@@ -16,8 +16,7 @@ from app.core.errors import (
     SlugUnavailableError,
     UserNotFoundError,
 )
-from app.modules.identity.public import get_user_by_id
-from app.modules.identity.service import AuthenticationService
+from app.modules.identity.public import AuthenticationService, get_user_by_id
 from app.modules.organization.models import ADMIN, MEMBER, OWNER, Membership, Organization, role_at_least
 
 

@@ -16,6 +16,7 @@
 - [x] `rbac-entitlements` implementada, verificada e arquivada (`2026-09-11-rbac-entitlements`)
 - [x] `email-storage-jobs` implementada, verificada e arquivada (`2026-09-11-email-storage-jobs`)
 - [x] `audit-observability-backup` implementada, verificada e arquivada (`2026-09-11-audit-observability-backup`)
+- [x] `billing-stripe` implementada, verificada e arquivada (`2026-09-11-billing-stripe`)
 
 Saída: repo planejado, nenhum `app/`, `Dockerfile`, `.env`.
 
@@ -55,7 +56,7 @@ Aceite: mesma `idempotency_key` não agenda 2x; upload local sem MinIO; retry co
 
 Aceite: ação sensível auditável; restore em ambiente limpo reproduz o banco.
 
-## Fase 7 — Billing Stripe (opcional)
+## Fase 7 — Billing Stripe (opcional) ✅
 
 `PaymentProvider` + `StripePaymentProvider`; webhook → idempotência (`provider_event_id` unique) → billing → entitlements. Core funciona com `billing_stripe` desligado.
 

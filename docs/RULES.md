@@ -59,7 +59,7 @@ interfaces → modules/application → core contracts → infrastructure adapter
 identity → organization → tenancy → entitlements
 ```
 
-Opcionais são folhas (`billing_stripe`, `audit`, `notifications_email`, `storage_s3`, `ai`): consomem core, nenhum core depende deles. CI enforça com `import-linter`.
+Opcionais são folhas (`billing_stripe`, `audit`, `notifications_email`, `storage_s3`, `ai`): consomem core, nenhum core depende deles. CI enforça com `import-linter`: contrato `layers`, `core-independence`, `infrastructure-no-upward-imports`, um `<mod>-internals-private` por módulo (explícito — wildcard com source pai é vácuo no import-linter), `no-internals-from-outside` e `no-provider-imports-in-modules`. **Ao criar um módulo**: adicionar seu contrato e listá-lo nas sources dos demais.
 
 Módulo nunca depende direto de: Stripe, Redis, SMTP, S3, `FastAPI.Request`, infra de outro módulo. Tudo atravessa fronteira explícita.
 

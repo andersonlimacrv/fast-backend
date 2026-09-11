@@ -17,6 +17,7 @@ from app.core.errors import (
     SlugUnavailableError,
     ThrottledError,
     UserNotFoundError,
+    WebhookVerificationError,
 )
 
 
@@ -39,6 +40,8 @@ def _status_for(exc: DomainError) -> int:
         return 404
     if isinstance(exc, ThrottledError):
         return 429
+    if isinstance(exc, WebhookVerificationError):
+        return 400
     return 500
 
 

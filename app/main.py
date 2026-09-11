@@ -16,6 +16,7 @@ from app.infrastructure.email.sender import LogEmailSender, SmtpEmailSender
 from app.infrastructure.jobs.outbox import OutboxService
 from app.infrastructure.observability.logging import setup_logging
 from app.infrastructure.observability.request_id import request_id_middleware
+from app.infrastructure.payments.stripe_adapter import StripePaymentProvider
 from app.infrastructure.security.headers import security_headers_middleware
 from app.infrastructure.storage.local import LocalFilesystemStorage
 from app.infrastructure.storage.s3 import S3CompatibleStorage
@@ -23,6 +24,8 @@ from app.interfaces.errors import install_error_handlers
 from app.interfaces.health import router as health_router
 from app.modules.audit.router import router as audit_router
 from app.modules.audit.service import AuditService
+from app.modules.billing_stripe.router import router as billing_router
+from app.modules.billing_stripe.service import BillingService
 from app.modules.entitlements.router import router as entitlements_router
 from app.modules.entitlements.service import EntitlementService
 from app.modules.identity.router import router as identity_router
@@ -73,6 +76,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.storage = S3CompatibleStorage(settings) if settings.storage_backend == "s3" else LocalFilesystemStorage(settings)
     app.state.outbox = OutboxService(settings=settings, session_factory=session_factory)
     app.state.audit_service = AuditService(session_factory=session_factory)
+    if settings.billing_enabled:
+        app.state.billing_service = BillingService(
+            settings=settings,
+            session_factory=session_factory,
+            provider=StripePaymentProvider(settings),
+            entitlements=app.state.entitlement_service,
+            outbox=app.state.outbox,
+        )
     install_error_handlers(app)
     # Added in reverse execution order: request-id runs first (outermost).
     app.middleware("http")(security_headers_middleware)
@@ -92,5 +103,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(entitlements_router)
     app.include_router(audit_router)
     app.include_router(projects_router)
+    if settings.billing_enabled:
+        app.include_router(billing_router)
 
     return app

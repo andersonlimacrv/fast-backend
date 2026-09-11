@@ -64,6 +64,12 @@ class Settings(BaseSettings):
     task_broker_url: str = "redis://localhost:6379/1"
     outbox_max_attempts: int = 5
 
+    # --- Billing (Fase 7, opcional; default off) ---
+    billing_enabled: bool = False
+    stripe_webhook_secret: str = ""
+    stripe_signature_tolerance: int = 300
+    stripe_price_map: dict = {}
+
     # --- HTTP hardening ---
     trusted_hosts: list[str] = ["*"]
     cors_origins: list[str] = []
@@ -87,6 +93,8 @@ class Settings(BaseSettings):
             raise ValueError(f"unknown EMAIL_BACKEND: {self.email_backend!r}")
         if self.storage_backend not in ("local", "s3"):
             raise ValueError(f"unknown STORAGE_BACKEND: {self.storage_backend!r}")
+        if self.billing_enabled and not self.stripe_webhook_secret:
+            raise ValueError("BILLING_ENABLED requires STRIPE_WEBHOOK_SECRET")
         if self.environment == "production":
             if self.secret_key == DEV_DEFAULT_SECRET or len(self.secret_key) < 32:
                 raise ValueError("production requires a real SECRET_KEY (>=32 chars)")

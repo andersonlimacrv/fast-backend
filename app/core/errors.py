@@ -49,5 +49,9 @@ class EntitlementDeniedError(DomainError):
     """Feature not entitled for the caller's organization/plan."""
 
 
+class WebhookVerificationError(DomainError):
+    """Provider webhook signature missing, invalid, or stale."""
+
+
 class ThrottledError(DomainError):
     """Too many attempts; client must back off."""
