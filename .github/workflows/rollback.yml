@@ -28,13 +28,6 @@ jobs:
       - name: Roll back over SSH
         if: steps.gate.outputs.configured == 'true'
         env:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
-      - run: uv sync --extra dev --frozen
-      - name: Validate target
-        run: uv run python -c "from scripts.deploy import image_for; print(image_for('ghcr.io/${{ github.repository }}', '${{ inputs.sha }}'))"
-      - name: Roll back over SSH
-        env:
           SSH_HOST: ${{ secrets.VPS_HOST }}
           SSH_USER: ${{ secrets.VPS_USER }}
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
