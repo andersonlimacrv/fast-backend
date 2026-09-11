@@ -8,6 +8,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 
 # Import models so metadata is populated.
 import app.infrastructure.auth.refresh_tokens  # noqa: F401
+import app.infrastructure.jobs.models  # noqa: F401
 import app.modules.entitlements.models  # noqa: F401
 import app.modules.identity.models  # noqa: F401
 import app.modules.organization.models  # noqa: F401

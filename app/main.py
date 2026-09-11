@@ -12,7 +12,11 @@ from app.infrastructure.auth.hashing import PwdlibHasher
 from app.infrastructure.auth.refresh_tokens import RefreshTokenRepository
 from app.infrastructure.auth.throttling import LoginThrottler
 from app.infrastructure.db.session import create_session_factory
+from app.infrastructure.email.sender import LogEmailSender, SmtpEmailSender
+from app.infrastructure.jobs.outbox import OutboxService
 from app.infrastructure.security.headers import security_headers_middleware
+from app.infrastructure.storage.local import LocalFilesystemStorage
+from app.infrastructure.storage.s3 import S3CompatibleStorage
 from app.interfaces.errors import install_error_handlers
 from app.interfaces.health import router as health_router
 from app.modules.entitlements.router import router as entitlements_router
@@ -60,6 +64,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         session_factory=session_factory,
         entitlements=app.state.entitlement_service,
     )
+    app.state.email_sender = SmtpEmailSender(settings) if settings.email_backend == "smtp" else LogEmailSender()
+    app.state.storage = S3CompatibleStorage(settings) if settings.storage_backend == "s3" else LocalFilesystemStorage(settings)
+    app.state.outbox = OutboxService(settings=settings, session_factory=session_factory)
     install_error_handlers(app)
     # Added in reverse execution order: TrustedHost runs first (outermost).
     app.middleware("http")(security_headers_middleware)

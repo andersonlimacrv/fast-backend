@@ -38,3 +38,15 @@ def test_gate_rejects_cross_module_internals() -> None:
         PROBE.unlink(missing_ok=True)
     assert result.returncode != 0
     assert "no-cross-module-internals" in result.stdout + result.stderr
+
+
+@pytest.mark.integration
+def test_gate_rejects_provider_imports_in_modules() -> None:
+    probe = REPO_ROOT / "app" / "modules" / "projects" / "_probe_sdk.py"
+    probe.write_text("import aioboto3  # noqa: F401\n")
+    try:
+        result = _run_lint()
+    finally:
+        probe.unlink(missing_ok=True)
+    assert result.returncode != 0
+    assert "no-provider-imports-in-modules" in result.stdout + result.stderr

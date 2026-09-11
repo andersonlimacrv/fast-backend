@@ -21,6 +21,11 @@ dependencies = [
     "PyJWT>=2.8",
     "redis>=6.1",
     "httpx>=0.28",
+    "aiosmtplib>=3.0",
+    "jinja2>=3.1",
+    "aioboto3>=13",
+    "taskiq>=0.11",
+    "taskiq-redis>=1.1",
 ]
 
 [project.optional-dependencies]
@@ -77,6 +82,7 @@ known-first-party = ["app"]
 
 [tool.importlinter]
 root_package = "app"
+include_external_packages = true
 
 [[tool.importlinter.contracts]]
 name = "layers"
@@ -126,6 +132,13 @@ forbidden_modules = [
 ]
 broken_contract_guidance = "See docs/RULES.md §4: outside modules, depend only on modules/<name>/public.py."
 
+[[tool.importlinter.contracts]]
+name = "no-provider-imports-in-modules"
+type = "forbidden"
+source_modules = ["app.modules"]
+forbidden_modules = ["aioboto3", "botocore", "aiosmtplib", "jinja2", "taskiq", "taskiq_redis"]
+broken_contract_guidance = "See docs/RULES.md §4: modules use core/contracts; only infrastructure adapts providers."
+
 [tool.mypy]
 python_version = "3.11"
 warn_return_any = true
@@ -142,4 +155,8 @@ explicit_package_bases = true
 
 [[tool.mypy.overrides]]
 module = "asyncpg.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["aioboto3.*", "botocore.*"]
 ignore_missing_imports = true

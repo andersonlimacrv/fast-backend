@@ -1,0 +1,4 @@
+Olá {{ name }},
+
+Bem-vindo! Confirme sua conta acessando:
+{{ link }}

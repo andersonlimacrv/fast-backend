@@ -41,6 +41,29 @@ class Settings(BaseSettings):
     # --- Tenancy (Fase 1: single only; row enforced in Fase 3) ---
     tenancy_mode: str = "single"
 
+    # --- Email ---
+    email_backend: str = "log"  # log | smtp
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = False
+    smtp_from: str = "no-reply@example.com"
+
+    # --- Storage ---
+    storage_backend: str = "local"  # local | s3
+    storage_dir: str = "./var/storage"
+    storage_max_bytes: int = 10 * 1024 * 1024
+    s3_endpoint_url: str = ""
+    s3_bucket: str = "fastbackend"
+    s3_access_key: str = ""
+    s3_secret_key: str = ""
+    s3_region: str = "us-east-1"
+
+    # --- Jobs ---
+    task_broker_url: str = "redis://localhost:6379/1"
+    outbox_max_attempts: int = 5
+
     # --- HTTP hardening ---
     trusted_hosts: list[str] = ["*"]
     cors_origins: list[str] = []
@@ -60,6 +83,10 @@ class Settings(BaseSettings):
     def _reject_insecure_production(self) -> "Settings":
         if self.tenancy_mode not in ("single", "row"):
             raise ValueError(f"unknown TENANCY_MODE: {self.tenancy_mode!r}")
+        if self.email_backend not in ("log", "smtp"):
+            raise ValueError(f"unknown EMAIL_BACKEND: {self.email_backend!r}")
+        if self.storage_backend not in ("local", "s3"):
+            raise ValueError(f"unknown STORAGE_BACKEND: {self.storage_backend!r}")
         if self.environment == "production":
             if self.secret_key == DEV_DEFAULT_SECRET or len(self.secret_key) < 32:
                 raise ValueError("production requires a real SECRET_KEY (>=32 chars)")

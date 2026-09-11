@@ -14,6 +14,7 @@
 - [x] `hardening` implementada, verificada e arquivada (`2026-09-11-hardening`)
 - [x] `identity-organization-tenancy` implementada, verificada e arquivada (`2026-09-11-identity-organization-tenancy`)
 - [x] `rbac-entitlements` implementada, verificada e arquivada (`2026-09-11-rbac-entitlements`)
+- [x] `email-storage-jobs` implementada, verificada e arquivada (`2026-09-11-email-storage-jobs`)
 
 Saída: repo planejado, nenhum `app/`, `Dockerfile`, `.env`.
 
@@ -41,7 +42,7 @@ Papéis fixos owner/admin/member, `require_role`/`require_entitlement`. `entitle
 
 Aceite: sem membership → 403; sem entitlement → 403 mesmo sem Stripe.
 
-## Fase 5 — Email + Storage + Jobs/Idempotência
+## Fase 5 — Email + Storage + Jobs/Idempotência ✅
 
 `EmailSender` (Jinja2+SMTP/`aiosmtplib`, Mailpit dev), `ObjectStorage` (local→MinIO→S3), Taskiq + `outbox_messages{id,type,aggregate_id,idempotency_key,payload,status,attempts}`. Idempotência = operação lógica única; sem exactly-once externo.
 
