@@ -8,6 +8,7 @@ import hashlib
 
 import bcrypt
 from pwdlib import PasswordHash
+from pwdlib.hashers.argon2 import Argon2Hasher
 
 from app.core.settings import Settings
 
@@ -39,7 +40,15 @@ class PwdlibHasher:
     """Argon2id hasher with transparent bcrypt-legacy migration on verify."""
 
     def __init__(self, settings: Settings) -> None:
-        self._ph = PasswordHash.recommended()
+        self._ph = PasswordHash(
+            (
+                Argon2Hasher(
+                    time_cost=settings.argon2_time_cost,
+                    memory_cost=settings.argon2_memory_cost,
+                    parallelism=settings.argon2_parallelism,
+                ),
+            )
+        )
         self._settings = settings
 
     def hash(self, password: str) -> str:

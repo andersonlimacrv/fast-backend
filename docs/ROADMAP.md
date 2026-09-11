@@ -10,17 +10,18 @@
 - [x] `references/implementation_v2.md` congelada (nunca editar)
 - [x] `openspec init` (config + skills `opsx:*`)
 - [x] Change `auth-foundation` draftada em `openspec/changes/` (proposal+design+3 specs+tasks) — **aguardando sua aprovação**
-- [ ] Usuário aprova este ROADMAP v3 + a change `auth-foundation`
+- [x] ROADMAP v3 aprovado; `auth-foundation` implementada, verificada e arquivada (`2026-09-11-auth-foundation`)
+- [x] `hardening` implementada, verificada e arquivada (`2026-09-11-hardening`)
 
 Saída: repo planejado, nenhum `app/`, `Dockerfile`, `.env`.
 
-## Fase 1 — Fundação de Auth
+## Fase 1 — Fundação de Auth ✅
 
 Escopo (v2 §3): Argon2id/`pwdlib` (bcrypt só migração), JWT HS256 10–15min com `sub/type/iat/exp/iss/aud/jti/active_org_id`, refresh opaco Postgres `{token_hash,family_id,used_at,revoked_at,replaced_by}` com rotation + reuse→revoga family + **atomicidade (`FOR UPDATE`)**, `tokens_valid_after` (só em `CurrentPrincipal`), throttling (ip,email), logging mínimo + `/healthz`.
 
 Aceite: rotation ok; concorrência A/B em R1 → só 1 vence; reuse de R1 → 401 e R2 morre; `tokens_valid_after` invalida access velho; throttling → 429. Testes Testcontainers, nunca mock.
 
-## Fase 2 — Hardening
+## Fase 2 — Hardening ✅
 
 Security headers, CORS por ambiente, `/readyz` (DB+Redis), validação de env, `import-linter` (DAG `identity→organization→tenancy→entitlements`) no CI, `bandit/pip-audit/gitleaks` limpos.
 

@@ -28,6 +28,15 @@ def test_verify_roundtrip_and_wrong_password(hasher: PwdlibHasher) -> None:
 
 
 @pytest.mark.unit
+def test_hashing_cost_is_configurable() -> None:
+    fast = PwdlibHasher(Settings(secret_key="x" * 32, argon2_time_cost=1, argon2_memory_cost=1024))
+    digest = fast.hash("Str0ng!Pass")
+    assert digest.startswith("$argon2id$")
+    assert "m=1024" in digest
+    assert fast.verify("Str0ng!Pass", digest) is True
+
+
+@pytest.mark.unit
 def test_bcrypt_legacy_verifies_and_migrates(hasher: PwdlibHasher) -> None:
     legacy = bcrypt.hashpw(b"legacypass", bcrypt.gensalt()).decode()
     valid, new_hash = hasher.verify_and_update("legacypass", legacy)

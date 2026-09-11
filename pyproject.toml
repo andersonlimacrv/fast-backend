@@ -33,6 +33,7 @@ dev = [
     "mypy>=1.14",
     "bandit>=1.8",
     "pip-audit>=2.7",
+    "import-linter>=1.13",
 ]
 
 [tool.setuptools.packages.find]
@@ -67,6 +68,57 @@ known-first-party = ["app"]
 "app/modules/identity/router.py" = ["B008"]
 "app/modules/identity/dependencies.py" = ["B008"]
 "app/tests/**/*.py" = ["S105", "S106", "S107", "S603", "S607"]
+
+[tool.importlinter]
+root_package = "app"
+
+[[tool.importlinter.contracts]]
+name = "layers"
+type = "layers"
+layers = ["app.interfaces", "app.modules", "app.core"]
+broken_contract_guidance = "See docs/RULES.md §4: imports flow interfaces → modules → core/contracts."
+
+[[tool.importlinter.contracts]]
+name = "core-independence"
+type = "forbidden"
+source_modules = ["app.core"]
+forbidden_modules = ["app.modules", "app.interfaces", "app.infrastructure"]
+broken_contract_guidance = "See docs/RULES.md §4: core imports nothing of ours."
+
+[[tool.importlinter.contracts]]
+name = "infrastructure-no-upward-imports"
+type = "forbidden"
+source_modules = ["app.infrastructure"]
+forbidden_modules = ["app.modules", "app.interfaces"]
+broken_contract_guidance = "See docs/RULES.md §4: adapters never import modules/interfaces."
+
+[[tool.importlinter.contracts]]
+name = "no-cross-module-internals"
+type = "forbidden"
+source_modules = ["app.modules"]
+forbidden_modules = [
+    "app.modules.*.models",
+    "app.modules.*.repository",
+    "app.modules.*.service",
+    "app.modules.*.dependencies",
+    "app.modules.*.router",
+    "app.modules.*.schemas",
+]
+broken_contract_guidance = "See docs/RULES.md §4: depend only on modules/<name>/public.py, core/contracts, or Taskiq events."
+
+[[tool.importlinter.contracts]]
+name = "no-internals-from-outside"
+type = "forbidden"
+source_modules = ["app.interfaces", "app.infrastructure"]
+forbidden_modules = [
+    "app.modules.*.models",
+    "app.modules.*.repository",
+    "app.modules.*.service",
+    "app.modules.*.dependencies",
+    "app.modules.*.router",
+    "app.modules.*.schemas",
+]
+broken_contract_guidance = "See docs/RULES.md §4: outside modules, depend only on modules/<name>/public.py."
 
 [tool.mypy]
 python_version = "3.11"

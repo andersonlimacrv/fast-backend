@@ -1,0 +1,45 @@
+# CI mirrors the Fase 1 manual gates: lint → unit → integration → security.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev --frozen
+      - run: uv run ruff check app
+      - run: uv run ruff format --check app
+      - run: uv run mypy app
+      - run: uv run lint-imports
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev --frozen
+      - run: uv run pytest -m "unit"
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev --frozen
+      - run: uv run pytest -m "integration"
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev --frozen
+      - run: uv run bandit -r app -q
+      - run: uv run pip-audit
+      - uses: gitleaks/gitleaks-action@v2
