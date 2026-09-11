@@ -49,12 +49,14 @@ Primários: `build` (executa), `plan` (Tab, analisa sem alterar).
 
 ```text
 fast-backend/
-├── README.md / AGENTS.md / opencode.json
+├── README.md / AGENTS.md / CHANGELOG.md / opencode.json
+├── Dockerfile / .dockerignore / docker-compose.yml / docker-compose.prod.yml
 ├── .opencode/agents/ (6 agentes)
-├── docs/ RULES.md, ROADMAP.md, BOILERPLATE-ANALYSIS.md, SKILLS-REGISTRY.md, adr/0001-0003
+├── scripts/ backup.py, deploy.py, new_project.py
+├── docs/ RULES.md, ROADMAP.md, DEPLOYMENT.md, BOILERPLATE-ANALYSIS.md, SKILLS-REGISTRY.md, adr/0001-0004
 ├── openspec/ (specs + changes)
 ├── references/implementation_v2.md (congelada, nunca editar)
-└── .github/ (CI futuro)
+└── .github/ (ci, deploy, rollback)
 ```
 
 Futuro (não criar agora): `app/{core,infrastructure,modules}/`, `app/tests/{unit,integration,e2e,fixtures}/`, `app/migrations/` (pacote `app`, imports `from app.*` — ADR 0004) + `pyproject.toml`, `alembic.ini`, `.env.example` na raiz.

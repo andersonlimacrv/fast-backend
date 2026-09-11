@@ -1,40 +1,76 @@
 # fast-backend
 
-Modular Monolith Async FastAPI SaaS Kernel — em preparação.
+Modular Monolith Async FastAPI SaaS Kernel — auth própria (JWT + refresh opaco), tenancy row-level, RBAC + entitlements, email/storage/jobs, auditoria, backup e billing Stripe opcional.
 
-> **Status: Fase 0. Sem `app/`.** Referência congelada: `references/implementation_v2.md` (nunca editar).
-> Regra: sem `app/` sem OpenSpec change aprovada + ordem explícita.
+## Começando
 
-## Origem (somente leitura)
-
-- Upstream: [benavlabs/FastAPI-boilerplate@0.19.0](https://github.com/benavlabs/FastAPI-boilerplate) + `crudauth@0.6.0`
-- Cópias locais: `/home/anderson/dev/copy/benavlabs_FastAPI-boilerplate`, `/home/anderson/dev/copy/benavlabs_crudauth`
-- Decisão (ADR 0001): ejetar `crudauth`, auth própria (Argon2id, JWT HS256 10-15min, refresh opaco Postgres + rotation/reuse/atomicidade, `tokens_valid_after`).
-
-## Mapa
-
-```text
-fast-backend/
-├── AGENTS.md / docs/RULES.md / docs/ROADMAP.md (fases 0-8) / docs/adr/0001-0004
-├── docs/BOILERPLATE-ANALYSIS.md / docs/SKILLS-REGISTRY.md
-├── .opencode/agents/ (planner, backend-implementer, code-reviewer, security-auditor, tester, docs-writer)
-├── openspec/ (specs + changes) + .opencode/commands|skills (opsx)
-├── references/implementation_v2.md (congelada)
-└── .github/ (CI futuro)
+```bash
+cp .env.example .env
+uv sync --extra dev
+uv run alembic upgrade head
+uv run uvicorn app.main:create_app --factory --reload
+# → http://127.0.0.1:8000/docs
 ```
 
-## Fases (resumo, fonte: `docs/ROADMAP.md`)
+Com Docker (app + worker + postgres + redis; `tools` p/ mailpit/minio):
 
-0 Baseline repo (atual) → 1 Auth → 2 Hardening → 3 Identity/Org/Tenancy → 4 RBAC+Entitlements → 5 Email/Storage/Jobs → 6 Audit/Obs/Backup → 7 Billing Stripe opcional → 8 CI/CD+Template+Docs.
+```bash
+cp .env.example .env
+docker compose up --build
+docker compose --profile tools up --build
+```
 
-Stack: FastAPI async + SQLAlchemy 2.0 + Pydantic v2 + Postgres + Redis + Alembic + Taskiq + Docker + `uv`. `CORE_MODULES` sempre ligados; opcionais via `ENABLED_MODULES`.
+## Testar / verificar
 
-## Próximos passos
+```bash
+uv run pytest -m "unit"                       # rápidos, sem serviços
+uv run pytest -m "integration"                # Postgres+Redis reais (testcontainers)
+FB_TEST_NETWORK=host uv run pytest            # alternativa onde bridge Docker é bloqueada
+uv run ruff check app scripts && uv run ruff format --check app scripts
+uv run mypy app scripts
+uv run lint-imports                            # DAG de módulos
+uv run bandit -r app -q && uv run pip-audit && gitleaks detect --source . --no-git
+```
 
-1. Revisar `docs/RULES.md`, `docs/ROADMAP.md`, `docs/adr/*`.
-2. Aprovar instalação de skills do `docs/SKILLS-REGISTRY.md` (openspec `opsx:*` já instaladas pelo `init`).
-3. `planner` escreve `openspec/changes/auth-foundation/proposal.md|tasks.md` → aprovação → Fase 1.
+## Build / deploy
 
-## Regras
+```bash
+docker build --target prod -t ghcr.io/<org>/fast-backend:<sha> .
+IMAGE=ghcr.io/<org>/fast-backend:<sha> docker compose -f docker-compose.prod.yml up -d
+```
 
-PT-BR; código em inglês. Sem commit sem pedido. Sem segredos. `git status --short` após cada mudança. Licença MIT.
+Push na `main` deploya via `.github/workflows/deploy.yml` (migrate → healthcheck `/readyz` → rollback automático). Rollback manual: `rollback.yml` com a SHA. Detalhes em `docs/DEPLOYMENT.md`.
+
+## Backup
+
+```bash
+BACKUP_PASSPHRASE=... python scripts/backup.py --database-url ... --dest ./var/backups
+python scripts/backup.py --restore <artifact> --database-url ...
+```
+
+## Novo projeto a partir daqui
+
+```bash
+python scripts/new_project.py --name my-saas --dest /path/to/my-saas
+```
+
+## Estrutura
+
+```text
+app/                  # pacote (imports from app.*)
+├── core/             # errors, settings, security port, contracts/
+├── infrastructure/   # auth, db, cache?, email, storage, jobs, observability, payments, security
+├── modules/          # identity, organization, tenancy, entitlements, projects, audit, billing_stripe
+├── interfaces/       # errors, health (/healthz, /readyz)
+├── migrations/       # Alembic 0001–0005
+└── tests/            # unit, integration, e2e, fixtures
+scripts/              # backup.py, deploy.py, new_project.py
+openspec/             # specs (18 capabilities) + changes arquivadas
+docs/                 # RULES, ROADMAP, ADRs, DEPLOYMENT, SKILLS-REGISTRY
+```
+
+Regras: `AGENTS.md` (leia antes de codar) → `docs/RULES.md` → `docs/ROADMAP.md` → `docs/adr/*` → `references/*` (congelada). Sem `backend/` — o diretório da aplicação é `app/`.
+
+## Licença
+
+MIT — ver `LICENSE`.

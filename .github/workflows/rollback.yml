@@ -1,0 +1,33 @@
+# Rollback: bring a previous immutable SHA back up (manual dispatch).
+name: rollback
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: "Git SHA to roll back to (7+ hex chars)"
+        required: true
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev --frozen
+      - name: Validate target
+        run: uv run python -c "from scripts.deploy import image_for; print(image_for('ghcr.io/${{ github.repository }}', '${{ inputs.sha }}'))"
+      - name: Roll back over SSH
+        env:
+          SSH_HOST: ${{ secrets.VPS_HOST }}
+          SSH_USER: ${{ secrets.VPS_USER }}
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh && echo "$SSH_KEY" > ~/.ssh/deploy && chmod 600 ~/.ssh/deploy
+          ssh -i ~/.ssh/deploy -o StrictHostKeyChecking=accept-new "$SSH_USER@$SSH_HOST" \
+            "IMAGE=ghcr.io/${{ github.repository }}:${{ inputs.sha }} bash -s" <<'EOF'
+          set -euo pipefail
+          cd ~/fast-backend
+          IMAGE="$IMAGE" docker compose -f docker-compose.prod.yml up -d --quiet-pull
+          echo "$IMAGE" > .deploy-sha
+          EOF

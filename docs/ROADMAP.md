@@ -17,6 +17,7 @@
 - [x] `email-storage-jobs` implementada, verificada e arquivada (`2026-09-11-email-storage-jobs`)
 - [x] `audit-observability-backup` implementada, verificada e arquivada (`2026-09-11-audit-observability-backup`)
 - [x] `billing-stripe` implementada, verificada e arquivada (`2026-09-11-billing-stripe`)
+- [x] `release-template` implementada, verificada e arquivada (`2026-09-11-release-template`)
 
 Saída: repo planejado, nenhum `app/`, `Dockerfile`, `.env`.
 
@@ -62,7 +63,7 @@ Aceite: ação sensível auditável; restore em ambiente limpo reproduz o banco.
 
 Aceite: webhook 3x → 1 efeito; desligar em `ENABLED_MODULES` não quebra core (CI com/sem).
 
-## Fase 8 — CI/CD + Template + Docs finais
+## Fase 8 — CI/CD + Template + Docs finais ✅
 
 Pipeline `PR → ruff → mypy → unit → integration → security → build`; prod `build:sha → push → deploy VPS → migrate (expand/contract) → healthcheck → traffic`; rollback p/ imagem anterior. Docs `architecture/development/deployment/modules/guides/adr`, README operacional, bootstrap de 2º projeto só pela doc.
 
