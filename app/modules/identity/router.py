@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter, Depends, Request
 
-from app.infrastructure.auth.jwt import mint_access_token
 from app.modules.identity.dependencies import Principal, current_principal
 from app.modules.identity.schemas import (
     ChangePasswordRequest,
@@ -10,7 +9,6 @@ from app.modules.identity.schemas import (
     LogoutRequest,
     RefreshRequest,
     RegisterRequest,
-    SwitchOrganizationRequest,
     TokenPair,
     UserRead,
 )
@@ -82,21 +80,3 @@ async def me(request: Request, principal: Principal = Depends(current_principal)
     user = await _service(request).get_user(user_id=principal.user_id)
     assert user is not None
     return UserRead.model_validate(user)
-
-
-@router.post("/switch-organization", response_model=TokenPair)
-async def switch_organization(
-    payload: SwitchOrganizationRequest,
-    request: Request,
-    me: Principal = Depends(current_principal),
-) -> TokenPair:
-    """Mint a new access token with the requested `active_org_id`.
-
-    Fase 1: context only. Membership enforcement arrives in Fase 3 (tenancy),
-    which will deny orgs the user does not belong to.
-    """
-    service = _service(request)
-    user = await service.get_user(user_id=me.user_id)
-    assert user is not None
-    access_token = mint_access_token(settings=request.app.state.settings, user_id=user.id, active_org_id=payload.org_id)
-    return TokenPair(access_token=access_token, refresh_token="")

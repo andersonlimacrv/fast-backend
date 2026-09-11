@@ -18,7 +18,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from sqlalchemy import DateTime, ForeignKey, String, Text, func, select, update
-from sqlalchemy.dialects.postgresql import UUID as PG_UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -34,20 +33,24 @@ def hash_refresh_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+def _uuid() -> str:
+    import uuid
+
+    return uuid.uuid4().hex
+
+
 class RefreshToken(Base):
     __tablename__ = "refresh_tokens"
 
-    id: Mapped[str] = mapped_column(PG_UUID(as_uuid=False), primary_key=True, default=lambda: __import__("uuid").uuid4().hex)
-    user_id: Mapped[str] = mapped_column(
-        PG_UUID(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
-    )
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=_uuid)
+    user_id: Mapped[str] = mapped_column(String(32), ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
-    family_id: Mapped[str] = mapped_column(PG_UUID(as_uuid=False), index=True, nullable=False)
+    family_id: Mapped[str] = mapped_column(String(32), index=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    replaced_by: Mapped[str | None] = mapped_column(PG_UUID(as_uuid=False), ForeignKey("refresh_tokens.id"), nullable=True)
+    replaced_by: Mapped[str | None] = mapped_column(String(32), ForeignKey("refresh_tokens.id"), nullable=True)
     ip: Mapped[str | None] = mapped_column(String(64), nullable=True)
     user_agent: Mapped[str | None] = mapped_column(Text, nullable=True)
 

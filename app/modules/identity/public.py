@@ -1,9 +1,9 @@
 """Public API of the identity module. Other modules may import ONLY from here."""
 
-from app.modules.identity.dependencies import Principal
+from app.modules.identity.dependencies import Principal, current_principal
 from app.modules.identity.service import AuthenticationService
 
-__all__ = ["AuthenticationService", "Principal", "get_user_by_id"]
+__all__ = ["AuthenticationService", "Principal", "current_principal", "get_user_by_id"]
 
 
 async def get_user_by_id(service: AuthenticationService, *, user_id: str):

@@ -29,5 +29,21 @@ class OrganizationSwitchDeniedError(DomainError):
     """Switch-organization request denied (reserved for membership enforcement in Fase 3)."""
 
 
+class OrganizationAccessDeniedError(DomainError):
+    """No membership (or no such organization — deliberately indistinguishable)."""
+
+
+class LastOwnerProtectedError(DomainError):
+    """Refusing to remove/demote the last owner of an organization."""
+
+
+class SlugUnavailableError(DomainError):
+    """Could not mint a unique organization slug after retries."""
+
+
+class ResourceNotFoundError(DomainError):
+    """Tenant-scoped resource not found in the caller's tenant."""
+
+
 class ThrottledError(DomainError):
     """Too many attempts; client must back off."""

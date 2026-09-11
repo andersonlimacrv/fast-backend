@@ -17,6 +17,11 @@ from app.interfaces.errors import install_error_handlers
 from app.interfaces.health import router as health_router
 from app.modules.identity.router import router as identity_router
 from app.modules.identity.service import AuthenticationService
+from app.modules.organization.router import auth_router as org_auth_router
+from app.modules.organization.router import router as organization_router
+from app.modules.organization.service import OrganizationService
+from app.modules.projects.router import router as projects_router
+from app.modules.projects.service import ProjectService
 
 
 @asynccontextmanager
@@ -44,6 +49,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         refresh_repo=refresh_repo,
         throttler=throttler,
     )
+    app.state.org_service = OrganizationService(
+        session_factory=session_factory,
+        identity_service=app.state.auth_service,
+    )
+    app.state.project_service = ProjectService(session_factory=session_factory)
     install_error_handlers(app)
     # Added in reverse execution order: TrustedHost runs first (outermost).
     app.middleware("http")(security_headers_middleware)
@@ -57,5 +67,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
     app.include_router(health_router)
     app.include_router(identity_router)
+    app.include_router(organization_router)
+    app.include_router(org_auth_router)
+    app.include_router(projects_router)
 
     return app

@@ -12,6 +12,7 @@
 - [x] Change `auth-foundation` draftada em `openspec/changes/` (proposal+design+3 specs+tasks) — **aguardando sua aprovação**
 - [x] ROADMAP v3 aprovado; `auth-foundation` implementada, verificada e arquivada (`2026-09-11-auth-foundation`)
 - [x] `hardening` implementada, verificada e arquivada (`2026-09-11-hardening`)
+- [x] `identity-organization-tenancy` implementada, verificada e arquivada (`2026-09-11-identity-organization-tenancy`)
 
 Saída: repo planejado, nenhum `app/`, `Dockerfile`, `.env`.
 
@@ -27,7 +28,7 @@ Security headers, CORS por ambiente, `/readyz` (DB+Redis), validação de env, `
 
 Aceite: CI falha em import proibido; env inseguro rejeitado.
 
-## Fase 3 — Identity / Organization / Tenancy
+## Fase 3 — Identity / Organization / Tenancy ✅
 
 `modules/identity` (register/login/refresh/logout/change_password/invalidate_tokens, `public.py`), `organization`+`membership`, `CurrentTenant` + `TenantScopedRepository(tenant_id)` + `SuperuserContext` explícito. `TENANCY_MODE=single|row`; `active_org_id` contexto (autoridade = membership); troca via `POST /auth/switch-organization` emitindo novo access. Sem RLS.
 

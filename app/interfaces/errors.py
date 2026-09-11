@@ -7,10 +7,15 @@ from app.core.errors import (
     DomainError,
     EmailAlreadyRegisteredError,
     InvalidCredentialsError,
+    LastOwnerProtectedError,
+    OrganizationAccessDeniedError,
     OrganizationSwitchDeniedError,
     RefreshTokenInvalidError,
     RefreshTokenReuseError,
+    ResourceNotFoundError,
+    SlugUnavailableError,
     ThrottledError,
+    UserNotFoundError,
 )
 
 
@@ -21,8 +26,14 @@ def _status_for(exc: DomainError) -> int:
         return 401
     if isinstance(exc, EmailAlreadyRegisteredError):
         return 409
-    if isinstance(exc, OrganizationSwitchDeniedError):
+    if isinstance(exc, (OrganizationAccessDeniedError, OrganizationSwitchDeniedError)):
         return 403
+    if isinstance(exc, (LastOwnerProtectedError, SlugUnavailableError)):
+        return 409
+    if isinstance(exc, UserNotFoundError):
+        return 404
+    if isinstance(exc, ResourceNotFoundError):
+        return 404
     if isinstance(exc, ThrottledError):
         return 429
     return 500

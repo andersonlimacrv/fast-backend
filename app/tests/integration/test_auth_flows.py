@@ -75,15 +75,22 @@ async def test_logout_everywhere_revokes_access_and_refresh(client: AsyncClient)
 
 
 @pytest.mark.integration
-async def test_switch_organization_mints_context_token(client: AsyncClient) -> None:
-    data = await register_and_login(client)
-    headers = {"Authorization": f"Bearer {data['access_token']}"}
-    resp = await client.post("/auth/switch-organization", json={"org_id": "org-123"}, headers=headers)
-    assert resp.status_code == 200, resp.text
+async def test_switch_organization_requires_membership(client: AsyncClient) -> None:
+    owner = await register_and_login(client)
+    owner_headers = {"Authorization": f"Bearer {owner['access_token']}"}
+    org = (await client.post("/organizations", json={"name": "Acme"}, headers=owner_headers)).json()
+
+    outsider = await register_and_login(client)
+    outsider_headers = {"Authorization": f"Bearer {outsider['access_token']}"}
+    denied = await client.post("/auth/switch-organization", json={"org_id": org["id"]}, headers=outsider_headers)
+    assert denied.status_code == 403
+
+    switched = await client.post("/auth/switch-organization", json={"org_id": org["id"]}, headers=owner_headers)
+    assert switched.status_code == 200, switched.text
     import jwt as pyjwt
 
-    payload = pyjwt.decode(resp.json()["access_token"], options={"verify_signature": False})
-    assert payload["active_org_id"] == "org-123"
+    payload = pyjwt.decode(switched.json()["access_token"], options={"verify_signature": False})
+    assert payload["active_org_id"] == org["id"]
     assert payload["sub"]
 
 
