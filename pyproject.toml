@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "fast-backend-app"
+version = "0.1.0"
+description = "fast-backend — Modular Monolith Async FastAPI SaaS Kernel (auth-foundation)."
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "sqlalchemy[asyncio]>=2.0",
+    "asyncpg>=0.30",
+    "alembic>=1.16",
+    "pydantic>=2.10",
+    "pydantic-settings>=2.7",
+    "email-validator>=2.0",
+    "pwdlib[argon2]>=0.2",
+    "bcrypt>=4.0",
+    "PyJWT>=2.8",
+    "redis>=6.1",
+    "httpx>=0.28",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3",
+    "pytest-asyncio>=0.25",
+    "testcontainers[postgres,redis]>=4.10",
+    "faker>=37",
+    "ruff>=0.9",
+    "mypy>=1.14",
+    "bandit>=1.8",
+    "pip-audit>=2.7",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["app*"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["app/tests"]
+python_files = ["test_*.py"]
+asyncio_mode = "auto"
+addopts = ["-v", "--strict-markers", "--tb=short", "--disable-warnings"]
+markers = [
+    "unit: Unit tests without external services",
+    "integration: Integration tests with real Postgres/Redis via testcontainers",
+    "e2e: End-to-end tests",
+    "slow: Slow running tests",
+    "security: Security-focused tests",
+]
+
+[tool.ruff]
+line-length = 128
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.ruff.lint.per-file-ignores]
+"app/modules/identity/router.py" = ["B008"]
+"app/modules/identity/dependencies.py" = ["B008"]
+"app/tests/**/*.py" = ["S105", "S106", "S107", "S603", "S607"]
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+check_untyped_defs = true
+no_implicit_optional = true
+strict_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+namespace_packages = true
+explicit_package_bases = true
+
+[[tool.mypy.overrides]]
+module = "asyncpg.*"
+ignore_missing_imports = true

@@ -1,6 +1,10 @@
 # BOILERPLATE-ANALYSIS — Fastro 0.19.0 vs fast-backend v2
 
 > Evidência: `/home/anderson/dev/copy/benavlabs_FastAPI-boilerplate` (`backend/pyproject.toml` v0.19.0) + `/home/anderson/dev/copy/benavlabs_crudauth` (v0.6.0). Nada copiado. Decisões em `docs/adr/*`.
+>
+> Pins upstream (verificados 2026-09-11, somente leitura):
+> - Fastro: commit `2b6373d` (merge #277 neon-option) — backend `0.19.0`
+> - crudauth: commit `21cf51a` (pós-`0.6.0`) — pacote `0.6.0`
 
 ## 1. O que o Fastro é
 

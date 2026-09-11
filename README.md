@@ -2,8 +2,8 @@
 
 Modular Monolith Async FastAPI SaaS Kernel — em preparação.
 
-> **Status: Fase 0. Sem `backend/`.** Referência congelada: `references/implementation_v2.md` (nunca editar).
-> Regra: sem `backend/` sem OpenSpec change aprovada + ordem explícita.
+> **Status: Fase 0. Sem `app/`.** Referência congelada: `references/implementation_v2.md` (nunca editar).
+> Regra: sem `app/` sem OpenSpec change aprovada + ordem explícita.
 
 ## Origem (somente leitura)
 
@@ -15,7 +15,7 @@ Modular Monolith Async FastAPI SaaS Kernel — em preparação.
 
 ```text
 fast-backend/
-├── AGENTS.md / docs/RULES.md / docs/ROADMAP.md (fases 0-8) / docs/adr/0001-0003
+├── AGENTS.md / docs/RULES.md / docs/ROADMAP.md (fases 0-8) / docs/adr/0001-0004
 ├── docs/BOILERPLATE-ANALYSIS.md / docs/SKILLS-REGISTRY.md
 ├── .opencode/agents/ (planner, backend-implementer, code-reviewer, security-auditor, tester, docs-writer)
 ├── openspec/ (specs + changes) + .opencode/commands|skills (opsx)

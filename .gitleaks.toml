@@ -1,0 +1,12 @@
+# Gitleaks config: default rules + explicit allowlist for KNOWN-FAKE placeholders.
+# Real secrets must never be committed (see docs/RULES.md §6).
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known-fake test/doc placeholder secrets (never valid credentials)"
+regexes = [
+    '''test-secret-key-min-32-chars-long-enough''',
+    '''another-secret-key-min-32-chars-ok''',
+    '''change-me-in-production-min-32-chars''',
+]

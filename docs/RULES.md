@@ -28,6 +28,8 @@ OPTIONAL_MODULES = ["billing_stripe", "audit", "notifications_email", "storage_s
 
 `entitlements` é **core leve**: tabela + dependency, sem billing obrigatório.
 
+- Dir da aplicação: `app/` flat como pacote (`app/core/`, `app/infrastructure/`, `app/modules/`, `app/tests/`, `app/migrations/`); projeto Python na raiz (`pyproject.toml`, `alembic.ini`, `.env.example`). Imports sempre `from app.*`; `ruff known-first-party=["app"]`. Mapa v2→nosso: `backend/src/X` (v2) ≡ `app/X`. Detalhe em ADR 0004.
+
 ## 3. Decisões arquiteturais congeladas (v2 §23)
 
 | Decisão | Escolha | Onde |
@@ -64,7 +66,7 @@ Módulo nunca depende direto de: Stripe, Redis, SMTP, S3, `FastAPI.Request`, inf
 ## 5. TDD obrigatório
 
 - Pirâmide ~70% unit / 25% integration / 5% e2e (orientação, risco manda).
-- `backend/tests/{unit,integration,e2e,fixtures}` + `conftest.py`; markers `unit,integration,e2e,slow,security`.
+- `app/tests/{unit,integration,e2e,fixtures}` + `conftest.py`; markers `unit,integration,e2e,slow,security`.
 - Testcontainers Postgres+Redis sempre que o comportamento depender deles.
 - Cobertura ≥80%, com rigor total em auth, tenancy, RBAC, billing, webhooks, idempotency, security.
 - 3 testes-guia bloqueantes: reuse-family + concorrência A/B (só 1 rotação vence) + tenant isolation IDOR (list/get/update/delete) + webhook `provider_event_id` unique.
@@ -78,7 +80,7 @@ Módulo nunca depende direto de: Stripe, Redis, SMTP, S3, `FastAPI.Request`, inf
 
 ## 7. OpenSpec + skills
 
-- Sem `backend/` sem OpenSpec change (`proposal.md/tasks.md/design.md`) aprovada.
+- Sem `app/` sem OpenSpec change (`proposal.md/tasks.md/design.md`) aprovada.
 - Fluxo: `planner` escreve change → `tester` deriva testes → `backend-implementer` executa → `code-reviewer` + `security-auditor` conferem.
 - Nenhuma skill instala sem entrada em `docs/SKILLS-REGISTRY.md` (nome, origem URL+SHA, escopo, motivo, status, risco, dono), pin por SHA/tag.
 

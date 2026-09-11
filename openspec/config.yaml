@@ -4,7 +4,7 @@ context: |
   fast-backend — Modular Monolith Async FastAPI SaaS Kernel.
   Stack: FastAPI async, SQLAlchemy 2.0, Pydantic v2, Postgres, Redis, Alembic, Taskiq, Docker, uv.
   Frozen: references/implementation_v2.md (never edit); CORE_MODULES (never PLATFORM_MODULES); auth própria sem crudauth (Argon2id/pwdlib, JWT HS256 10-15min, refresh opaco Postgres + rotation/reuse/atomic FOR UPDATE, tokens_valid_after); TENANCY_MODE=single|row, no RLS in v1; active_org_id is context, membership Postgres is authority; logical idempotency only.
-  Hierarchy: AGENTS.md > docs/RULES.md > docs/ROADMAP.md > docs/adr/* > references/* > copy/*. PT-BR docs, English code. Conventional Commits, no secrets, no backend/ without approved change.
+  Hierarchy: AGENTS.md > docs/RULES.md > docs/ROADMAP.md > docs/adr/* > references/* > copy/*. PT-BR docs, English code. Conventional Commits, no secrets, no app/ without approved change.
 
 rules:
   proposal:

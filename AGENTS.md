@@ -7,7 +7,7 @@
 - Repo: `fast-backend` — Modular Monolith Async FastAPI SaaS Kernel (v2 congelada).
 - Referência congelada (somente leitura, **nunca editar**): `references/implementation_v2.md`.
 - Evidência upstream (somente leitura): `/home/anderson/dev/copy/benavlabs_FastAPI-boilerplate@0.19.0`, `/home/anderson/dev/copy/benavlabs_crudauth@0.6.0`.
-- Estado: Fase 0 — sem `backend/`. Decisões congeladas: Auth própria (sem crudauth), Argon2id/pwdlib, JWT HS256 10-15min, refresh opaco Postgres com rotation+reuse+atomicidade, `tokens_valid_after`, `TENANCY_MODE=single|row` sem RLS no v1, `active_org_id` contexto (autoridade = membership Postgres), idempotência lógica.
+- Estado: Fase 0 — sem `app/`. Decisões congeladas: Auth própria (sem crudauth), Argon2id (pwdlib), JWT HS256 10-15min, refresh opaco Postgres com rotation+reuse+atomicidade, `tokens_valid_after`, `TENANCY_MODE=single|row` sem RLS no v1, `active_org_id` contexto (autoridade = membership Postgres), idempotência lógica.
 - Nomenclatura congelada: `CORE_MODULES` (nunca `PLATFORM_MODULES`), `OPTIONAL_MODULES` + `ENABLED_MODULES`.
 - Stack: FastAPI async + SQLAlchemy 2.0 + Pydantic v2 + Postgres + Redis + Alembic + Taskiq + Docker + `uv`.
 
@@ -17,9 +17,9 @@
 
 ## 3. Regra de ouro (bloqueio ativo)
 
-**Sem `backend/` sem OpenSpec change aprovada + ordem explícita do usuário.**
+**Sem `app/` sem OpenSpec change aprovada + ordem explícita do usuário.**
 
-- Proibido sem liberação: criar `backend/`, `app/`, `src/`, `pyproject.toml` de app, `Dockerfile`, `docker-compose.yml`, `.env`, migrations; rodar `uv sync`, `pip install`, `docker compose up`, `alembic`, `pytest` de app.
+- Proibido sem liberação: criar `app/`, `src/`, `pyproject.toml` de app, `Dockerfile`, `docker-compose.yml`, `.env`, migrations; rodar `uv sync`, `pip install`, `docker compose up`, `alembic`, `pytest` de app.
 - Permitido agora: `README.md`, `AGENTS.md`, `opencode.json`, `.opencode/agents/`, `docs/`, `openspec/`, `.github/`, `.gitignore`.
 - `references/` é imutável. Conflito com a v2 → registrar ADR, nunca reescrever a referência.
 - Dizer "clonar" ou "iniciar Fase N" exige confirmação de escopo + change correspondente.
@@ -57,7 +57,7 @@ fast-backend/
 └── .github/ (CI futuro)
 ```
 
-Futuro (não criar agora): `backend/src/{core,infrastructure,modules}/`, `backend/tests/{unit,integration,e2e,fixtures}/`, `backend/migrations/`, `backend/.env.example`.
+Futuro (não criar agora): `app/{core,infrastructure,modules}/`, `app/tests/{unit,integration,e2e,fixtures}/`, `app/migrations/` (pacote `app`, imports `from app.*` — ADR 0004) + `pyproject.toml`, `alembic.ini`, `.env.example` na raiz.
 
 ## 7. Referências
 
@@ -65,4 +65,4 @@ Futuro (não criar agora): `backend/src/{core,infrastructure,modules}/`, `backen
 - `docs/ROADMAP.md` — fases 0-8.
 - `docs/BOILERPLATE-ANALYSIS.md` — reusar vs descartar vs greenfield.
 - `docs/SKILLS-REGISTRY.md` — skills (nada instala sem registro).
-- `docs/adr/` — decisões (0001 auth, 0002 tenancy, 0003 tiers).
+- `docs/adr/` — decisões (0001 auth, 0002 tenancy, 0003 tiers, 0004 app-dir).

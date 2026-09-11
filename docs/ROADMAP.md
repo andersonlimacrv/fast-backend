@@ -1,17 +1,18 @@
 # ROADMAP — fast-backend (fonte da verdade, v3)
 
 > Alinhado à referência congelada `references/implementation_v2.md` + `docs/RULES.md` + `docs/adr/*`.
-> Nomenclatura congelada: `CORE_MODULES`. Estado: Fase 0. Sem `backend/` sem OpenSpec change aprovada.
+> Nomenclatura congelada: `CORE_MODULES`. Dir da aplicação: `app/` flat (ADR 0004). Estado: Fase 0. Sem `app/` sem OpenSpec change aprovada.
 
 ## Fase 0 — Baseline repo (ATUAL)
 
 - [x] `AGENTS.md` + `docs/RULES.md` + `docs/adr/0001-0003` + 6 agentes (incl. `security-auditor`) + `opencode.json` endurecido
 - [x] `docs/SKILLS-REGISTRY.md` (nada instalado sem registro + SHA)
 - [x] `references/implementation_v2.md` congelada (nunca editar)
-- [ ] `openspec init` + primeira change `auth-foundation` em `openspec/changes/`
-- [ ] Usuário aprova este ROADMAP v3
+- [x] `openspec init` (config + skills `opsx:*`)
+- [x] Change `auth-foundation` draftada em `openspec/changes/` (proposal+design+3 specs+tasks) — **aguardando sua aprovação**
+- [ ] Usuário aprova este ROADMAP v3 + a change `auth-foundation`
 
-Saída: repo planejado, nenhum `backend/`, `Dockerfile`, `.env`.
+Saída: repo planejado, nenhum `app/`, `Dockerfile`, `.env`.
 
 ## Fase 1 — Fundação de Auth
 
@@ -63,7 +64,7 @@ Pipeline `PR → ruff → mypy → unit → integration → security → build`;
 
 ```bash
 uv sync --all-packages --all-extras
-cd backend && uv run alembic upgrade head && uv run pytest -m "unit"
+uv run alembic upgrade head && uv run pytest -m "unit"
 uv run pytest -m "integration"
-bandit -r backend/src && pip-audit && gitleaks detect
+bandit -r app && pip-audit && gitleaks detect
 ```
