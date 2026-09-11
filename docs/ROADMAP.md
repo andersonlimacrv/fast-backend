@@ -1,11 +1,11 @@
 # ROADMAP — fast-backend (fonte da verdade, v3)
 
 > Alinhado à referência congelada `references/implementation_v2.md` + `docs/RULES.md` + `docs/adr/*`.
-> Nomenclatura congelada: `CORE_MODULES`. Dir da aplicação: `app/` flat (ADR 0004). Estado: Fase 0. Sem `app/` sem OpenSpec change aprovada.
+> Nomenclatura congelada: `CORE_MODULES`. Dir da aplicação: `app/` flat (ADR 0004). Estado: **v1.0.0 entregue** (tag `0.1.0`, 95 testes, 20 capabilities). Novas fases exigem nova change OpenSpec.
 
-## Fase 0 — Baseline repo (ATUAL)
+## Fase 0 — Baseline repo (concluída)
 
-- [x] `AGENTS.md` + `docs/RULES.md` + `docs/adr/0001-0003` + 6 agentes (incl. `security-auditor`) + `opencode.json` endurecido
+- [x] `AGENTS.md` + `docs/RULES.md` + `docs/adr/0001-0004` + 6 agentes (incl. `security-auditor`) + `opencode.json` endurecido
 - [x] `docs/SKILLS-REGISTRY.md` (nada instalado sem registro + SHA)
 - [x] `references/implementation_v2.md` congelada (nunca editar)
 - [x] `openspec init` (config + skills `opsx:*`)
@@ -19,7 +19,7 @@
 - [x] `billing-stripe` implementada, verificada e arquivada (`2026-09-11-billing-stripe`)
 - [x] `release-template` implementada, verificada e arquivada (`2026-09-11-release-template`)
 
-Saída: repo planejado, nenhum `app/`, `Dockerfile`, `.env`.
+Saída (atingida): repo planejado e implementado — `app/`, `Dockerfile`, composes, `.env.example`, 8 changes arquivadas.
 
 ## Fase 1 — Fundação de Auth ✅
 
@@ -61,17 +61,20 @@ Aceite: ação sensível auditável; restore em ambiente limpo reproduz o banco.
 
 `PaymentProvider` + `StripePaymentProvider`; webhook → idempotência (`provider_event_id` unique) → billing → entitlements. Core funciona com `billing_stripe` desligado.
 
-Aceite: webhook 3x → 1 efeito; desligar em `ENABLED_MODULES` não quebra core (CI com/sem).
+Aceite: webhook 3x → 1 efeito; core funciona com `BILLING_ENABLED=false` (flag, sem runtime de módulos plugáveis).
 
 ## Fase 8 — CI/CD + Template + Docs finais ✅
 
-Pipeline `PR → ruff → mypy → unit → integration → security → build`; prod `build:sha → push → deploy VPS → migrate (expand/contract) → healthcheck → traffic`; rollback p/ imagem anterior. Docs `architecture/development/deployment/modules/guides/adr`, README operacional, bootstrap de 2º projeto só pela doc.
+Pipeline `PR → ruff → mypy → unit → integration → security → build`; prod `build:sha → push → deploy VPS → migrate (expand/contract) → healthcheck → traffic`; rollback p/ imagem anterior. Docs finais: `README.md` operacional, `docs/DEPLOYMENT.md` (runbook), `CHANGELOG.md`, ADRs; bootstrap de 2º projeto via `scripts/new_project.py` (testado).
 
-## Comandos futuros (NÃO rodar na Fase 0)
+## Gates de verificação (comandos atuais)
 
 ```bash
-uv sync --all-packages --all-extras
+uv sync --extra dev
 uv run alembic upgrade head && uv run pytest -m "unit"
 uv run pytest -m "integration"
-bandit -r app && pip-audit && gitleaks detect
+FB_TEST_NETWORK=host uv run pytest   # onde bridge Docker é bloqueada
+uv run ruff check app scripts && uv run ruff format --check app scripts
+uv run mypy app scripts && uv run lint-imports
+uv run bandit -r app scripts -q -ll && uv run pip-audit && gitleaks detect --source . --no-git
 ```

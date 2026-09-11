@@ -7,22 +7,20 @@
 - Repo: `fast-backend` — Modular Monolith Async FastAPI SaaS Kernel (v2 congelada).
 - Referência congelada (somente leitura, **nunca editar**): `references/implementation_v2.md`.
 - Evidência upstream (somente leitura): `/home/anderson/dev/copy/benavlabs_FastAPI-boilerplate@0.19.0`, `/home/anderson/dev/copy/benavlabs_crudauth@0.6.0`.
-- Estado: Fase 0 — sem `app/`. Decisões congeladas: Auth própria (sem crudauth), Argon2id (pwdlib), JWT HS256 10-15min, refresh opaco Postgres com rotation+reuse+atomicidade, `tokens_valid_after`, `TENANCY_MODE=single|row` sem RLS no v1, `active_org_id` contexto (autoridade = membership Postgres), idempotência lógica.
-- Nomenclatura congelada: `CORE_MODULES` (nunca `PLATFORM_MODULES`), `OPTIONAL_MODULES` + `ENABLED_MODULES`.
+- Estado: **v1.0.0 entregue** (tag `0.1.0`) — `app/` implementado (Fases 1–8), 95 testes, 20 capabilities. Decisões congeladas: Auth própria (sem crudauth), Argon2id (pwdlib), JWT HS256 10-15min, refresh opaco Postgres com rotation+reuse+atomicidade, `tokens_valid_after`, `TENANCY_MODE=single|row` sem RLS no v1, `active_org_id` contexto (autoridade = membership Postgres), idempotência lógica.
+- Nomenclatura congelada: `CORE_MODULES` (nunca `PLATFORM_MODULES`); opcionais por flag (ex.: `BILLING_ENABLED`).
 - Stack: FastAPI async + SQLAlchemy 2.0 + Pydantic v2 + Postgres + Redis + Alembic + Taskiq + Docker + `uv`.
 
 ## 2. Hierarquia (topo vence)
 
 `AGENTS.md > docs/RULES.md > docs/ROADMAP.md > docs/adr/* > references/* > copy/*`
 
-## 3. Regra de ouro (bloqueio ativo)
+## 3. Regra de ouro (fluxo normal)
 
-**Sem `app/` sem OpenSpec change aprovada + ordem explícita do usuário.**
+**Nova fase/tarefa relevante exige OpenSpec change (`openspec/changes/<nome>/proposal.md|tasks.md|design.md`) + aprovação antes de implementar.**
 
-- Proibido sem liberação: criar `app/`, `src/`, `pyproject.toml` de app, `Dockerfile`, `docker-compose.yml`, `.env`, migrations; rodar `uv sync`, `pip install`, `docker compose up`, `alembic`, `pytest` de app.
-- Permitido agora: `README.md`, `AGENTS.md`, `opencode.json`, `.opencode/agents/`, `docs/`, `openspec/`, `.github/`, `.gitignore`.
-- `references/` é imutável. Conflito com a v2 → registrar ADR, nunca reescrever a referência.
-- Dizer "clonar" ou "iniciar Fase N" exige confirmação de escopo + change correspondente.
+- Nunca commitar segredos (`.env` é gitignored; só `.env.example`). `references/` é imutável: conflito com a v2 → registrar ADR, nunca reescrever a referência.
+- Mudanças estruturais (novo módulo, contrato, migração) exigem change correspondente.
 
 ## 4. Como trabalhar
 
@@ -36,8 +34,8 @@
 
 | Agente | Arquivo | Quando usar |
 |---|---|---|
-| `planner` | `planner.md` | Análise read-only. Padrão Fase 0-1. Lê v2 + `copy/` antes de opinar. |
-| `backend-implementer` | `backend-implementer.md` | Implementa pós-change. Conhece auth/tenancy/DAG. **Bloqueado sem change.** |
+| `planner` | `planner.md` | Análise read-only. Lê v2 + `copy/` antes de opinar. |
+| `backend-implementer` | `backend-implementer.md` | Implementa pós-change. Conhece auth/tenancy/DAG. **Exige change aprovada.** |
 | `code-reviewer` | `code-reviewer.md` | 3 eixos: Standards + Spec + Security. Read-only. |
 | `security-auditor` | `security-auditor.md` | Auditoria SAST + auth/tenancy. Read-only. **Novo.** |
 | `tester` | `tester.md` | TDD; exige Postgres real p/ auth/tenancy; mock não prova isolamento. |
@@ -59,7 +57,7 @@ fast-backend/
 └── .github/ (ci, deploy, rollback)
 ```
 
-Futuro (não criar agora): `app/{core,infrastructure,modules}/`, `app/tests/{unit,integration,e2e,fixtures}/`, `app/migrations/` (pacote `app`, imports `from app.*` — ADR 0004) + `pyproject.toml`, `alembic.ini`, `.env.example` na raiz.
+Mapa atual (v1.0.0): `app/{core,infrastructure,modules}/`, `app/tests/{unit,integration,e2e,fixtures}/`, `app/migrations/` (pacote `app`, imports `from app.*` — ADR 0004) + `pyproject.toml`, `alembic.ini`, `.env.example` na raiz.
 
 ## 7. Referências
 

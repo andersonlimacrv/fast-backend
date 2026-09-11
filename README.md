@@ -2,6 +2,8 @@
 
 Modular Monolith Async FastAPI SaaS Kernel — auth própria (JWT + refresh opaco), tenancy row-level, RBAC + entitlements, email/storage/jobs, auditoria, backup e billing Stripe opcional.
 
+> **Status: v1.0.0 entregue** (tag `0.1.0`) — Fases 0–8 concluídas, 95 testes verdes, 20 capabilities em `openspec/specs/`.
+
 ## Começando
 
 ```bash
@@ -29,7 +31,7 @@ FB_TEST_NETWORK=host uv run pytest            # alternativa onde bridge Docker �
 uv run ruff check app scripts && uv run ruff format --check app scripts
 uv run mypy app scripts
 uv run lint-imports                            # DAG de módulos
-uv run bandit -r app -q && uv run pip-audit && gitleaks detect --source . --no-git
+uv run bandit -r app scripts -q -ll && uv run pip-audit && gitleaks detect --source . --no-git
 ```
 
 ## Build / deploy
@@ -59,13 +61,13 @@ python scripts/new_project.py --name my-saas --dest /path/to/my-saas
 ```text
 app/                  # pacote (imports from app.*)
 ├── core/             # errors, settings, security port, contracts/
-├── infrastructure/   # auth, db, cache?, email, storage, jobs, observability, payments, security
+├── infrastructure/   # auth, db, email, storage, jobs, observability, payments, security
 ├── modules/          # identity, organization, tenancy, entitlements, projects, audit, billing_stripe
 ├── interfaces/       # errors, health (/healthz, /readyz)
 ├── migrations/       # Alembic 0001–0005
 └── tests/            # unit, integration, e2e, fixtures
 scripts/              # backup.py, deploy.py, new_project.py
-openspec/             # specs (18 capabilities) + changes arquivadas
+openspec/             # specs (20 capabilities) + changes arquivadas
 docs/                 # RULES, ROADMAP, ADRs, DEPLOYMENT, SKILLS-REGISTRY
 ```
 

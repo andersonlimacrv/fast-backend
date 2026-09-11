@@ -13,9 +13,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --extra dev --frozen
-      - run: uv run ruff check app
-      - run: uv run ruff format --check app
-      - run: uv run mypy app
+      - run: uv run ruff check app scripts
+      - run: uv run ruff format --check app scripts
+      - run: uv run mypy app scripts
       - run: uv run lint-imports
 
   unit:
@@ -40,6 +40,6 @@ jobs:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --extra dev --frozen
-      - run: uv run bandit -r app -q
+      - run: uv run bandit -r app scripts -q -ll
       - run: uv run pip-audit
       - uses: gitleaks/gitleaks-action@v2

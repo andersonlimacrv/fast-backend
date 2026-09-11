@@ -10,6 +10,8 @@ on:
 
 jobs:
   rollback:
+    # No VPS configured yet → skip gracefully. Set VPS_HOST/USER/SSH_KEY secrets to enable.
+    if: ${{ secrets.VPS_HOST != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

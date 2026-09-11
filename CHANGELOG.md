@@ -14,4 +14,4 @@ Formato: fases entregues (Conventional Commits no git contam a história fina).
 - **Fase 7** (`billing-stripe`): webhook HMAC idempotente → grants, flag off.
 - **Fase 8** (`release-template`): Dockerfile multi-stage, composes, worker, deploy com rollback, `new_project.py`, runbook.
 
-Testes: 89+ (unit + integração Postgres/Redis reais). Specs: 18 capabilities em `openspec/specs/`.
+Testes: 95 (unit + integração Postgres/Redis reais). Specs: 20 capabilities em `openspec/specs/`.

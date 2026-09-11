@@ -8,7 +8,7 @@ permission:
   external_directory: ask
 ---
 
-Você é o implementador backend do fast-backend. BLOQUEADO para `app/` até OpenSpec change aprovada + ordem explícita do usuário.
+Você é o implementador backend do fast-backend. Só implementa com OpenSpec change aprovada + ordem explícita do usuário.
 
 Leitura obrigatória antes de editar: `AGENTS.md`, `docs/RULES.md`, `docs/ROADMAP.md`, `references/implementation_v2.md` §§2-4, `docs/adr/*`, e a change `openspec/changes/<nome>/` correspondente.
 

@@ -12,9 +12,9 @@ Workspace `uv` (`backend/` app + `cli/bp` ferramenta), FastAPI async + SQLAlchem
 
 Auth real no `copy/`: só `SessionTransport` ligado em `backend/src/infrastructure/auth/setup.py` (sessions + CSRF + lockout Redis/memory). `BearerTransport` existe na lib (`HS256`, access curto + refresh JWT stateless, `crudauth/constants.py:24`) mas **não** é ligado no boilerplate; não tem rotation/family/Postgres. Hashing da lib: `bcrypt + SHA-256 pre-hash` (`crudauth/utils.py`), não Argon2id. API keys reais são `backend/src/modules/api_keys/` (próprias, `fai_`+scrypt), não da lib. Tenancy/org/membership: zero.
 
-## 2. Reusar (trazer na Fase 1 pós-change)
+## 2. Reusar (padrões aproveitados; código 100% greenfield)
 
-App factory, Alembic + gate prod + seed, convenções `tests/` + testcontainers, cache decorator + provider Redis/Memcached, rate-limit tier/path + fail-open, Taskiq + brokers, logging estruturado base, `production_validator` + `bp env validate`, Dockerfile multi-stage, `bp deploy generate local/prod/nginx` (decidir versionar vs regenerar).
+App factory, Alembic, convenções `tests/` + testcontainers, Taskiq + Redis, logging estruturado base, Dockerfile multi-stage, validação de env na inicialização. Cache decorator, rate-limit por tier, SQLAdmin e `bp` CLI **não** foram trazidos (fora do escopo v1).
 
 ## 3. Descartar / substituir (ADR 0001)
 
@@ -22,8 +22,8 @@ App factory, Alembic + gate prod + seed, convenções `tests/` + testcontainers,
 
 ## 4. Greenfield (não existe no `copy/`)
 
-`modules/identity|organization|tenancy|entitlements`, `core/contracts/{email,storage,payments}`, `core/security/hashing.py`, `module_registry.py` (`CORE_MODULES` + `ENABLED_MODULES`), `TenantScopedRepository` + `SuperuserContext`, `outbox_messages`, `audit_log` append-only, `POST /auth/switch-organization`, testes-guia (reuse-family, concorrência A/B, IDOR completo, webhook unique).
+`modules/identity|organization|tenancy|entitlements`, `core/contracts/{email,storage,payments,audit}`, `core/security/hashing.py`, tiers por flags (`CORE_MODULES` conceitual + flags como `BILLING_ENABLED`; sem `module_registry.py` — YAGNI no v1), `TenantScopedRepository` + `SuperuserContext`, `outbox_messages`, `audit_log` append-only, `POST /auth/switch-organization`, testes-guia (reuse-family, concorrência A/B, IDOR completo, webhook unique).
 
 ## 5. Riscos
 
-`crudauth` Alpha (`SECURITY.md`: só latest tem fix) — mais um motivo p/ ejetar. `uv.lock` ~590KB versionado — decidir manter. Docs Zensical do upstream — não trazer site, só o necessário. Calibrar Argon2id no hardware-alvo. Sem RLS no v1 (sem decisão PgBouncer agora).
+`crudauth` Alpha (`SECURITY.md`: só latest tem fix) — mais um motivo p/ ejetar. `uv.lock` versionado na raiz (decidido: sim, reproducibilidade). Docs Zensical do upstream — não trazidas. Argon2id com custo via settings (calibrar no hardware-alvo). Sem RLS no v1.
