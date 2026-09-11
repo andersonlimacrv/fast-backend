@@ -2,6 +2,9 @@
 
 Formato: fases entregues (Conventional Commits no git contam a história fina).
 
+> Convenção de versão: tags e seções usam prefixo `v` a partir daqui (`v1.1.0`, …).
+> A seção `0.1.0` abaixo é histórica (tag `0.1.0` sem prefixo) e permanece como está.
+
 ## 0.1.0 — 2026-09-11 — Kernel SaaS completo (Fases 0–8)
 
 - **Fase 0**: repo, 6 agentes, OpenSpec, ADRs 0001–0004, registry de skills.
@@ -14,4 +17,4 @@ Formato: fases entregues (Conventional Commits no git contam a história fina).
 - **Fase 7** (`billing-stripe`): webhook HMAC idempotente → grants, flag off.
 - **Fase 8** (`release-template`): Dockerfile multi-stage, composes, worker, deploy com rollback, `new_project.py`, runbook.
 
-Testes: 95 (unit + integração Postgres/Redis reais). Specs: 20 capabilities em `openspec/specs/`.
+Testes: 98 (unit + integração Postgres/Redis reais). Specs: 20 capabilities em `openspec/specs/`.

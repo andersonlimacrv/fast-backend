@@ -69,7 +69,7 @@ Módulo nunca depende direto de: Stripe, Redis, SMTP, S3, `FastAPI.Request`, inf
 - `app/tests/{unit,integration,e2e,fixtures}` + `conftest.py`; markers `unit,integration,e2e,slow,security`.
 - Testcontainers Postgres+Redis sempre que o comportamento depender deles (`FB_TEST_NETWORK=host` onde bridge é bloqueada).
 - Cobertura ≥80%, com rigor total em auth, tenancy, RBAC, billing, webhooks, idempotency, security.
-- Suite v1.0.0: 95 testes (unit sem serviços + integração com Postgres/Redis reais).
+- Suite v1.0.0: 98 testes (unit sem serviços + integração com Postgres/Redis reais).
 - Mock de repository **não prova** isolamento de tenant.
 
 ## 6. Segurança

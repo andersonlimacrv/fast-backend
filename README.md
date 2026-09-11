@@ -1,8 +1,26 @@
 # fast-backend
 
+[![CI](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/andersonlimacrv/fast-backend)](https://github.com/andersonlimacrv/fast-backend/releases)
+[![Python](https://img.shields.io/badge/python-%3E%3D3.11-blue)](pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)](app/tests)
+
 Modular Monolith Async FastAPI SaaS Kernel — auth própria (JWT + refresh opaco), tenancy row-level, RBAC + entitlements, email/storage/jobs, auditoria, backup e billing Stripe opcional.
 
-> **Status: v1.0.0 entregue** (tag `0.1.0`) — Fases 0–8 concluídas, 95 testes verdes, 20 capabilities em `openspec/specs/`.
+> **Status: v1.0.0 entregue** (tag `0.1.0`) — Fases 0–8 concluídas, 98 testes verdes, 20 capabilities em `openspec/specs/`.
+
+## Índice
+
+- [Começando](#começando)
+- [Testar / verificar](#testar--verificar)
+- [Build / deploy](#build--deploy)
+- [Backup](#backup)
+- [Novo projeto a partir daqui](#novo-projeto-a-partir-daqui)
+- [Estrutura](#estrutura)
+- [Arquitetura e escala](#arquitetura-e-escala)
+- [Contribuindo](#contribuindo)
+- [Licença](#licença)
 
 ## Começando
 
@@ -66,12 +84,21 @@ app/                  # pacote (imports from app.*)
 ├── interfaces/       # errors, health (/healthz, /readyz)
 ├── migrations/       # Alembic 0001–0005
 └── tests/            # unit, integration, e2e, fixtures
-scripts/              # backup.py, deploy.py, new_project.py
+scripts/              # backup.py, deploy.py, new_project.py, release_notes.py
 openspec/             # specs (20 capabilities) + changes arquivadas
-docs/                 # RULES, ROADMAP, ADRs, DEPLOYMENT, SKILLS-REGISTRY
+docs/                 # RULES, ROADMAP, ARCHITECTURE, SCALING, DEPLOYMENT, guides/, ADRs
 ```
 
-Regras: `AGENTS.md` (leia antes de codar) → `docs/RULES.md` → `docs/ROADMAP.md` → `docs/adr/*` → `references/*` (congelada). Sem `backend/` — o diretório da aplicação é `app/`.
+## Arquitetura e escala
+
+- `docs/ARCHITECTURE.md` — mapa de módulos, DAG, fluxos, índice de ADRs.
+- `docs/SCALING.md` — knobs reais, ordem vertical-first, gatilhos futuros.
+- `docs/guides/add-module.md` — criar um módulo em 5 passos.
+- Regras: `AGENTS.md` (leia antes de codar) → `docs/RULES.md` → `docs/ROADMAP.md` → `docs/adr/*` → `references/*` (congelada). Sem `backend/` — o diretório da aplicação é `app/`.
+
+## Contribuindo
+
+Ver [`CONTRIBUTING.md`](CONTRIBUTING.md). Resumo: OpenSpec change antes de código relevante, Conventional Commits, gates verdes, sem segredos. Vulnerabilidades: [`SECURITY.md`](SECURITY.md) (não abra issue pública).
 
 ## Licença
 

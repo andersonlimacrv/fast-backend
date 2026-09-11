@@ -18,6 +18,7 @@
 - [x] `audit-observability-backup` implementada, verificada e arquivada (`2026-09-11-audit-observability-backup`)
 - [x] `billing-stripe` implementada, verificada e arquivada (`2026-09-11-billing-stripe`)
 - [x] `release-template` implementada, verificada e arquivada (`2026-09-11-release-template`)
+- [x] `oss-professional` implementada, verificada e arquivada (`2026-09-11-oss-professional`)
 
 Saída (atingida): repo planejado e implementado — `app/`, `Dockerfile`, composes, `.env.example`, 8 changes arquivadas.
 

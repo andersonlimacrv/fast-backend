@@ -1,0 +1,24 @@
+# Release: tag v*.*.* → GitHub Release with CHANGELOG notes. No release bots.
+name: release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev --frozen
+      - name: Extract notes (fails without CHANGELOG section)
+        run: uv run python scripts/release_notes.py --version "${{ github.ref_name }}" > /tmp/notes.md
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release create "${{ github.ref_name }}" --title "${{ github.ref_name }}" --notes-file /tmp/notes.md
