@@ -3,6 +3,7 @@
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy import select
 
+from app.core.contracts.audit import audit_request
 from app.core.errors import OrganizationAccessDeniedError
 from app.infrastructure.auth.jwt import mint_access_token
 from app.modules.identity.public import Principal, current_principal
@@ -33,6 +34,7 @@ async def create_organization(
     me: Principal = Depends(current_principal),
 ) -> OrganizationRead:
     org = await _service(request).create_organization(owner_user_id=me.user_id, name=payload.name)
+    await audit_request(request, action="org.create", actor_user_id=me.user_id, tenant_id=org.id, resource_type="organization")
     return OrganizationRead.model_validate(org)
 
 
@@ -70,6 +72,15 @@ async def add_member(
     membership = await _service(request).add_member(
         actor_user_id=me.user_id, org_id=org_id, user_id=payload.user_id, role=payload.role
     )
+    await audit_request(
+        request,
+        action="org.member_add",
+        actor_user_id=me.user_id,
+        tenant_id=org_id,
+        resource_type="membership",
+        resource_id=payload.user_id,
+        metadata={"role": payload.role},
+    )
     return MembershipRead.model_validate(membership)
 
 
@@ -84,6 +95,15 @@ async def change_member_role(
     membership = await _service(request).change_role(
         actor_user_id=me.user_id, org_id=org_id, user_id=user_id, role=payload.role
     )
+    await audit_request(
+        request,
+        action="org.member_role_change",
+        actor_user_id=me.user_id,
+        tenant_id=org_id,
+        resource_type="membership",
+        resource_id=user_id,
+        metadata={"role": payload.role},
+    )
     return MembershipRead.model_validate(membership)
 
 
@@ -95,6 +115,14 @@ async def remove_member(
     me: Principal = Depends(current_principal),
 ) -> None:
     await _service(request).remove_member(actor_user_id=me.user_id, org_id=org_id, user_id=user_id)
+    await audit_request(
+        request,
+        action="org.member_remove",
+        actor_user_id=me.user_id,
+        tenant_id=org_id,
+        resource_type="membership",
+        resource_id=user_id,
+    )
 
 
 @auth_router.post("/switch-organization", response_model=SwitchTokenPair)

@@ -2,8 +2,10 @@
 
 from fastapi import APIRouter, Depends, Request
 
+from app.core.contracts.audit import audit_request
 from app.modules.entitlements.dependencies import _scoped_admin
 from app.modules.entitlements.schemas import GrantRead, GrantUpsert
+from app.modules.identity.public import Principal, current_principal
 from app.modules.tenancy.public import TenantContext
 
 router = APIRouter(prefix="/organizations/{org_id}/grants", tags=["entitlements"])
@@ -24,8 +26,17 @@ async def upsert_grant(
     org_id: str,
     payload: GrantUpsert,
     request: Request,
+    me: Principal = Depends(current_principal),
     _tenant: TenantContext = Depends(_scoped_admin),
 ) -> GrantRead:
     service = request.app.state.entitlement_service
     grant = await service.upsert(org_id=org_id, key=payload.key, limit=payload.limit, enabled=payload.enabled)
+    await audit_request(
+        request,
+        action="billing.grant_upsert",
+        actor_user_id=me.user_id,
+        tenant_id=org_id,
+        resource_type="grant",
+        resource_id=payload.key,
+    )
     return GrantRead.model_validate(grant)

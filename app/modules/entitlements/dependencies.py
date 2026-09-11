@@ -2,17 +2,9 @@
 
 from fastapi import Depends, Request
 
-from app.core.errors import OrganizationAccessDeniedError
-from app.modules.tenancy.public import TenantContext, current_tenant, require_role
+from app.modules.tenancy.public import TenantContext, current_tenant, require_org_admin
 
-_ADMIN = require_role("admin")
-
-
-async def _scoped_admin(org_id: str, request: Request, tenant: TenantContext = Depends(_ADMIN)) -> TenantContext:
-    """Admin of the tenant AND path org must equal the tenant (no cross-org management)."""
-    if tenant.tenant_id != org_id:
-        raise OrganizationAccessDeniedError("access denied")
-    return tenant
+_scoped_admin = require_org_admin()
 
 
 async def require_entitlement(key: str, *, usage: int = 0):

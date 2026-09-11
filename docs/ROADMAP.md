@@ -15,6 +15,7 @@
 - [x] `identity-organization-tenancy` implementada, verificada e arquivada (`2026-09-11-identity-organization-tenancy`)
 - [x] `rbac-entitlements` implementada, verificada e arquivada (`2026-09-11-rbac-entitlements`)
 - [x] `email-storage-jobs` implementada, verificada e arquivada (`2026-09-11-email-storage-jobs`)
+- [x] `audit-observability-backup` implementada, verificada e arquivada (`2026-09-11-audit-observability-backup`)
 
 Saída: repo planejado, nenhum `app/`, `Dockerfile`, `.env`.
 
@@ -48,7 +49,7 @@ Aceite: sem membership → 403; sem entitlement → 403 mesmo sem Stripe.
 
 Aceite: mesma `idempotency_key` não agenda 2x; upload local sem MinIO; retry controlado.
 
-## Fase 6 — Auditoria + Observabilidade avançada + Backup
+## Fase 6 — Auditoria + Observabilidade avançada + Backup ✅
 
 `audit_log{tenant_id,actor_user_id,action,resource_type,resource_id,metadata,ip,user_agent}` append-only (login, logout global, senha, membership/role, billing, entitlement, admin). Logs estruturados + `request_id` + erro centralizado; métricas/tracing proporcionais. Backup `dump→compress→encrypt→off-site` + restore drill.
 

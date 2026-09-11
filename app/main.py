@@ -14,11 +14,15 @@ from app.infrastructure.auth.throttling import LoginThrottler
 from app.infrastructure.db.session import create_session_factory
 from app.infrastructure.email.sender import LogEmailSender, SmtpEmailSender
 from app.infrastructure.jobs.outbox import OutboxService
+from app.infrastructure.observability.logging import setup_logging
+from app.infrastructure.observability.request_id import request_id_middleware
 from app.infrastructure.security.headers import security_headers_middleware
 from app.infrastructure.storage.local import LocalFilesystemStorage
 from app.infrastructure.storage.s3 import S3CompatibleStorage
 from app.interfaces.errors import install_error_handlers
 from app.interfaces.health import router as health_router
+from app.modules.audit.router import router as audit_router
+from app.modules.audit.service import AuditService
 from app.modules.entitlements.router import router as entitlements_router
 from app.modules.entitlements.service import EntitlementService
 from app.modules.identity.router import router as identity_router
@@ -38,6 +42,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
+    setup_logging()
     settings = settings or Settings()
     session_factory = create_session_factory(settings)
     hasher = PwdlibHasher(settings)
@@ -67,8 +72,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.email_sender = SmtpEmailSender(settings) if settings.email_backend == "smtp" else LogEmailSender()
     app.state.storage = S3CompatibleStorage(settings) if settings.storage_backend == "s3" else LocalFilesystemStorage(settings)
     app.state.outbox = OutboxService(settings=settings, session_factory=session_factory)
+    app.state.audit_service = AuditService(session_factory=session_factory)
     install_error_handlers(app)
-    # Added in reverse execution order: TrustedHost runs first (outermost).
+    # Added in reverse execution order: request-id runs first (outermost).
     app.middleware("http")(security_headers_middleware)
     app.add_middleware(
         CORSMiddleware,
@@ -78,11 +84,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
     )
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
+    app.middleware("http")(request_id_middleware)
     app.include_router(health_router)
     app.include_router(identity_router)
     app.include_router(organization_router)
     app.include_router(org_auth_router)
     app.include_router(entitlements_router)
+    app.include_router(audit_router)
     app.include_router(projects_router)
 
     return app

@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, Request
 
+from app.core.contracts.audit import audit_request
 from app.modules.identity.dependencies import Principal, current_principal
 from app.modules.identity.schemas import (
     ChangePasswordRequest,
@@ -41,6 +42,7 @@ async def login(payload: LoginRequest, request: Request) -> TokenPair:
         ip=_client_ip(request),
         user_agent=request.headers.get("user-agent"),
     )
+    await audit_request(request, action="auth.login", actor_user_id=result.user.id, resource_type="user")
     return TokenPair(access_token=result.access_token, refresh_token=result.refresh_token)
 
 
@@ -62,6 +64,7 @@ async def logout(payload: LogoutRequest, request: Request) -> None:
 @router.post("/logout-everywhere", status_code=204)
 async def logout_everywhere(request: Request, me: Principal = Depends(current_principal)) -> None:
     await _service(request).logout_everywhere(user_id=me.user_id)
+    await audit_request(request, action="auth.logout_global", actor_user_id=me.user_id, resource_type="user")
 
 
 @router.post("/change-password", status_code=204)
@@ -73,6 +76,7 @@ async def change_password(
     await _service(request).change_password(
         user_id=me.user_id, current_password=payload.current_password, new_password=payload.new_password
     )
+    await audit_request(request, action="auth.password_change", actor_user_id=me.user_id, resource_type="user")
 
 
 @router.get("/me", response_model=UserRead)

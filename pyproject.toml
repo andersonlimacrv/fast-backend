@@ -78,6 +78,8 @@ known-first-party = ["app"]
 "app/modules/tenancy/public.py" = ["B008"]
 "app/modules/entitlements/dependencies.py" = ["B008"]
 "app/modules/entitlements/router.py" = ["B008"]
+"app/modules/audit/router.py" = ["B008"]
+"scripts/backup.py" = ["S603"]
 "app/tests/**/*.py" = ["S105", "S106", "S107", "S603", "S607"]
 
 [tool.importlinter]
