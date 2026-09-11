@@ -1,29 +1,31 @@
 # SCALING — fast-backend
 
-> Knobs com defaults literais de `app/core/settings.py`. Ordem: esgotar o vertical antes de distribuir.
+> 🇬🇧 English | [Português (BR)](SCALING.pt-BR.md)
+>
+> Knobs with literal defaults from `app/core/settings.py`. Order: exhaust vertical before distributing.
 
-## 1. Vertical primeiro (single-host)
+## 1. Vertical first (single-host)
 
-| Knob | Default | Quando mexer |
+| Knob | Default | When to touch |
 |---|---|---|
-| `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` | 5 / 10 (+`pool_pre_ping`) | pool esgotado sob carga (logs `QueuePool exaustion`) |
-| Taskiq `--workers` (compose) | 2 | fila do outbox cresce (`pending` parado) |
-| `ACCESS_TOKEN_TTL_MINUTES` | 15 | alta frequência de refresh onerando o banco |
-| `LOGIN_MAX_ATTEMPTS` / `LOGIN_WINDOW_SECONDS` | 10 / 60 | brute force ou UX de login |
-| `STORAGE_MAX_BYTES` | 10 MiB | uploads maiores |
-| `OUTBOX_MAX_ATTEMPTS` | 5 | tarefas lentas marcadas `dead` cedo demais |
-| Uvicorn `--workers` (prod) | 1 (default; subir no compose se CPU-bound antes do banco) | CPU-bound antes do banco |
+| `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` | 5 / 10 (+`pool_pre_ping`) | pool exhaustion under load |
+| Taskiq `--workers` (compose) | 2 | outbox queue grows (`pending` stalls) |
+| `ACCESS_TOKEN_TTL_MINUTES` | 15 | high refresh frequency burdens the DB |
+| `LOGIN_MAX_ATTEMPTS` / `LOGIN_WINDOW_SECONDS` | 10 / 60 | brute force or login UX |
+| `STORAGE_MAX_BYTES` | 10 MiB | larger uploads |
+| `OUTBOX_MAX_ATTEMPTS` | 5 | slow tasks marked `dead` too early |
+| Uvicorn `--workers` (prod) | 1 (default; raise in compose if CPU-bound before the DB) | |
 
-## 2. Depois do vertical
+## 2. After vertical
 
-1. **Réplicas de leitura Postgres** — só com invariantes claros (leitura eventual ok p/ listagens; escrita sempre no primário). Exige separar session factory (fora do v1).
-2. **PgBouncer** — antes de RLS (`SET LOCAL` exige session pooling) ou com centenas de conexões.
-3. **Cache** — não existe no v1 de propósito; introduzir por endpoint quente com invalidação explícita (nunca cache global).
-4. **Split de módulos** — só quando um módulo tiver ciclo de deploy/equipe próprio; até lá, o monólito modular com DAG vence (ver ADR 0003).
+1. **Postgres read replicas** — only with clear invariants (eventual reads ok for listings; writes always on primary). Requires splitting the session factory (out of v1).
+2. **PgBouncer** — before RLS (`SET LOCAL` needs session pooling) or with hundreds of connections.
+3. **Cache** — absent from v1 on purpose; introduce per hot endpoint with explicit invalidation (never global cache).
+4. **Module split** — only when a module earns its own deploy cycle/team; until then the modular monolith with DAG wins (see ADR 0003).
 
-## 3. Gatilhos futuros (não fazer agora)
+## 3. Future triggers (not now)
 
-- RLS: cliente exigir isolamento além de `WHERE tenant_id`.
-- OTel/Prometheus: operação exigir SLOs (hoje: logs + `/healthz` + `/readyz`).
-- Fila além do Taskiq/Redis: volume que justifique outro broker.
-- Sharding/multi-region: bem depois de réplicas de leitura.
+- RLS: a client demands isolation beyond `WHERE tenant_id`.
+- OTel/Prometheus: operations demand SLOs (today: logs + `/healthz` + `/readyz`).
+- Queue beyond Taskiq/Redis: volume justifying another broker.
+- Sharding/multi-region: well after read replicas.

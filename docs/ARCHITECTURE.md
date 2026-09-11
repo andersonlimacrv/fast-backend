@@ -1,44 +1,46 @@
 # ARCHITECTURE — fast-backend
 
-> Derivado do código (não inventado): confira contra `uv run lint-imports` e a árvore `app/`.
+> 🇬🇧 English | [Português (BR)](ARCHITECTURE.pt-BR.md)
+>
+> Derived from the code (not invented): verify against `uv run lint-imports` and the `app/` tree.
 
-## Mapa de módulos
+## Module map
 
 ```text
-interfaces  (FastAPI: errors, health)        ← composição HTTP, traduz erros→status
+interfaces  (FastAPI: errors, health)        ← HTTP composition, maps errors→status
     ↓
-modules     (domínio por slice vertical)
+modules     (domain, vertical slices)
 ├── identity        User/Credential, AuthenticationService, CurrentPrincipal
-├── organization    Organization/Membership, roles owner|admin|member
+├── organization    Organization/Membership, owner|admin|member roles
 ├── tenancy         CurrentTenant, TenantScopedRepository, SuperuserContext, require_role
-├── entitlements    grants + require_entitlement (core leve, sem billing)
-├── projects        recurso tenant-scoped de exemplo (vitrine do padrão)
-├── audit           trilha append-only (folha)
-└── billing_stripe  webhook → grants (folha, flag BILLING_ENABLED)
+├── entitlements    grants + require_entitlement (light core, no billing)
+├── projects        example tenant-scoped resource (pattern showcase)
+├── audit           append-only trail (leaf)
+└── billing_stripe  webhook → grants (leaf, BILLING_ENABLED flag)
     ↓
-core        (contratos e primitivas: errors, settings, security port, contracts/)
+core        (contracts and primitives: errors, settings, security port, contracts/)
     ↓
 infrastructure (adapters: auth, db, email, storage, jobs, observability, payments, security)
 ```
 
-## DAG (12 contratos `import-linter`, todos KEPT)
+## DAG (12 `import-linter` contracts, all KEPT)
 
-`identity → organization → tenancy → entitlements`; folhas (`projects`, `audit`, `billing_stripe`) consomem core sem retorno. Regra: nunca importar internals (`models|repository|service|dependencies|router|schemas`) de outro módulo — só `modules/<nome>/public.py`, `core/contracts/` ou eventos Taskiq. Raiz `app/main.py` (composition root) é isenta e monta tudo.
+`identity → organization → tenancy → entitlements`; leaves (`projects`, `audit`, `billing_stripe`) consume core with no return. Rule: never import another module's internals (`models|repository|service|dependencies|router|schemas`) — only `modules/<name>/public.py`, `core/contracts/`, or Taskiq events. Root `app/main.py` (composition root) is exempt and wires everything.
 
-## Fluxo de um request autenticado
+## Authenticated request flow
 
 ```text
-Bearer JWT → CurrentPrincipal (signature, iss/aud/exp/type, tokens_valid_after, ativo?)
-  → CurrentTenant (active_org_id × membership Postgres)
-  → require_role / require_entitlement (se a rota exigir)
-  → service (domínio, nunca HTTPException) → interfaces traduz erro→status
+Bearer JWT → CurrentPrincipal (signature, iss/aud/exp/type, tokens_valid_after, active?)
+  → CurrentTenant (active_org_id × Postgres membership)
+  → require_role / require_entitlement (if the route demands)
+  → service (domain, never HTTPException) → interfaces translate error→status
 ```
 
-Refresh: `SELECT FOR UPDATE` → marca `used_at` → emite sucessor → `replaced_by`; reuse revoga a family inteira (commit antes do raise). Webhook Stripe: HMAC → outbox `stripe:{id}` → aplica → complete.
+Refresh: `SELECT FOR UPDATE` → mark `used_at` → mint successor → `replaced_by`; reuse revokes the whole family (commit before raise). Stripe webhook: HMAC → outbox `stripe:{id}` → apply → complete.
 
-## Índice de decisões (ADRs)
+## Decision index (ADRs)
 
-- `0001-remove-crudauth` — auth própria (Argon2id, JWT+refresh opaco).
-- `0002-tenancy-model` — `single|row`, sem RLS no v1.
-- `0003-module-tiers` — `CORE_MODULES` + folhas opcionais.
-- `0004-app-dir` — pacote flat `app/`, imports `from app.*`.
+- `0001-remove-crudauth` — own auth (Argon2id, JWT + opaque refresh).
+- `0002-tenancy-model` — `single|row`, no RLS in v1.
+- `0003-module-tiers` — `CORE_MODULES` + optional leaves.
+- `0004-app-dir` — flat `app/` package, imports `from app.*`.

@@ -24,7 +24,7 @@
 
 ## 4. Como trabalhar
 
-1. **Idioma:** PT-BR; código e identificadores em inglês.
+1. **Idioma:** respostas em PT-BR; código e identificadores em inglês. Docs voltadas ao usuário em inglês + variante `.pt-BR.md`; docs internas/processo (AGENTS, RULES, ROADMAP, ADRs, openspec) em PT-BR.
 2. **Plano antes de código + spec antes de plano:** `planner` escreve `openspec/changes/<nome>/proposal.md|tasks.md`, só então `backend-implementer` executa.
 3. **Evidência:** ler locais antes de afirmar; citar `path:linha`; upstream só via `copy/`.
 4. **Verificação:** `git status --short` após cada mudança. Sem commit sem pedido. Conventional Commits. Sem segredos.

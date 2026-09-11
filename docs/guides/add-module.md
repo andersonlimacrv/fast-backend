@@ -1,11 +1,13 @@
-# Como adicionar um módulo (5 passos)
+# How to add a module (5 steps)
 
-> Espelhado em `projects/` (vitrine) e cobrado por `lint-imports`. Para a teoria, ver `docs/ARCHITECTURE.md` e ADR 0003.
+> 🇬🇧 English | [Português (BR)](add-module.pt-BR.md)
+>
+> Mirrored on `projects/` (showcase) and enforced by `lint-imports`. For theory, see `docs/ARCHITECTURE.md` and ADR 0003.
 
-1. **Criar `app/modules/<nome>/`** com `models.py`, `schemas.py`, `service.py` (sem `HTTPException`), `router.py`, `dependencies.py` (se precisar), `public.py` (só o que outros módulos podem importar) e `tests/`.
-2. **Depender só do permitido**: `modules/*/public.py`, `core/contracts/`, eventos Taskiq. Registrar o contrato `<nome>-internals-private` em `pyproject.toml` e listar o módulo nas sources dos demais.
-3. **Criar a migration** (`alembic revision --autogenerate -m "<nome>"`, revisar o SQL) + registrar modelos em `migrations/env.py`.
-4. **Montar em `app/main.py`** (services no `app.state`, `include_router`) + `.env.example` se houver knob novo.
-5. **Testes**: unit do service + integração com Postgres real (nunca mock p/ isolamento) + provar o gate (`lint-imports` verde).
+1. **Create `app/modules/<name>/`** with `models.py`, `schemas.py`, `service.py` (no `HTTPException`), `router.py`, `dependencies.py` (if needed), `public.py` (only what other modules may import), and `tests/`.
+2. **Depend only on what's allowed**: `modules/*/public.py`, `core/contracts/`, Taskiq events. Register the `<mod>-internals-private` contract in `pyproject.toml` and list the module in the others' sources.
+3. **Create the migration** (`alembic revision --autogenerate -m "<name>"`, review the SQL) + register models in `migrations/env.py`.
+4. **Wire in `app/main.py`** (services on `app.state`, `include_router`) + `.env.example` for any new knob.
+5. **Tests**: service unit + integration with real Postgres (never mocks for isolation) + prove the gate (`lint-imports` green).
 
-Remover é o inverso: desmontar, remover env/adapters/migration/testes/docs — sem deixar dependência oculta (o gate acusa).
+Removal is the inverse: unwire, remove env/adapters/migration/tests/docs — no hidden dependency left (the gate reports it).

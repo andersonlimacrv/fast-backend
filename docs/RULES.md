@@ -88,3 +88,8 @@ Módulo nunca depende direto de: Stripe, Redis, SMTP, S3, `FastAPI.Request`, inf
 ## 8. Não-fazer no v1
 
 Kubernetes, microservices, Kafka, event sourcing, CQRS completo, schema/database-per-tenant, custom event bus, feature-flag platform, service mesh, multi-cloud, AI obrigatório, Stripe obrigatório, frontend obrigatório, RLS obrigatório, OTel obrigatório, repository-abstraction-para-tudo, DDD formal excessivo.
+
+## 9. Idioma da documentação
+
+- Usuário (README, CONTRIBUTING, SECURITY, `docs/{ARCHITECTURE,SCALING,DEPLOYMENT}`, `guides/`, templates, CHANGELOG): **inglês padrão** + variante `.pt-BR.md` com banner de alternância.
+- Interno/processo (AGENTS.md, RULES, ROADMAP, ADRs, SKILLS-REGISTRY, ANALYSIS, openspec, agentes): PT-BR.

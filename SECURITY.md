@@ -1,27 +1,29 @@
 # Security Policy — fast-backend
 
-## Versões suportadas
+> 🇬🇧 English | [Português (BR)](SECURITY.pt-BR.md)
 
-Pré-1.0: apenas a `main` atual recebe correções. Use sempre a última tag.
+## Supported versions
 
-| Versão | Suporte |
+Pre-1.0: only current `main` receives fixes. Always use the latest tag.
+
+| Version | Support |
 |---|---|
-| `main` / última tag | ✅ |
-| tags antigas | ❌ |
+| `main` / latest tag | ✅ |
+| older tags | ❌ |
 
-## Reportando vulnerabilidades
+## Reporting vulnerabilities
 
-**Não abra issue pública.** Reporte em privado:
+**Do not open a public issue.** Report privately:
 
-- Email: mantenha o canal do repositório (ou Security Advisories do GitHub, quando habilitado).
+- Email: keep the repository channel (or GitHub Security Advisories, when enabled).
 
-Inclua: descrição, passos p/ reproduzir, impacto, versão afetada e sugestão de correção, se houver.
+Include: description, reproduction steps, impact, affected version, and suggested fix, if any.
 
-## Escopo
+## Scope
 
-Superfície de auth (hashing, JWT, refresh/rotation, lockout), isolamento de tenant, RBAC/entitlements, webhooks (HMAC), segredos em logs/git, dependências (`pip-audit`), containers (non-root, sem portas de dados expostas).
+Auth surface (hashing, JWT, refresh/rotation, lockout), tenant isolation, RBAC/entitlements, webhooks (HMAC), secrets in logs/git, dependencies (`pip-audit`), containers (non-root, no exposed data ports).
 
-## Expectativas
+## Expectations
 
-- Confirmação em até 48h; atualização de status em até 1 semana.
-- Correção por severidade; disclosure coordenado após o fix.
+- Acknowledgment within 48h; status update within 1 week.
+- Severity-based fixes; coordinated disclosure after the fix.

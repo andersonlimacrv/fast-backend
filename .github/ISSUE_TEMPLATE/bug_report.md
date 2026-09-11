@@ -1,27 +1,27 @@
 ---
 name: Bug report
-about: Reportar um defeito reproduzível
+about: Report a reproducible defect
 title: "[bug] "
 labels: bug
 ---
 
-## Comportamento esperado
+## Expected behavior
 
-## Comportamento atual
+## Current behavior
 
-## Reprodução (passos + comandos)
+## Reproduction (steps + commands)
 
 ```bash
 # ...
 ```
 
-## Ambiente
+## Environment
 
 - tag/commit:
 - `ENVIRONMENT`:
-- saída relevante de logs (`X-Request-ID` se houver):
+- relevant log output (`X-Request-ID` if available):
 
-## Escopo
+## Scope
 
-- [ ] Inclui teste que falha antes do fix
-- [ ] Não mistura refactor com o fix
+- [ ] Includes a test that fails before the fix
+- [ ] No refactor mixed into the fix

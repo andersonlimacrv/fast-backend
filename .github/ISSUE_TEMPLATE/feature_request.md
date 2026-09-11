@@ -1,16 +1,16 @@
 ---
 name: Feature request
-about: Propor capacidade nova (vira OpenSpec change)
+about: Propose a new capability (becomes an OpenSpec change)
 title: "[feat] "
 labels: enhancement
 ---
 
-## Problema / oportunidade
+## Problem / opportunity
 
-## Proposta (o quê, não como)
+## Proposal (what, not how)
 
-## Capabilities afetadas (`openspec/specs/` existentes ou novas)
+## Affected capabilities (existing or new `openspec/specs/`)
 
-## Alternativas consideradas
+## Alternatives considered
 
-## Critérios de aceite (testáveis)
+## Acceptance criteria (testable)

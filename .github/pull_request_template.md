@@ -1,17 +1,17 @@
-## O que mudou
+## What changed
 
-## O que NÃO mudou (de propósito)
+## What did NOT change (intentionally)
 
-## Change OpenSpec
+## OpenSpec change
 
-<!-- link openspec/changes/<nome>/ ou motivo de dispensa -->
+<!-- link openspec/changes/<name>/ or waiver reason -->
 
-## Evidência
+## Evidence
 
-- [ ] `ruff check` + `format --check` verdes
-- [ ] `mypy` limpo
-- [ ] `lint-imports` verde
-- [ ] `pytest` (unit + integration) verdes
-- [ ] `bandit` 0 Medium+, `pip-audit` limpo, `gitleaks` limpo
+- [ ] `ruff check` + `format --check` green
+- [ ] `mypy` clean
+- [ ] `lint-imports` green
+- [ ] `pytest` (unit + integration) green
+- [ ] `bandit` 0 Medium+, `pip-audit` clean, `gitleaks` clean
 
-## Riscos / rollback
+## Risks / rollback

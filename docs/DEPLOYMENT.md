@@ -1,50 +1,52 @@
-# DEPLOYMENT — runbook VPS single-host
+# DEPLOYMENT — single-host VPS runbook
 
-## Pré-requisitos
+> 🇬🇧 English | [Português (BR)](DEPLOYMENT.pt-BR.md)
 
-VPS com Docker + Compose plugin, DNS apontando p/ o host, GHCR com a imagem `:sha`, `.env` de produção (nunca commitar; auditar contra `.env.example`).
+## Prerequisites
+
+VPS with Docker + Compose plugin, DNS pointing at the host, GHCR with the `:sha` image, production `.env` (never commit; audit against `.env.example`).
 
 ```bash
-# no VPS, primeira vez
+# on the VPS, first time
 mkdir -p ~/fast-backend && cd ~/fast-backend
-# copiar: docker-compose.prod.yml + .env (SCP ou secrets do CI)
+# copy: docker-compose.prod.yml + .env (SCP or CI secrets)
 ```
 
-## Variáveis críticas de produção
+## Critical production variables
 
-`ENVIRONMENT=production`, `SECRET_KEY` real (≥32), `TRUSTED_HOSTS=[dominio]`, `DATABASE_URL`/`POSTGRES_*`, `REDIS_URL`, `TASK_BROKER_URL`, `CORS_ORIGINS`, `BILLING_ENABLED` + `STRIPE_*` se aplicável. O boot falha alto com config insegura (validado em `Settings`).
+`ENVIRONMENT=production`, real `SECRET_KEY` (≥32), `TRUSTED_HOSTS=[domain]`, `DATABASE_URL`/`POSTGRES_*`, `REDIS_URL`, `TASK_BROKER_URL`, `CORS_ORIGINS`, `BILLING_ENABLED` + `STRIPE_*` if applicable. Boot fails fast on insecure config (validated in `Settings`).
 
-## Deploy (automático via push na main)
+## Deploy (automatic on push to main)
 
 1. Build `:sha` → push GHCR → SSH → `migrate` (`alembic upgrade head`) → `up app+worker` → 30× `GET /readyz`.
-2. Falhou? Rollback automático p/ `.deploy-sha` anterior + job vermelho.
-3. Manual: workflow `rollback` com a SHA (ou no host: `IMAGE=... up -d`).
+2. Failed? Automatic rollback to previous `.deploy-sha` + red job.
+3. Manual: `rollback` workflow with the SHA (or on the host: `IMAGE=... up -d`).
 
-Migrations seguem expand/contract quando houver incompatibilidade entre versões.
+Migrations follow expand/contract when versions are incompatible.
 
-## TLS (Caddy externo, exemplo)
+## TLS (external Caddy, example)
 
 ```caddyfile
-api.seudominio.com {
+api.yourdomain.com {
     reverse_proxy 127.0.0.1:8000
 }
 ```
 
-O compose não termina TLS de propósito (domínio varia por deploy).
+Compose intentionally does not terminate TLS (domain varies per deploy).
 
-## Backup (cron diário sugerido)
+## Backup (suggested daily cron)
 
 ```bash
 0 3 * * * cd ~/fast-backend && BACKUP_PASSPHRASE="$(cat /run/secrets/backup_pp)" \
   python3 scripts/backup.py --database-url "$DATABASE_URL" --dest ./var/backups --retention 7
 ```
 
-`BACKUP_PASSPHRASE` fora do repo (secret manager do CI ou `/run/secrets`). Drill: `test_backup_restore_drill` prova seed → backup → drop → restore.
+`BACKUP_PASSPHRASE` outside the repo (CI secret manager or `/run/secrets`). Drill: `test_backup_restore_drill` proves seed → backup → drop → restore.
 
-## Observabilidade mínima
+## Minimum observability
 
-`/healthz` (liveness, sem deps) vs `/readyz` (DB+Redis). Logs com `X-Request-ID`. `audit_log` append-only p/ ações sensíveis. Métricas/OTel ficam p/ quando a operação exigir (proporcionalidade).
+`/healthz` (liveness, no deps) vs `/readyz` (DB+Redis). Logs with `X-Request-ID`. Append-only `audit_log` for sensitive actions. Metrics/OTel when operations demand it (proportionality).
 
-## Rollback de dados
+## Data rollback
 
-Imagens são imutáveis; dados não voltam sozinhos: combine rollback de código + restore de backup quando a migration for destrutiva (motivo do expand/contract acima).
+Images are immutable; data doesn't come back alone: combine code rollback + backup restore when the migration is destructive (hence expand/contract above).
