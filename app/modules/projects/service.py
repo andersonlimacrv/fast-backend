@@ -1,19 +1,30 @@
 """ProjectService: tenant-scoped CRUD via TenantScopedRepository. No HTTPException."""
 
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from app.core.errors import ResourceNotFoundError
+from app.modules.entitlements.public import PROJECTS_MAX, EntitlementService
 from app.modules.projects.models import Project
 from app.modules.tenancy.public import SuperuserContext, TenantScopedRepository
 
 
 class ProjectService:
-    def __init__(self, session_factory: async_sessionmaker[AsyncSession]) -> None:
+    def __init__(
+        self,
+        session_factory: async_sessionmaker[AsyncSession],
+        entitlements: EntitlementService,
+    ) -> None:
         self._sessions = session_factory
+        self._entitlements = entitlements
 
     async def create(self, *, tenant_id: str, name: str) -> Project:
         async with self._sessions() as session:
             async with session.begin():
+                count = int(
+                    await session.scalar(select(func.count()).select_from(Project).where(Project.org_id == tenant_id)) or 0
+                )
+                await self._entitlements.require(org_id=tenant_id, key=PROJECTS_MAX, usage=count)
                 repo = TenantScopedRepository(session, tenant_id)
                 project = Project(org_id=tenant_id, name=name.strip())
                 await repo.add(project)

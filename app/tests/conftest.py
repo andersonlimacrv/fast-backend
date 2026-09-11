@@ -15,6 +15,7 @@ from testcontainers.redis import RedisContainer
 
 # Import models so metadata covers all tables.
 import app.infrastructure.auth.refresh_tokens  # noqa: F401
+import app.modules.entitlements.models  # noqa: F401
 import app.modules.identity.models  # noqa: F401
 import app.modules.organization.models  # noqa: F401
 import app.modules.projects.models  # noqa: F401
@@ -125,7 +126,10 @@ async def clean_db(base_settings: Settings, migrated_db: None) -> None:
     engine = create_async_engine(base_settings.database_url)
     async with engine.begin() as conn:
         await conn.execute(
-            text("TRUNCATE TABLE projects, refresh_tokens, credentials, memberships, organizations, users CASCADE")
+            text(
+                "TRUNCATE TABLE projects, refresh_tokens, credentials, memberships,"
+                " entitlement_grants, organizations, users CASCADE"
+            )
         )
     await engine.dispose()
 

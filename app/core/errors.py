@@ -45,5 +45,9 @@ class ResourceNotFoundError(DomainError):
     """Tenant-scoped resource not found in the caller's tenant."""
 
 
+class EntitlementDeniedError(DomainError):
+    """Feature not entitled for the caller's organization/plan."""
+
+
 class ThrottledError(DomainError):
     """Too many attempts; client must back off."""

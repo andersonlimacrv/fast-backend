@@ -2,8 +2,11 @@
 
 from fastapi import APIRouter, Depends, Request
 
+from app.modules.entitlements.public import require_projects_access
 from app.modules.projects.schemas import ProjectCreate, ProjectRead, ProjectUpdate
-from app.modules.tenancy.public import TenantContext, current_tenant
+from app.modules.tenancy.public import TenantContext, current_tenant, require_role
+
+_ADMIN = require_role("admin")
 
 router = APIRouter(prefix="/projects", tags=["projects"])
 
@@ -23,13 +26,22 @@ async def create_project(
 
 
 @router.get("", response_model=list[ProjectRead])
-async def list_projects(request: Request, tenant: TenantContext = Depends(current_tenant)) -> list[ProjectRead]:
+async def list_projects(
+    request: Request,
+    tenant: TenantContext = Depends(current_tenant),
+    _access=Depends(require_projects_access),
+) -> list[ProjectRead]:
     projects = await _service(request).list(tenant_id=tenant.tenant_id)
     return [ProjectRead.model_validate(p) for p in projects]
 
 
 @router.get("/{project_id}", response_model=ProjectRead)
-async def get_project(project_id: str, request: Request, tenant: TenantContext = Depends(current_tenant)) -> ProjectRead:
+async def get_project(
+    project_id: str,
+    request: Request,
+    tenant: TenantContext = Depends(current_tenant),
+    _access=Depends(require_projects_access),
+) -> ProjectRead:
     project = await _service(request).get(tenant_id=tenant.tenant_id, project_id=project_id)
     return ProjectRead.model_validate(project)
 
@@ -46,5 +58,10 @@ async def rename_project(
 
 
 @router.delete("/{project_id}", status_code=204)
-async def delete_project(project_id: str, request: Request, tenant: TenantContext = Depends(current_tenant)) -> None:
+async def delete_project(
+    project_id: str,
+    request: Request,
+    tenant: TenantContext = Depends(current_tenant),
+    _admin: TenantContext = Depends(_ADMIN),
+) -> None:
     await _service(request).remove(tenant_id=tenant.tenant_id, project_id=project_id)

@@ -13,6 +13,7 @@
 - [x] ROADMAP v3 aprovado; `auth-foundation` implementada, verificada e arquivada (`2026-09-11-auth-foundation`)
 - [x] `hardening` implementada, verificada e arquivada (`2026-09-11-hardening`)
 - [x] `identity-organization-tenancy` implementada, verificada e arquivada (`2026-09-11-identity-organization-tenancy`)
+- [x] `rbac-entitlements` implementada, verificada e arquivada (`2026-09-11-rbac-entitlements`)
 
 Saída: repo planejado, nenhum `app/`, `Dockerfile`, `.env`.
 
@@ -34,7 +35,7 @@ Aceite: CI falha em import proibido; env inseguro rejeitado.
 
 Aceite: isolamento tenant list/get/update/delete + IDOR → `403/404` com Postgres real.
 
-## Fase 4 — RBAC + Entitlements
+## Fase 4 — RBAC + Entitlements ✅
 
 Papéis fixos owner/admin/member, `require_role`/`require_entitlement`. `entitlements` core leve (ex. `projects.max`, `ai.enabled`), funciona sem billing.
 

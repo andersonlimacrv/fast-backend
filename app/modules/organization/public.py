@@ -1,6 +1,6 @@
 """Public API of the organization module. Other modules may import ONLY from here."""
 
-from app.modules.organization.models import Membership, Organization
+from app.modules.organization.models import Membership, Organization, role_at_least
 from app.modules.organization.service import OrganizationService
 
 __all__ = [
@@ -10,6 +10,7 @@ __all__ = [
     "assert_membership",
     "get_membership",
     "list_user_orgs",
+    "role_at_least",
 ]
 
 

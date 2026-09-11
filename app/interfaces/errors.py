@@ -6,6 +6,7 @@ from fastapi.responses import JSONResponse
 from app.core.errors import (
     DomainError,
     EmailAlreadyRegisteredError,
+    EntitlementDeniedError,
     InvalidCredentialsError,
     LastOwnerProtectedError,
     OrganizationAccessDeniedError,
@@ -27,6 +28,8 @@ def _status_for(exc: DomainError) -> int:
     if isinstance(exc, EmailAlreadyRegisteredError):
         return 409
     if isinstance(exc, (OrganizationAccessDeniedError, OrganizationSwitchDeniedError)):
+        return 403
+    if isinstance(exc, EntitlementDeniedError):
         return 403
     if isinstance(exc, (LastOwnerProtectedError, SlugUnavailableError)):
         return 409
