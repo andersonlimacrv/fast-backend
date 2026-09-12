@@ -1,0 +1,203 @@
+# fast-backend — single entry point for every repo command.
+# `make help` lists everything. Logic lives in scripts/, never inline here.
+#
+# FORK GUIDE (reusing this boilerplate): override `?=` variables on the command
+# line or environment instead of editing recipes — e.g. `make api PORT=9000`,
+# `make build IMAGE=myorg/app TAG=abc1234`, `make worker WORKERS=4`.
+# Only edit this file to add/remove targets (skill `makefile-keeper`).
+# Conventions: docs/Makefile.md.
+#
+# Safety: destructive targets require CONFIRM=1 and carry (⚠️ DESTRUCTIVE).
+
+SHELL := bash
+.SHELLFLAGS := -eu -o pipefail -c
+.DELETE_ON_ERROR:
+.DEFAULT_GOAL := help
+
+# --- Fork points (override, don't edit) ---
+UV ?= uv
+COMPOSE ?= docker compose
+ENV_FILE ?= .env
+HOST ?= 127.0.0.1
+PORT ?= 8000
+WORKERS ?= 2
+STACK_SERVICES ?= db redis
+BUILD_TARGET ?= prod
+IMAGE ?= fast-backend
+TAG ?= dev
+BACKUP_DIR ?= ./var/backups
+
+##@ 🚀 Setup
+
+setup: env-template sync migrate ## First run: .env + deps + migrations
+
+sync: ## Install deps from lockfile (`uv sync --extra dev`)
+	$(UV) sync --extra dev
+
+env-template: ## Create .env from .env.example (never overwrites)
+	@if [ -f $(ENV_FILE) ]; then \
+		echo ".env already exists — leaving it alone"; \
+	elif [ ! -f .env.example ]; then \
+		echo ".env.example not found"; exit 1; \
+	else \
+		cp .env.example $(ENV_FILE); \
+		echo "Created $(ENV_FILE) — fill in real values"; \
+	fi
+
+_check-env:
+	@if [ ! -f $(ENV_FILE) ]; then \
+		echo ".env not found — run 'make env-template'"; exit 1; \
+	fi
+
+##@ 🗄️ Database
+
+migrate: ## Apply migrations (`alembic upgrade head`)
+	$(UV) run alembic upgrade head
+
+migration: ## New migration (make migration msg="add users table")
+	@if [ -z "$(msg)" ]; then echo "Usage: make migration msg=\"...\""; exit 1; fi
+	$(UV) run alembic revision --autogenerate -m "$(msg)"
+
+downgrade: ## Roll back one migration (make downgrade / make downgrade rev=base)
+	$(UV) run alembic downgrade $(or $(rev),-1)
+
+db-current: ## Show current migration version
+	$(UV) run alembic current
+
+db-history: ## Show migration history
+	$(UV) run alembic history
+
+db-shell: ## Open psql on DATABASE_URL (strips async dialect marker)
+	$(UV) run python -c "import os,sys; u=os.environ.get('DATABASE_URL',''); u=u.replace('+asyncpg','').replace('+psycopg','').replace('+psycopg2',''); os.execvp('psql', ['psql', u]) if u else sys.exit('Set DATABASE_URL first')"
+
+db-reset: _check-env ## Destroy volumes, recreate, migrate (⚠️ DESTRUCTIVE)
+	@if [ -z "$(CONFIRM)" ]; then \
+		echo "⚠️  Destroys local volumes. Re-run with CONFIRM=1"; exit 1; \
+	fi
+	$(COMPOSE) down -v
+	$(COMPOSE) up -d $(STACK_SERVICES)
+	$(UV) run alembic upgrade head
+
+##@ 🧪 Tests
+
+test: ## Full suite (needs Docker; bridge or FB_TEST_NETWORK=host)
+	$(UV) run pytest
+
+test-unit: ## Fast tests, no services
+	$(UV) run pytest -m "unit"
+
+test-integration: ## Postgres+Redis via testcontainers
+	$(UV) run pytest -m "integration"
+
+test-host: ## Full suite where Docker bridge is blocked
+	FB_TEST_NETWORK=host $(UV) run pytest
+
+test-file: ## Single file (make test-file f=app/tests/unit/test_jwt.py)
+	@if [ -z "$(f)" ]; then echo "Usage: make test-file f=<path>"; exit 1; fi
+	$(UV) run pytest $(f)
+
+clean: ## Remove caches and artifacts (safe: source untouched)
+	find app scripts -type d -name "__pycache__" -prune -exec rm -rf {} +
+	rm -rf .pytest_cache .ruff_cache .mypy_cache
+
+##@ 🛠️ Verify
+
+lint: ## ruff check + format check
+	$(UV) run ruff check app scripts
+	$(UV) run ruff format --check app scripts
+
+format-fix: ## Auto-format code
+	$(UV) run ruff check --fix app scripts
+	$(UV) run ruff format app scripts
+
+types: ## mypy strict-ish
+	$(UV) run mypy app scripts
+
+arch: ## Module DAG + boundaries (`import-linter`, 12 contracts)
+	$(UV) run lint-imports
+
+security: ## bandit (0 Medium+) + pip-audit + gitleaks
+	$(UV) run bandit -r app scripts -q -ll
+	$(UV) run pip-audit
+	gitleaks detect --source . --no-git
+
+verify: lint types arch ## All static gates (lint + types + architecture)
+
+check: verify test-unit ## Local PR gate (static + fast tests)
+
+##@ 🐳 Docker
+
+up: _check-env ## Start app + worker + db + redis
+	$(COMPOSE) up -d --build
+
+down: ## Stop everything (keeps volumes)
+	$(COMPOSE) down
+
+logs: ## Follow all logs
+	$(COMPOSE) logs -f
+
+logs-app: ## Follow app logs only
+	$(COMPOSE) logs -f app
+
+logs-db: ## Follow postgres logs only
+	$(COMPOSE) logs -f db
+
+restart: down up ## Rebuild and restart everything
+
+tools: _check-env ## Start mailpit + minio profiles
+	$(COMPOSE) --profile tools up -d --build
+
+build: ## Build prod image (IMAGE=... TAG=..., never :latest)
+	docker build --target $(BUILD_TARGET) -t "$(IMAGE):$(TAG)" .
+
+##@ 🏃 Run
+
+api: ## API with reload (http://127.0.0.1:8000/docs)
+	$(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(PORT) --reload
+
+worker: ## Taskiq worker (WORKERS=2)
+	$(UV) run taskiq worker app.worker:broker --workers $(WORKERS)
+
+##@ 🛫 Ops
+
+backup: ## Encrypted backup to BACKUP_DIR (needs BACKUP_PASSPHRASE)
+	@if [ -z "$${BACKUP_PASSPHRASE:-}" ]; then echo "Set BACKUP_PASSPHRASE first"; exit 1; fi
+	$(UV) run python scripts/backup.py --database-url "$${DATABASE_URL:?}" --dest $(BACKUP_DIR)
+
+restore: ## Restore artifact (make restore FILE=<artifact>) (⚠️ DESTRUCTIVE)
+	@if [ -z "$(FILE)" ]; then echo "Usage: make restore FILE=<artifact>"; exit 1; fi
+	@if [ -z "$(CONFIRM)" ]; then \
+		echo "⚠️  Overwrites the database. Re-run with CONFIRM=1 FILE=$(FILE)"; exit 1; \
+	fi
+	@if [ -z "$${BACKUP_PASSPHRASE:-}" ]; then echo "Set BACKUP_PASSPHRASE first"; exit 1; fi
+	$(UV) run python scripts/backup.py --restore "$(FILE)" --database-url "$${DATABASE_URL:?}"
+
+new-project: ## Scaffold sibling (make new-project name=x dest=../x)
+	@if [ -z "$(name)" ] || [ -z "$(dest)" ]; then echo "Usage: make new-project name=<kebab> dest=<dir>"; exit 1; fi
+	$(UV) run python scripts/new_project.py --name "$(name)" --dest "$(dest)"
+
+release-notes: ## Notes for a version (make release-notes v=v1.1.0)
+	@if [ -z "$(v)" ]; then echo "Usage: make release-notes v=vX.Y.Z"; exit 1; fi
+	$(UV) run python scripts/release_notes.py --version "$(v)"
+
+##@ 📦 Meta
+
+change: ## New OpenSpec change (make change name=my-change)
+	@if [ -z "$(name)" ]; then echo "Usage: make change name=<kebab-case>"; exit 1; fi
+	openspec new change "$(name)"
+
+##@ ❓ Help
+
+help: ## Show this help
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+
+help-unclassified: ## Targets with ## but no ##@ section above (audit, must be empty)
+	@awk 'FNR == 1 { section = "" } /^##@ / { section = substr($$0, 5); next } /^[a-zA-Z0-9_-]+:.*## / && section == "" { print "  " $$0 }' $(MAKEFILE_LIST)
+
+.PHONY: setup sync env-template migrate migration downgrade db-current db-history db-shell db-reset
+.PHONY: test test-unit test-integration test-host test-file clean
+.PHONY: lint format-fix types arch security verify check
+.PHONY: up down logs logs-app logs-db restart tools build
+.PHONY: api worker
+.PHONY: backup restore new-project release-notes
+.PHONY: change help help-unclassified

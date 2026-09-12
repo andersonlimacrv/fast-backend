@@ -88,8 +88,20 @@ app/                  # package (imports from app.*)
 └── tests/            # unit, integration, e2e, fixtures
 scripts/              # backup.py, deploy.py, new_project.py, release_notes.py
 openspec/             # specs (20 capabilities) + archived changes
-docs/                 # RULES, ROADMAP, ARCHITECTURE, SCALING, DEPLOYMENT, guides/, ADRs (PT-BR)
+docs/                 # RULES, ROADMAP, ARCHITECTURE, SCALING, DEPLOYMENT, guides/, ADRs
 ```
+
+Run `make help` for every command (documented in `docs/Makefile.md`).
+
+## Skills
+
+Agent skills shipped in `.opencode/skills/` (see `docs/SKILLS-REGISTRY.md`):
+
+- `openspec-*` — spec-driven workflow (propose/verify/archive changes).
+- `documentation-and-adrs`, `docs-generate` — feed README/API/ADR/CHANGELOG from code.
+- `git-workflow-and-versioning`, `shipping-and-launch`, `ci-cd-and-automation` — releases, changelogs, pipelines.
+- `cmd-makefile`, `writing-makefiles` — Makefile base references.
+- `makefile-keeper` — keeps this repo's Makefile on standard.
 
 ## Architecture & scaling
 

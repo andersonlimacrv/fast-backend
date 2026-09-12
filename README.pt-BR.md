@@ -91,6 +91,18 @@ openspec/             # specs (20 capabilities) + changes arquivadas
 docs/                 # RULES, ROADMAP, ARCHITECTURE, SCALING, DEPLOYMENT, guides/, ADRs
 ```
 
+Rode `make help` para todos os comandos (documentados em `docs/Makefile.pt-BR.md`).
+
+## Skills
+
+Skills de agente em `.opencode/skills/` (ver `docs/SKILLS-REGISTRY.md`):
+
+- `openspec-*` — workflow spec-driven (propose/verify/archive de changes).
+- `documentation-and-adrs`, `docs-generate` — alimentam README/API/ADR/CHANGELOG a partir do código.
+- `git-workflow-and-versioning`, `shipping-and-launch`, `ci-cd-and-automation` — releases, changelogs, pipelines.
+- `cmd-makefile`, `writing-makefiles` — referências base de Makefile.
+- `makefile-keeper` — mantém o Makefile deste repo no padrão.
+
 ## Arquitetura e escala
 
 - `docs/ARCHITECTURE.md` — mapa de módulos, DAG, fluxos, índice de ADRs.
