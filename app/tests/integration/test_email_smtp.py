@@ -1,8 +1,6 @@
 """Integration: real SMTP delivery via Mailpit (slow, skipped without docker)."""
 
 import shutil
-import socket
-import subprocess
 import time
 
 import httpx
@@ -10,49 +8,33 @@ import pytest
 
 from app.core.settings import Settings
 from app.infrastructure.email.sender import SmtpEmailSender
+from app.tests.conftest import ServiceContainer, wait_tcp
 
 MAILPIT_IMAGE = "axllent/mailpit:v1.21"
 
 
-def _docker_available() -> bool:
-    return shutil.which("docker") is not None
-
-
-def _wait_smtp(host: str, port: int, timeout: int = 60) -> None:
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        try:
-            with socket.create_connection((host, port), timeout=2):
-                return
-        except OSError:
-            time.sleep(1)
-    raise RuntimeError("mailpit smtp not ready")
-
-
 @pytest.fixture()
 def mailpit():
-    if not _docker_available():
+    if shutil.which("docker") is None:
         pytest.skip("docker unavailable")
-    subprocess.run(
-        ["docker", "run", "-d", "--rm", "--network", "host", "--name", "fb-test-mailpit", MAILPIT_IMAGE],
-        check=True,
-        capture_output=True,
-    )
+    container = ServiceContainer(MAILPIT_IMAGE, tcp_ports=[1025, 8025], name="mailpit")
     try:
-        _wait_smtp("localhost", 1025)
-        yield {"smtp": ("localhost", 1025), "api": "http://localhost:8025"}
+        smtp_port, api_port = container.ports[1025], container.ports[8025]
+        wait_tcp("localhost", smtp_port, timeout=60)
+        yield {"smtp": ("localhost", smtp_port), "api": f"http://localhost:{api_port}"}
     finally:
-        subprocess.run(["docker", "rm", "-f", "fb-test-mailpit"], capture_output=True)
+        container.stop()
 
 
 @pytest.mark.integration
 @pytest.mark.slow
 async def test_smtp_delivery_lands_in_mailpit(mailpit: dict) -> None:
+    host, port = mailpit["smtp"]
     settings = Settings(
         secret_key="x" * 32,
         email_backend="smtp",
-        smtp_host="localhost",
-        smtp_port=1025,
+        smtp_host=host,
+        smtp_port=port,
         smtp_from="no-reply@example.com",
     )
     sender = SmtpEmailSender(settings)
@@ -64,7 +46,7 @@ async def test_smtp_delivery_lands_in_mailpit(mailpit: dict) -> None:
     count = 0
     async with httpx.AsyncClient() as http:
         while time.time() < deadline:
-            data = (await http.get("http://localhost:8025/api/v1/messages")).json()
+            data = (await http.get(f"{mailpit['api']}/api/v1/messages")).json()
             count = data.get("total", 0)
             if count >= 1:
                 break

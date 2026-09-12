@@ -1,61 +1,36 @@
 """Integration: S3-compatible storage vs MinIO (slow, skipped without docker)."""
 
+import asyncio
 import shutil
-import socket
-import subprocess
-import time
 
 import pytest
 
 from app.core.settings import Settings
 from app.infrastructure.storage.s3 import S3CompatibleStorage
+from app.tests.conftest import ServiceContainer, wait_tcp
 
 MINIO_IMAGE = "minio/minio:RELEASE.2025-04-22T22-12-26Z"
 BUCKET = "fastbackend-test"
-
-
-def _wait_port(host: str, port: int, timeout: int = 90) -> None:
-    deadline = time.time() + timeout
-    while time.time() < deadline:
-        try:
-            with socket.create_connection((host, port), timeout=2):
-                return
-        except OSError:
-            time.sleep(1)
-    raise RuntimeError("minio not ready")
 
 
 @pytest.fixture()
 def minio_storage():
     if shutil.which("docker") is None:
         pytest.skip("docker unavailable")
-    subprocess.run(
-        [
-            "docker",
-            "run",
-            "-d",
-            "--rm",
-            "--network",
-            "host",
-            "--name",
-            "fb-test-minio",
-            "-e",
-            "MINIO_ROOT_USER=minioadmin",
-            "-e",
-            "MINIO_ROOT_PASSWORD=minioadmin123",
-            MINIO_IMAGE,
-            "server",
-            "/data",
-        ],
-        check=True,
-        capture_output=True,
+    container = ServiceContainer(
+        MINIO_IMAGE,
+        command="server /data",
+        env={"MINIO_ROOT_USER": "minioadmin", "MINIO_ROOT_PASSWORD": "minioadmin123"},
+        tcp_ports=[9000],
+        name="minio",
     )
     try:
-        _wait_port("localhost", 9000)
+        port = container.ports[9000]
+        wait_tcp("localhost", port)
         settings = Settings(
             secret_key="x" * 32,
             storage_backend="s3",
-            s3_endpoint_url="http://localhost:9000",
+            s3_endpoint_url=f"http://localhost:{port}",
             s3_bucket=BUCKET,
             s3_access_key="minioadmin",
             s3_secret_key="minioadmin123",
@@ -71,12 +46,10 @@ def minio_storage():
                     if "BucketAlreadyOwnedByYou" not in str(exc):
                         raise
 
-        import asyncio
-
         asyncio.run(make_bucket())
         yield storage
     finally:
-        subprocess.run(["docker", "rm", "-f", "fb-test-minio"], capture_output=True)
+        container.stop()
 
 
 @pytest.mark.integration

@@ -253,5 +253,5 @@ module = "asyncpg.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["aioboto3.*", "botocore.*"]
+module = ["aioboto3.*", "botocore.*", "docker.*"]
 ignore_missing_imports = true

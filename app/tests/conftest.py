@@ -34,6 +34,84 @@ if HOST_NET:
     os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
 
+def wait_tcp(host: str, port: int, timeout: int = 90) -> None:
+    """Block until a TCP port accepts (or raise). Works in both net modes."""
+    import socket
+    import time
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            with socket.create_connection((host, port), timeout=2):
+                return
+        except OSError:
+            time.sleep(1)
+    raise RuntimeError(f"tcp {host}:{port} not ready")
+
+
+class ServiceContainer:
+    """One docker container in both network modes, with stderr on failure.
+
+    Bridge (default): random host ports, read back after start.
+    Host (`FB_TEST_NETWORK=host`): fixed ports, `--network host`.
+    """
+
+    def __init__(
+        self,
+        image: str,
+        *,
+        command=None,
+        env: dict[str, str] | None = None,
+        tcp_ports: list[int] | None = None,
+        name: str,
+    ) -> None:
+        import docker
+
+        self._docker = docker
+        self._name = name
+        self._tcp_ports = tcp_ports or []
+        client = docker.from_env()
+        try:
+            client.images.get(image)
+        except docker.errors.ImageNotFound:
+            client.images.pull(image)
+        if HOST_NET:
+            self._container = client.containers.run(
+                image,
+                command=command,
+                environment=env or {},
+                network_mode="host",
+                name=f"fb-test-{name}",
+                detach=True,
+                auto_remove=True,
+            )
+            self.ports = {port: port for port in self._tcp_ports}
+        else:
+            self._container = client.containers.run(
+                image,
+                command=command,
+                environment=env or {},
+                ports={f"{port}/tcp": ("127.0.0.1", None) for port in self._tcp_ports},
+                name=f"fb-test-{name}",
+                detach=True,
+                auto_remove=True,
+            )
+            self._container.reload()
+            bound = self._container.ports or {}
+            self.ports = {}
+            for port in self._tcp_ports:
+                bindings = bound.get(f"{port}/tcp") or []
+                if not bindings:
+                    raise RuntimeError(f"port {port} not bound for {name}")
+                self.ports[port] = int(bindings[0]["HostPort"])
+
+    def stop(self) -> None:
+        try:
+            self._container.stop(timeout=5)
+        except self._docker.errors.NotFound:
+            pass
+
+
 @pytest.fixture(scope="session")
 def containers() -> Iterator[dict[str, str]]:
     if HOST_NET:
