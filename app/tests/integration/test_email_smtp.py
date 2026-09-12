@@ -8,7 +8,7 @@ import pytest
 
 from app.core.settings import Settings
 from app.infrastructure.email.sender import SmtpEmailSender
-from app.tests.conftest import ServiceContainer, wait_tcp
+from app.tests.conftest import ServiceContainer, wait_smtp
 
 MAILPIT_IMAGE = "axllent/mailpit:v1.21"
 
@@ -20,7 +20,7 @@ def mailpit():
     container = ServiceContainer(MAILPIT_IMAGE, tcp_ports=[1025, 8025], name="mailpit")
     try:
         smtp_port, api_port = container.ports[1025], container.ports[8025]
-        wait_tcp("localhost", smtp_port, timeout=60)
+        wait_smtp("localhost", smtp_port, timeout=60)
         yield {"smtp": ("localhost", smtp_port), "api": f"http://localhost:{api_port}"}
     finally:
         container.stop()

@@ -7,9 +7,9 @@ import pytest
 
 from app.core.settings import Settings
 from app.infrastructure.storage.s3 import S3CompatibleStorage
-from app.tests.conftest import ServiceContainer, wait_tcp
+from app.tests.conftest import ServiceContainer, wait_http
 
-MINIO_IMAGE = "minio/minio:RELEASE.2025-04-22T22-12-26Z"
+MINIO_IMAGE = "quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z"
 BUCKET = "fastbackend-test"
 
 
@@ -26,7 +26,7 @@ def minio_storage():
     )
     try:
         port = container.ports[9000]
-        wait_tcp("localhost", port)
+        wait_http(f"http://localhost:{port}/minio/health/live")
         settings = Settings(
             secret_key="x" * 32,
             storage_backend="s3",

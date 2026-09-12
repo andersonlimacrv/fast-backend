@@ -35,7 +35,11 @@ if HOST_NET:
 
 
 def wait_tcp(host: str, port: int, timeout: int = 90) -> None:
-    """Block until a TCP port accepts (or raise). Works in both net modes."""
+    """Block until a TCP port accepts (or raise). Works in both net modes.
+
+    NOTE: docker's userland proxy accepts TCP before the process inside
+    listens — for protocol readiness, prefer wait_smtp/wait_http below.
+    """
     import socket
     import time
 
@@ -47,6 +51,41 @@ def wait_tcp(host: str, port: int, timeout: int = 90) -> None:
         except OSError:
             time.sleep(1)
     raise RuntimeError(f"tcp {host}:{port} not ready")
+
+
+def wait_smtp(host: str, port: int, timeout: int = 90) -> None:
+    """Block until a real SMTP greeting is served (not just TCP accept)."""
+    import smtplib
+    import time
+
+    deadline = time.time() + timeout
+    last: Exception | None = None
+    while time.time() < deadline:
+        try:
+            with smtplib.SMTP(host, port, timeout=5) as smtp:
+                smtp.noop()
+                return
+        except Exception as exc:  # noqa: BLE001 (readiness polling)
+            last = exc
+            time.sleep(1)
+    raise RuntimeError(f"smtp {host}:{port} not ready: {last}")
+
+
+def wait_http(url: str, timeout: int = 90) -> None:
+    """Block until an HTTP 2xx/4xx is served (proves the app, not the proxy)."""
+    import time
+
+    import httpx
+
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            resp = httpx.get(url, timeout=5)
+            if resp.status_code < 500:
+                return
+        except Exception:
+            time.sleep(1)
+    raise RuntimeError(f"http {url} not ready")
 
 
 class ServiceContainer:
@@ -73,7 +112,9 @@ class ServiceContainer:
         client = docker.from_env()
         try:
             client.images.get(image)
-        except docker.errors.ImageNotFound:
+        except Exception:
+            # Missing locally (or daemon quirk): pull explicitly so the
+            # failure below — if any — is the real one, with its message.
             client.images.pull(image)
         if HOST_NET:
             self._container = client.containers.run(
