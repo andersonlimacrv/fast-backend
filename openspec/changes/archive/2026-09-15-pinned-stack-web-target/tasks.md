@@ -27,7 +27,7 @@
 - [x] 5.2 `make db-up` (via Git Bash) → `db`+`redis` healthy (PG17 accepting connections, Valkey PONG)
 - [x] 5.3 Infra/frontend: `compose config` local+prod resolve pins; `make web-install` (npm ci, 0 vuln); Vite `:5173` → HTTP 200
 - [x] 5.4 Suite: unit 49/49; integration 48/49 (PG17+Valkey 9; Ryuk desligado no Desktop Windows)
-- [ ] 5.5 `test_backup_restore_drill` — gap de ambiente: sem `pg_dump`/`psql` neste Windows (vale no CI/Linux)
+- [x] 5.5 `test_backup_restore_drill` verde com PG client tools 17.11 (98/98 em 2026-09-15)
 - [x] 5.6 `git status --short` só previstos (`node_modules` gitignored); sem segredo
 
 ## 6. Fixes Windows-compat encontrados ao testar (test-harness, sem `app/`)
