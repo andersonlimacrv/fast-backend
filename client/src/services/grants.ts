@@ -1,5 +1,7 @@
 /* Grant domain: owns the form-level limit parsing (was inline in GrantsPage). */
 
+import { z } from "zod";
+
 import { listGrants, upsertGrant } from "@/lib/api";
 import type { GrantRead } from "@/lib/api";
 
@@ -24,3 +26,11 @@ export async function saveGrant(
 ): Promise<GrantRead> {
   return upsertGrant(orgId, key.trim(), parseGrantLimit(limitInput), enabled);
 }
+
+export const grantSchema = z.object({
+  key: z.string().trim().min(1, "Key is required (e.g. projects.max)."),
+  limitInput: z.string(),
+  enabled: z.boolean(),
+});
+
+export type GrantInput = z.input<typeof grantSchema>;

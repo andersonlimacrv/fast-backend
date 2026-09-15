@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 import { ErrorBox, Field, PageHeader } from "@/components/feedback";
 import { RequireStaff } from "@/components/require-staff";
@@ -9,41 +10,53 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAdminOrgs } from "@/hooks/useAdmin";
 import { ROLES } from "@/lib/constants";
-import { normalizeReason, removeMembership, setMembership } from "@/services/admin";
+import {
+  adminMembershipSchema,
+  normalizeReason,
+  removeMembership,
+  setMembership,
+  type AdminMembershipInput,
+} from "@/services/admin";
 import { notify } from "@/services/notify";
 
 export function AdminOrgsPage() {
   const { items: orgs, error, loading, busy, mutate, setError } = useAdminOrgs();
-  const [orgId, setOrgId] = useState("");
-  const [userId, setUserId] = useState("");
-  const [role, setRole] = useState<string>("member");
-  const [reason, setReason] = useState("");
+  const {
+    register: field,
+    handleSubmit,
+    reset: resetMembership,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm<AdminMembershipInput>({
+    resolver: zodResolver(adminMembershipSchema),
+    defaultValues: { orgId: "", userId: "", role: "member", reason: "" },
+  });
+  const orgId = watch("orgId");
+  const userId = watch("userId");
 
   const takeReason = (): string | null => {
-    const ok = normalizeReason(reason);
+    const ok = normalizeReason(watch("reason"));
     if (!ok) setError(new Error(`Reason required (min 8 chars) — it is audited with every action.`));
     return ok;
   };
 
-  const save = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const ok = takeReason();
-    if (!ok || !orgId) return;
-    const done = await mutate(() => setMembership(orgId, userId, role, ok));
+  const save = async (input: AdminMembershipInput) => {
+    const done = await mutate(() => setMembership(input.orgId, input.userId, input.role, input.reason));
     if (done !== null) {
-      setUserId("");
-      notify.success("Membership set", `${userId} → ${role}`);
+      setValue("userId", "");
+      notify.success("Membership set", `${input.userId} → ${input.role}`);
     }
   };
 
-  const remove = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const remove = async () => {
     const ok = takeReason();
-    if (!ok || !orgId || !userId.trim()) return;
-    const done = await mutate(() => removeMembership(orgId, userId, ok));
+    const uid = watch("userId").trim();
+    if (!ok || !orgId || !uid) return;
+    const done = await mutate(() => removeMembership(orgId, uid, ok));
     if (done !== null) {
-      setUserId("");
-      notify.success("Membership removed", userId.slice(0, 8));
+      resetMembership();
+      notify.success("Membership removed", uid.slice(0, 8));
     }
   };
 
@@ -52,14 +65,14 @@ export function AdminOrgsPage() {
       <PageHeader title="Admin organizations" description="GET /admin/organizations + membership actions (staff+; cross-org, audited)" />
       <Card className="mb-4">
         <CardContent className="pt-6">
-          <form onSubmit={(e) => void save(e)} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <form onSubmit={(e) => void handleSubmit(save)(e)} className="flex flex-col gap-2 sm:flex-row sm:items-end" noValidate>
             <div className="flex-1">
               <Field label="Organization">
                 <select
                   className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
-                  value={orgId}
-                  onChange={(e) => setOrgId(e.target.value)}
                   aria-label="Organization"
+                  aria-invalid={!!errors.orgId}
+                  {...field("orgId")}
                 >
                   <option value="">Pick…</option>
                   {orgs.map((o) => (
@@ -69,17 +82,27 @@ export function AdminOrgsPage() {
                   ))}
                 </select>
               </Field>
+              {errors.orgId && (
+                <p className="text-xs text-destructive" role="alert">
+                  {errors.orgId.message}
+                </p>
+              )}
             </div>
             <div className="flex-1">
               <Field label="User id">
-                <Input required value={userId} onChange={(e) => setUserId(e.target.value)} />
+                <Input aria-invalid={!!errors.userId} {...field("userId")} />
               </Field>
+              {errors.userId && (
+                <p className="text-xs text-destructive" role="alert">
+                  {errors.userId.message}
+                </p>
+              )}
             </div>
             <Field label="Role">
               <select
                 className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
+                aria-invalid={!!errors.role}
+                {...field("role")}
               >
                 {ROLES.map((r) => (
                   <option key={r} value={r}>
@@ -90,10 +113,15 @@ export function AdminOrgsPage() {
             </Field>
             <div className="flex-1">
               <Field label="Reason (audited)">
-                <Input required value={reason} onChange={(e) => setReason(e.target.value)} placeholder="why is this needed?" />
+                <Input aria-invalid={!!errors.reason} placeholder="why is this needed?" {...field("reason")} />
               </Field>
+              {errors.reason && (
+                <p className="text-xs text-destructive" role="alert">
+                  {errors.reason.message}
+                </p>
+              )}
             </div>
-            <Button type="submit" disabled={busy || !orgId}>
+            <Button type="submit" disabled={busy}>
               {busy ? "Saving…" : "Set membership"}
             </Button>
           </form>
@@ -128,7 +156,7 @@ export function AdminOrgsPage() {
         Removing the last owner is refused (409) — backend rule. The same reason field above is audited with the removal.
       </p>
       <div className="mt-2">
-        <Button variant="destructive" size="sm" disabled={busy || !orgId || !userId.trim()} onClick={(e) => void remove(e)}>
+        <Button variant="destructive" size="sm" disabled={busy || !orgId || !userId.trim()} onClick={() => void remove()}>
           Remove membership
         </Button>
       </div>
