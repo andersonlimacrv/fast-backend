@@ -42,6 +42,18 @@ Nenhuma foi necessária: o projeto foi concluído com os runbooks acima + gates 
 | `docker-development` | `alirezarezvani/claude-skills` | Multi-stage/compose | Não instalada — Dockerfile + composes já entregues e validados com build real |
 | `stripe-best-practices` | `docs.stripe.com/skills` | Billing/webhooks | Não instalada — Fase 7 implementada com SDK + HMAC próprio e 5 testes; reavaliar se billing evoluir (checkout/portal) |
 
+## Triagem client-visualization (2026-09-15)
+
+Pesquisa via `npx skills find` para a SPA `/client` (Vite + React + shadcn + Tailwind v4 + tweakcn). Nenhuma instalada ainda — abaixo só triagem; instalação exige SHA/tag + auditoria do `SKILL.md` + entrada em Instaladas.
+
+| Nome | Origem (skills.sh) | Uso pretendido | Status | Risco + mitigação | Dono |
+|---|---|---|---|---|---|
+| `vercel-labs/agent-skills@vercel-react-best-practices` | `skills.sh/vercel-labs/agent-skills/vercel-react-best-practices` (~713k installs, oficial) | Runbook principal de padrões React/TS em `/client` | avaliada, candidata a aprovada | Baixo — origem oficial; mesmo assim ler `SKILL.md`, pin por SHA/tag, instalar em `.opencode/skills/` do repo | planner |
+| `igorwarzocha/opencode-workflows@vite-shadcn-tailwind4` | `skills.sh/igorwarzocha/opencode-workflows/vite-shadcn-tailwind4` (~117 installs) | Referência de scaffold Vite+shadcn+Tailwind4 | avaliada, só referência (não instalar sem auditoria) | Médio-baixo — poucos installs; usar como leitura, não instalar scripts sem auditoria | planner |
+| `fusengine/agents@react-shadcn` | `skills.sh/fusengine/agents/react-shadcn` (~58 installs) | Alternativa shadcn | descartada | Médio — poucos installs e sobreposição com as acima | planner |
+
+Nota: tweakcn sem skill relevante — tema via CSS-first do Tailwind v4 (`@theme` oklch).
+
 ## Como aprovar/instalar (quando autorizado)
 
 1. `docs-writer` preenche SHA/data nesta tabela e muda `avaliada → aprovada`.
