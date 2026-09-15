@@ -33,6 +33,12 @@ HOST_NET = os.environ.get("FB_TEST_NETWORK") == "host"
 if HOST_NET:
     os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
+if os.name == "nt" and "TESTCONTAINERS_RYUK_DISABLED" not in os.environ:
+    # Docker Desktop Windows races Ryuk's 8080 port-mapping lookup
+    # (ConnectionError at testcontainers Reaper startup); fixtures already
+    # stop/remove their containers explicitly, so auto-disable is safe here.
+    os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
+
 # Single source of truth for data-service images is the Makefile
 # (`POSTGRES_IMAGE` / `REDIS_IMAGE` / `DOCKER`); same defaults here so a bare
 # `pytest` (without make) resolves identical pins.
