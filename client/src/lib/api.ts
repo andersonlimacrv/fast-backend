@@ -422,6 +422,21 @@ export async function getHealthz(): Promise<{ status: string }> {
   return raw<{ status: string }>("/healthz");
 }
 
+export interface MetaModule {
+  key: string;
+  enabled: boolean;
+}
+
+export interface MetaRead {
+  app: string;
+  version: string;
+  modules: MetaModule[];
+}
+
+export async function getMeta(): Promise<MetaRead> {
+  return raw<MetaRead>("/meta");
+}
+
 export interface ReadyzRead {
   status: string;
   db: string;

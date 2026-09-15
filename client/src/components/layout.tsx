@@ -25,6 +25,7 @@ function ThemeToggle() {
 }
 
 const NAV = [
+  { to: ROUTES.app, label: "Home" },
   { to: ROUTES.health, label: "Health" },
   { to: ROUTES.orgs, label: "Orgs" },
   { to: ROUTES.projects, label: "Projects" },

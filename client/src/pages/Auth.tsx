@@ -6,6 +6,7 @@ import { ErrorBox, Field, PageHeader } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ROUTES } from "@/lib/constants";
 
 export function LoginPage() {
   const { login, sessionNotice, dismissNotice } = useAuth();
@@ -21,7 +22,7 @@ export function LoginPage() {
     setError(null);
     try {
       await login(email, password);
-      navigate("/");
+      navigate(ROUTES.app);
     } catch (err) {
       setError(err);
     } finally {
@@ -77,7 +78,7 @@ export function RegisterPage() {
     setError(null);
     try {
       await register(email, password);
-      navigate("/");
+      navigate(ROUTES.app);
     } catch (err) {
       setError(err);
     } finally {

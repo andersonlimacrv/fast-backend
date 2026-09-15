@@ -13,6 +13,7 @@ export const SESSION_EVENT = "fb:session-expired";
 
 export const ROUTES = {
   home: "/",
+  app: "/~",
   login: "/login",
   register: "/register",
   health: "/health",

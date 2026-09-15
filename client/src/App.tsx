@@ -8,6 +8,7 @@ import { AdminAuditPage } from "@/pages/AdminAudit";
 import { AdminOrgsPage } from "@/pages/AdminOrgs";
 import { AdminOverviewPage } from "@/pages/AdminOverview";
 import { AdminUsersPage } from "@/pages/AdminUsers";
+import { LandingPage } from "@/pages/Landing";
 import { LoginPage, RegisterPage } from "@/pages/Auth";
 import { AuditPage } from "@/pages/Audit";
 import { DashboardPage } from "@/pages/Dashboard";
@@ -20,7 +21,7 @@ import { ProjectsPage } from "@/pages/Projects";
 function Protected() {
   const { user, ready } = useAuth();
   if (!ready) return <p className="p-8 text-sm text-muted-foreground">Loading session…</p>;
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/" replace />;
   return (
     <Layout>
       <Outlet />
@@ -32,10 +33,11 @@ export default function App() {
   return (
     <>
       <Routes>
+      <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route element={<Protected />}>
-        <Route index element={<DashboardPage />} />
+        <Route path="~" element={<DashboardPage />} />
         <Route path="health" element={<HealthPage />} />
         <Route path="orgs" element={<OrgsPage />} />
         <Route path="orgs/:orgId/members" element={<MembersPage />} />

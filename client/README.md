@@ -32,8 +32,12 @@ npm install
 npm run dev            # http://localhost:5173
 ```
 
-Useful flows to eyeball: `/health` (no auth) → register/login → `/` overview →
+Useful flows to eyeball: `/` landing (anonymous, backend on/off) → register/login → `/~` session overview →
 `/orgs` create + switch tenant → `/projects` CRUD → `/grants` + `/audit` (admin).
+
+## Landing (`/`, public)
+
+Documents modules, flags and release from live `GET /meta` (static fallback + offline badge when the backend is down — never blank, no secrets/hosts/PII rendered). Logged-in `/` redirects to `/~`; anonymous `/~` (and every `Protected` miss) redirects to `/`. No trackers, no third-party requests.
 
 ## Admin dashboard (`/admin*`, staff+)
 
