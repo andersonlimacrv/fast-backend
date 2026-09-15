@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 import { ErrorBox, PageHeader } from "@/components/feedback";
 import { RequireStaff } from "@/components/require-staff";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { KpiCard } from "@/components/ui/kpi-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAdminOverview } from "@/hooks/useAdmin";
 import { ROUTES } from "@/lib/constants";
@@ -36,39 +37,33 @@ export function AdminOverviewPage() {
       )}
       {!loading && overview && (
         <div className="grid gap-4 sm:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle>Users</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{overview.users}</p>
-              <Link to={ROUTES.adminUsers} className="text-sm text-primary underline">
+          <KpiCard
+            label="Users"
+            value={String(overview.users)}
+            footer={
+              <Link to={ROUTES.adminUsers} className="text-primary underline">
                 Manage users
               </Link>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Organizations</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{overview.organizations}</p>
-              <Link to={ROUTES.adminOrgs} className="text-sm text-primary underline">
+            }
+          />
+          <KpiCard
+            label="Organizations"
+            value={String(overview.organizations)}
+            footer={
+              <Link to={ROUTES.adminOrgs} className="text-primary underline">
                 Manage orgs
               </Link>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader>
-              <CardTitle>Projects</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-3xl font-bold">{overview.projects}</p>
-              <Link to={ROUTES.adminAudit} className="text-sm text-primary underline">
+            }
+          />
+          <KpiCard
+            label="Projects"
+            value={String(overview.projects)}
+            footer={
+              <Link to={ROUTES.adminAudit} className="text-primary underline">
                 Global audit (root)
               </Link>
-            </CardContent>
-          </Card>
+            }
+          />
         </div>
       )}
     </RequireStaff>

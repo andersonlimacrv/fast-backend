@@ -6,6 +6,7 @@ import { RequireStaff } from "@/components/require-staff";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CopyButton } from "@/components/ui/copy-button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAdminOrgs } from "@/hooks/useAdmin";
@@ -146,7 +147,9 @@ export function AdminOrgsPage() {
                 <TableCell>
                   <Badge variant="secondary">{o.slug}</Badge>
                 </TableCell>
-                <TableCell className="font-mono text-xs">{o.id}</TableCell>
+                <TableCell className="font-mono text-xs">
+                  {o.id} <CopyButton content={o.id} />
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>

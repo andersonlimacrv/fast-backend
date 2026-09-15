@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { applyTheme, isDarkTheme } from "@/external/theme";
@@ -122,7 +123,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
               </select>
             )}
             {activeOrg && <Badge variant="secondary">{activeOrg.slug}</Badge>}
-            {user && <span className="hidden text-xs text-muted-foreground sm:inline">{user.email}</span>}
+            {user && (
+              <span className="hidden items-center gap-2 sm:inline-flex">
+                <Avatar name={user.email} />
+                <span className="text-xs text-muted-foreground">{user.email}</span>
+              </span>
+            )}
             <ThemeToggle />
             {user && (
               <>
@@ -139,7 +145,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </header>
       <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
       <footer className="mx-auto max-w-6xl px-4 pb-8 text-xs text-muted-foreground">
-        API: <code>{API_BASE}</code> · dev visualization only — tokens live in localStorage.
+        API: <code>{API_BASE}</code> — dev visualization only, tokens live in localStorage.
       </footer>
     </div>
   );
