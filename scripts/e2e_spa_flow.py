@@ -13,10 +13,10 @@ Env: E2E_BASE_URL (default http://127.0.0.1:8000),
 from __future__ import annotations
 
 import argparse
+import http.client
 import json
 import os
-import urllib.error
-import urllib.request
+import urllib.parse
 import uuid
 
 BASE = os.environ.get("E2E_BASE_URL", "http://127.0.0.1:8000")
@@ -34,21 +34,24 @@ def call(
     token: str | None = None,
     origin: str | None = None,
 ) -> tuple[int, dict, str]:
-    req = urllib.request.Request(
-        BASE + path,
-        data=json.dumps(body).encode() if body is not None else None,
-        method=method,
-        headers={"Content-Type": "application/json"},
-    )
+    # http.client (not urllib.urlopen): fixed http/https schemes only, so the
+    # Bandit B310 audit (0-Medium gate) stays clean without suppressions.
+    parts = urllib.parse.urlsplit(BASE)
+    if parts.scheme not in ("http", "https"):
+        raise ValueError(f"refusing non-http(s) base URL: {BASE!r}")
+    headers = {"Content-Type": "application/json"}
     if token:
-        req.add_header("Authorization", f"Bearer {token}")
+        headers["Authorization"] = f"Bearer {token}"
     if origin:
-        req.add_header("Origin", origin)
+        headers["Origin"] = origin
+    conn_cls = http.client.HTTPSConnection if parts.scheme == "https" else http.client.HTTPConnection
+    conn = conn_cls(parts.hostname or "localhost", parts.port or 80, timeout=30)
     try:
-        with urllib.request.urlopen(req) as resp:
-            return resp.status, dict(resp.headers), resp.read().decode()
-    except urllib.error.HTTPError as exc:
-        return exc.code, dict(exc.headers), exc.read().decode()
+        conn.request(method, path, body=json.dumps(body).encode() if body is not None else None, headers=headers)
+        resp = conn.getresponse()
+        return resp.status, dict(resp.getheaders()), resp.read().decode()
+    finally:
+        conn.close()
 
 
 def check(name: str, cond: bool, detail: str = "") -> None:
