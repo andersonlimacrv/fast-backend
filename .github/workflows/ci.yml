@@ -54,3 +54,17 @@ jobs:
           sudo tar -xzf /tmp/gitleaks.tgz -C /usr/local/bin gitleaks
           gitleaks version
       - run: make security
+
+  web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: cd client && npm ci
+      - run: make web-lint web-test web-build
+      - run: make web-e2e-install
+      - run: make web-e2e
