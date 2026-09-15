@@ -2,7 +2,7 @@
 
 - [x] 1.1 Registrar triagem em `docs/SKILLS-REGISTRY.md` (`vercel-react-best-practices` + `vite-shadcn-tailwind4` como referência, SHA/tag, escopo `/client`, risco, dono)
 - [x] 1.2 Conferir `node --version` (>=20) e definir `npm` como default
-- [ ] 1.3 Subir backend real (`docker-compose up -d postgres redis`, `uv sync --extra dev`, `alembic upgrade head`) e anotar `VITE_API_URL` + `CORS_ORIGINS`
+- [x] 1.3 Subir backend real (`docker-compose up -d postgres redis`, `uv sync --extra dev`, `alembic upgrade head`) e anotar `VITE_API_URL` + `CORS_ORIGINS` — coberto por evidência posterior, ver adendo ao fim do arquivo
 
 ## 2. Scaffold Vite isolado
 
@@ -46,4 +46,3 @@
 > posterior — suite backend 122 testes PG/Redis reais, aceite admin ao vivo
 > (`login → me → org → switch → project → grants → audit`), E2E `make dev`
 > (`/healthz`, `/meta`, SPA :5173) e `make e2e` 15/15 no fluxo SPA-equivalente.
-- [x] 1.3 Subir backend real (`docker-compose up -d postgres redis`, `uv sync --extra dev`, `alembic upgrade head`) e anotar `VITE_API_URL` + `CORS_ORIGINS`
