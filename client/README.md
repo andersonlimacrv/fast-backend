@@ -55,6 +55,13 @@ Force-reset only queues the email (`{status:accepted}`) — no secret ever hits 
 As a plain member the nav hides and deep links render the backend 403. Admin pages
 need no active org (global scope); `/admin/audit` is root-only.
 
+## Login (two-step, email-first)
+
+The landing **Login** button opens a modal; `/login` is the same form as a page.
+Step 1 validates format and **always advances** for valid emails — existence is never
+revealed (backend answers generic 401 with equal Argon2 cost either way). Errors stay
+inline; success lands on `/~`.
+
 ## Notes
 
 - Auth is `Bearer` access JWT (10–15 min) + opaque Postgres refresh with mandatory

@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBox } from "@/components/feedback";
+import { LoginModal } from "@/components/login-modal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,6 +14,7 @@ import { normalizeMeta } from "@/services/meta";
 export function LandingPage() {
   const { user, ready } = useAuth();
   const { data: info, error, loading } = useReleaseInfo();
+  const [loginOpen, setLoginOpen] = useState(false);
 
   if (ready && user) return <Navigate to={ROUTES.app} replace />;
 
@@ -32,12 +35,13 @@ export function LandingPage() {
             <Button variant="outline" size="sm" asChild>
               <Link to={ROUTES.register}>Create account</Link>
             </Button>
-            <Button size="sm" asChild>
-              <Link to={ROUTES.login}>Login</Link>
+            <Button size="sm" onClick={() => setLoginOpen(true)}>
+              Login
             </Button>
           </div>
         </div>
       </header>
+      <LoginModal open={loginOpen} onOpenChange={setLoginOpen} />
       <main className="mx-auto max-w-6xl px-4 py-10">
         <section aria-labelledby="hero" className="mb-10">
           <h1 id="hero" className="text-3xl font-bold tracking-tight">

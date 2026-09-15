@@ -30,3 +30,5 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 ## [Unreleased] — Landing, two-step login e LGPD (changes `backend-release-meta` → `lgpd-leak-audit`)
 
 - **`backend-release-meta`**: `GET /meta` público `{app, version, modules:[{key, enabled}]}` (allowlist, sem segredos/hosts/PII) + `APP_VERSION` (default `"0.1.0"`, injetado da tag no release); teste anti-vazamento varrendo o body; ADR 0008.
+- **`client-landing-home`**: landing pública `/` (versão/módulos/flags ao vivo de `/meta`, fallback estático offline, zero terceiros); home logada em `/~`; `Protected` sem sessão → `/`; `services/meta.ts` + `useMeta` + `Landing.tsx`; capability `client-landing`.
+- **`two-step-login`**: `LoginForm` email-primeiro always-advance + `LoginModal` (Base-UI Dialog) na landing + `/login` two-step; dummy Argon2 no `login()` fecha oráculo de timing; `register` 409 documentado como tradeoff; ADR 0009; capability `two-step-login`.

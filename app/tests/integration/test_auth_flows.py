@@ -116,3 +116,39 @@ async def test_login_throttling(base_settings: Settings, clean_db: None) -> None
     finally:
         await app.state.throttler.aclose()
         await app.state.session_factory.kw["bind"].dispose()
+
+
+@pytest.mark.integration
+async def test_login_unknown_email_indistinguishable(client: AsyncClient, application) -> None:
+    """Unknown email vs wrong password: same 401 + same body (anti-enumeration)."""
+    data = await register_and_login(client)
+    ghost = await client.post("/auth/login", json={"email": "ghost-xyz@example.com", "password": "Wrong!Pass1"})
+    wrong = await client.post("/auth/login", json={"email": data["email"], "password": "Wrong!Pass1"})
+    assert ghost.status_code == wrong.status_code == 401
+    assert ghost.json() == wrong.json()
+
+
+@pytest.mark.integration
+async def test_login_unknown_email_spends_argon2(client: AsyncClient, application) -> None:
+    """The dummy verify runs on the unknown-email path (no timing shortcut)."""
+    calls: list[tuple[str, str]] = []
+    real = application.state.auth_service._hasher
+
+    class RecordingHasher:
+        def hash(self, password: str) -> str:
+            return str(real.hash(password))
+
+        def verify(self, password: str, password_hash: str) -> bool:
+            calls.append((password, password_hash))
+            return bool(real.verify(password, password_hash))
+
+        def verify_and_update(self, password: str, password_hash: str):  # passthrough
+            return real.verify_and_update(password, password_hash)
+
+    application.state.auth_service._hasher = RecordingHasher()
+    try:
+        resp = await client.post("/auth/login", json={"email": "nobody-here@example.com", "password": "Wrong!Pass1"})
+        assert resp.status_code == 401
+        assert len(calls) == 1 and calls[0][0] == "Wrong!Pass1"
+    finally:
+        application.state.auth_service._hasher = real

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import secrets
 import uuid
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
@@ -55,6 +56,14 @@ class AuthenticationService:
         self._throttler = throttler
         self._resets = reset_repo or PasswordResetRepository(settings)
         self._outbox = outbox
+        # Anti-enumeration: spent on unknown-email logins so their Argon2 cost
+        # matches the real path (see `login`). Lazy: no startup cost for CLI.
+        self._dummy_hash: str | None = None
+
+    def _dummy_password_hash(self) -> str:
+        if self._dummy_hash is None:
+            self._dummy_hash = self._hasher.hash(secrets.token_hex(32))
+        return self._dummy_hash
 
     async def register(self, *, email: str, password: str) -> User:
         email = canonical_email(email)
@@ -87,6 +96,9 @@ class AuthenticationService:
             async with session.begin():
                 loaded = await self._load_for_login(session, email)
                 if loaded is None:
+                    # Same Argon2 cost as a real check; result discarded. Without
+                    # this, response timing alone reveals whether the email exists.
+                    self._hasher.verify(password, self._dummy_password_hash())
                     await self._throttler.record_failure(ip, email)
                     raise InvalidCredentialsError("invalid credentials")
                 user, cred = loaded

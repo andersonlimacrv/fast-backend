@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { LoginForm } from "@/components/login-form";
 import { ErrorBox, Field, PageHeader } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,52 +10,12 @@ import { Input } from "@/components/ui/input";
 import { ROUTES } from "@/lib/constants";
 
 export function LoginPage() {
-  const { login, sessionNotice, dismissNotice } = useAuth();
-  const navigate = useNavigate();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<unknown>(null);
-  const [busy, setBusy] = useState(false);
-
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      await login(email, password);
-      navigate(ROUTES.app);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
     <div className="mx-auto max-w-md">
-      <PageHeader title="Login" description="POST /auth/login against the running backend." />
-      {sessionNotice && (
-        <div className="mb-4 rounded-md border border-border bg-muted p-3 text-sm">
-          <p>{sessionNotice}</p>
-          <Button variant="ghost" size="sm" className="mt-2" onClick={dismissNotice}>
-            Dismiss
-          </Button>
-        </div>
-      )}
+      <PageHeader title="Login" description="Email first — POST /auth/login against the running backend." />
       <Card>
         <CardContent className="space-y-4 pt-6">
-          <form onSubmit={(e) => void submit(e)} className="space-y-4">
-            <Field label="Email">
-              <Input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} />
-            </Field>
-            <Field label="Password">
-              <Input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
-            </Field>
-            <ErrorBox error={error} />
-            <Button type="submit" className="w-full" disabled={busy}>
-              {busy ? "Logging in…" : "Login"}
-            </Button>
-          </form>
+          <LoginForm />
           <p className="text-sm text-muted-foreground">
             No account? <Link to="/register" className="text-primary underline">Register</Link>
           </p>
