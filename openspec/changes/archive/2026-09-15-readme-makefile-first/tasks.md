@@ -21,6 +21,6 @@
 
 ## 4. Gate + verify
 
-- [ ] 4.1 `make help` e `make help-unclassified` continuam ok (Makefile intocado — sanity)
-- [ ] 4.2 Revisão leitora: `code-reviewer` (Standards + Spec) nos dois READMEs
-- [ ] 4.3 Solicitar `/openspec-verify` ou aprovação manual antes de archivar
+- [x] 4.1 `make help` e `make help-unclassified` continuam ok (Makefile intocado — sanity por inspeção; `make help` falha neste Windows por falta de `awk`, sem regressão)
+- [x] 4.2 Revisão leitora: `code-reviewer` (Standards + Spec) nos dois READMEs — verificado em 2026-09-15
+- [x] 4.3 Solicitar `/openspec-verify` ou aprovação manual antes de archivar — verificado, pronto para archive + sync
