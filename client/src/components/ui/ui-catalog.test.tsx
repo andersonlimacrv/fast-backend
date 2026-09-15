@@ -1,0 +1,161 @@
+// @vitest-environment jsdom
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Avatar, initialsOf } from "@/components/ui/avatar";
+import { Checkbox } from "@/components/ui/checkbox";
+import { CopyButton } from "@/components/ui/copy-button";
+import { RadioGroup, RadioItem } from "@/components/ui/radio";
+import { Switch } from "@/components/ui/switch";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+
+describe("tabs", () => {
+  it("switches panels", () => {
+    render(
+      <Tabs defaultValue="a">
+        <TabsList>
+          <TabsTrigger value="a">Alpha</TabsTrigger>
+          <TabsTrigger value="b">Beta</TabsTrigger>
+        </TabsList>
+        <TabsContent value="a">panel-a</TabsContent>
+        <TabsContent value="b">panel-b</TabsContent>
+      </Tabs>,
+    );
+    expect(screen.getByText("panel-a")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Beta" }));
+    expect(screen.getByText("panel-b")).toBeTruthy();
+  });
+});
+
+describe("tooltip", () => {
+  it("reveals content on focus", async () => {
+    render(
+      <Tooltip>
+        <TooltipTrigger>hover me</TooltipTrigger>
+        <TooltipContent>tip text</TooltipContent>
+      </Tooltip>,
+    );
+    fireEvent.focus(screen.getByText("hover me"));
+    expect(await screen.findByText("tip text")).toBeTruthy();
+  });
+});
+
+describe("alert-dialog", () => {
+  it("confirms and closes", async () => {
+    const onConfirm = vi.fn();
+    render(
+      <AlertDialog>
+        <AlertDialogTrigger>delete</AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogDescription>Irreversible.</AlertDialogDescription>
+          <AlertDialogAction onClick={onConfirm}>Confirm</AlertDialogAction>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+        </AlertDialogContent>
+      </AlertDialog>,
+    );
+    fireEvent.click(screen.getByText("delete"));
+    expect(await screen.findByText("Are you sure?")).toBeTruthy();
+    fireEvent.click(screen.getByText("Confirm"));
+    expect(onConfirm).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(screen.queryByText("Are you sure?")).toBeNull());
+  });
+});
+
+describe("checkbox", () => {
+  it("toggles and reports", () => {
+    const onChange = vi.fn();
+    render(<Checkbox aria-label="accept" onCheckedChange={onChange} />);
+    fireEvent.click(screen.getByRole("checkbox"));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange.mock.calls[0]?.[0]).toBe(true);
+  });
+});
+
+describe("radio", () => {
+  it("selects a value in the group", () => {
+    const onChange = vi.fn();
+    render(
+      <RadioGroup aria-label="role" onValueChange={onChange}>
+        <label>
+          <RadioItem value="admin" /> admin
+        </label>
+        <label>
+          <RadioItem value="member" /> member
+        </label>
+      </RadioGroup>,
+    );
+    fireEvent.click(screen.getByText("member"));
+    expect(onChange).toHaveBeenCalledWith("member", expect.anything());
+  });
+});
+
+describe("accordion", () => {
+  it("expands its panel", async () => {
+    render(
+      <Accordion>
+        <AccordionItem value="one">
+          <AccordionTrigger>Section</AccordionTrigger>
+          <AccordionContent>hidden body</AccordionContent>
+        </AccordionItem>
+      </Accordion>,
+    );
+    expect(screen.queryByText("hidden body")).toBeNull();
+    fireEvent.click(screen.getByText("Section"));
+    expect(await screen.findByText("hidden body")).toBeTruthy();
+  });
+});
+
+describe("switch", () => {
+  it("toggles on click", () => {
+    const onChange = vi.fn();
+    render(<Switch aria-label="enabled" onCheckedChange={onChange} />);
+    fireEvent.click(screen.getByRole("switch"));
+    expect(onChange).toHaveBeenCalledTimes(1);
+    expect(onChange.mock.calls[0]?.[0]).toBe(true);
+  });
+});
+
+describe("avatar", () => {
+  it("renders initials", () => {
+    expect(initialsOf("Ada Lovelace")).toBe("AL");
+    expect(initialsOf("root")).toBe("RO");
+    render(<Avatar name="Ada Lovelace" />);
+    expect(screen.getByText("AL")).toBeTruthy();
+  });
+});
+
+describe("copy-button", () => {
+  it("copies and shows feedback, then resets", async () => {
+    const writeText = vi.fn(async () => {});
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    const onCopied = vi.fn();
+    render(<CopyButton content="org-123" delay={20} onCopiedChange={onCopied} />);
+    fireEvent.click(screen.getByRole("button", { name: /copy to clipboard/i }));
+    expect(writeText).toHaveBeenCalledWith("org-123");
+    expect(await screen.findByRole("button", { name: /copied/i })).toBeTruthy();
+    expect(onCopied).toHaveBeenCalledWith(true, "org-123");
+    await waitFor(() => expect(screen.getByRole("button", { name: /copy to clipboard/i })).toBeTruthy());
+  });
+});

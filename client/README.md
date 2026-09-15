@@ -82,7 +82,9 @@ src/
 ├── hooks/      # React data layer (useAsync, useCollection, per-domain hooks, useAdmin*)
 ├── contexts/   # session state (AuthContext)
 ├── external/   # non-backend integrations (theme)
-├── components/ # ui/ is shadcn (don't hand-edit); feedback, layout
+├── components/ # ui/ is shadcn (don't hand-edit primitives); hand-owned ui/ catalog
+│                # (tabs, tooltip, alert-dialog, checkbox, radio, accordion, avatar,
+│                #  copy-button, switch) adapted from /references + motion micro-interactions
 └── pages/      # composition + form state only
 ```
 

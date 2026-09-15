@@ -15,6 +15,7 @@ import { DashboardPage } from "@/pages/Dashboard";
 import { GrantsPage } from "@/pages/Grants";
 import { HealthPage } from "@/pages/Health";
 import { MembersPage } from "@/pages/Members";
+import { NotFoundPage } from "@/pages/NotFound";
 import { OrgsPage } from "@/pages/Orgs";
 import { ProjectsPage } from "@/pages/Projects";
 
@@ -50,7 +51,7 @@ export default function App() {
         <Route path="admin/orgs" element={<AdminOrgsPage />} />
         <Route path="admin/audit" element={<AdminAuditPage />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <AppToaster />
     </>
