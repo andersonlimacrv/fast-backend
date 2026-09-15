@@ -31,3 +31,7 @@ The system SHALL boot the full stack from compose files with one command per env
 - **WHEN** a developer runs `make db-up`
 - **THEN** only `db` + `redis` start healthy (Postgres 17 + Valkey 9), ready for local migrate/api/test
 
+#### Scenario: CI database tooling tracks the server major
+- **WHEN** `POSTGRES_IMAGE` moves to a new major
+- **THEN** the CI `integration` job installs the matching `postgresql-client-<major>` (pg_dump aborts on major mismatch)
+
