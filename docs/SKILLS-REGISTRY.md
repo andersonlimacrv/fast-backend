@@ -19,6 +19,10 @@
 | `vercel-react-best-practices` | `github.com/vercel-labs/agent-skills` @`063bee9` (2026-09-15) · `.opencode/skills/vercel-react-best-practices/SKILL.md` (+`rules/`, `AGENTS.md`) | Runbook de React/TS (perf, waterfalls, bundle, rerender) p/ landing + login two-step | **instalada** | Baixo — oficial Vercel, MIT, markdown-only auditado (zero scripts); `allowed-tools` restrito a leitura | planner, backend-implementer |
 | `web-design-guidelines` | `github.com/vercel-labs/agent-skills` @`063bee9` (2026-09-15) · `.opencode/skills/web-design-guidelines/SKILL.md` | Auditoria de UI (a11y, formulários, foco, UX) p/ landing + login | **instalada** | Baixo — oficial Vercel, MIT, SKILL.md único auditado (busca guidelines remotas só no uso); `allowed-tools` restrito a leitura | planner, docs-writer |
 
+## Triagem client-reformulation (2026-09-15, change `client-reformulation`)
+
+Nada novo a instalar: `vercel-react-best-practices` + `web-design-guidelines` (ambas @`063bee9`, já instaladas acima) cobrem estrutura/a11y da reformulação. Catálogo §9 do `DESIGN.md` (Motion, GSAP, Lenis, R3F, Rive, Lottie, Anime, Spline, MCPs Figma/shadcn/21st/DevTools): **só leitura como referência** — `motion` entra como dependência npm pinada na PR3 (não como skill); resto proibido até caso de uso real com change própria.
+
 ## Uso registrado (por que "não se vê" skill sendo usada)
 
 Nota de arquitetura: este ambiente **não expõe Skill como ferramenta invocável** — skills aqui funcionam como runbooks: o agente lê o `SKILL.md` e executa os Steps manualmente. Foi exatamente o que aconteceu nas 8 fases:

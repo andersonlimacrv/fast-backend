@@ -30,6 +30,10 @@
 4. **Verificação:** `git status --short` após cada mudança. Sem commit sem pedido. Conventional Commits. Sem segredos.
 5. **Estilo:** `ruff` line-length 128, type hints, async-first, `asyncio_mode=auto`, `import-linter` p/ DAG.
 
+## Design system
+
+Antes de gerar ou alterar qualquer componente de UI, leia `docs/DESIGN.md` por completo e siga os tokens, componentes base e padrões de interação definidos lá. Não reintroduza cores, espaçamentos ou variantes de componente fora do documentado — proponha uma alteração ao DESIGN.md primeiro (`ui-designer` desenha, `frontend-implementer` executa, `design-auditor` confere).
+
 ## 5. Subagentes (`.opencode/agents/`)
 
 | Agente | Arquivo | Quando usar |
@@ -40,6 +44,9 @@
 | `security-auditor` | `security-auditor.md` | Auditoria SAST + auth/tenancy. Read-only. **Novo.** |
 | `tester` | `tester.md` | TDD; exige Postgres real p/ auth/tenancy; mock não prova isolamento. |
 | `docs-writer` | `docs-writer.md` | Dono de README/docs/registry/ADRs. |
+| `ui-designer` | `ui-designer.md` | Propõe tokens/componentes a partir de `docs/DESIGN.md`. Read-only, nunca implementa. |
+| `frontend-implementer` | `frontend-implementer.md` | Implementa UI pós-change no `client/`. Conhece camadas e gates `npm`. **Exige change aprovada.** |
+| `design-auditor` | `design-auditor.md` | Audita UI vs `DESIGN.md` (tokens, a11y, anti-clichês) + `make web-e2e`. Read-only. |
 
 Primários: `build` (executa), `plan` (Tab, analisa sem alterar).
 
@@ -49,7 +56,7 @@ Primários: `build` (executa), `plan` (Tab, analisa sem alterar).
 fast-backend/
 ├── README.md / AGENTS.md / CHANGELOG.md / opencode.json
 ├── Dockerfile / .dockerignore / docker-compose.yml / docker-compose.prod.yml
-├── .opencode/agents/ (6 agentes)
+├── .opencode/agents/ (9 agentes: 6 núcleo + ui-designer/frontend-implementer/design-auditor)
 ├── scripts/ backup.py, deploy.py, new_project.py
 ├── docs/ RULES.md, ROADMAP.md, DEPLOYMENT.md, BOILERPLATE-ANALYSIS.md, SKILLS-REGISTRY.md, adr/0001-0004
 ├── openspec/ (specs + changes)
