@@ -15,6 +15,7 @@ Modular Monolith Async FastAPI SaaS Kernel — own auth (JWT + opaque refresh), 
 ## Contents
 
 - [Getting started](#getting-started)
+- [Frontend (dev)](#frontend-dev)
 - [Test / verify](#test--verify)
 - [Build / deploy](#build--deploy)
 - [Backup](#backup)
@@ -59,6 +60,25 @@ make tools   # mailpit + minio profiles
 docker compose up -d --build                # make up (needs .env)
 docker compose --profile tools up -d --build  # make tools
 ```
+
+</details>
+
+## Frontend (dev)
+
+```bash
+make web-install   # one time: npm ci in client/
+make web           # Vite dev → http://localhost:5173
+```
+
+<details>
+<summary>Under the hood</summary>
+
+```bash
+cd client && npm ci
+cd client && npm run dev -- --port 5173 --strictPort
+```
+
+Needs `client/.env` (`VITE_API_URL=http://localhost:8000`, see `client/.env.example`) and backend `CORS_ORIGINS=["http://localhost:5173"]`. Read-only visualization SPA — details in `client/README.md`.
 
 </details>
 

@@ -19,6 +19,9 @@
 | `BUILD_TARGET` | `prod` | Dockerfile stage for `build` | `make build BUILD_TARGET=dev` |
 | `IMAGE` / `TAG` | `fast-backend` / `dev` | Image name for `build` (never `:latest`) | `make build IMAGE=ghcr.io/org/app TAG=abc1234` |
 | `BACKUP_DIR` | `./var/backups` | `backup` destination | `make backup BACKUP_DIR=/mnt/backups` |
+| `POSTGRES_IMAGE` / `REDIS_IMAGE` | `postgres:17-alpine` / `valkey/valkey:9-alpine` | Pinned data-service images (single source of truth; RULES §10) | `make db-up POSTGRES_IMAGE=postgres:18-alpine` |
+| `DOCKER` | `docker` | Daemon CLI used by test fixtures | `make test-integration DOCKER=podman` (fixtures read `DOCKER_BIN`) |
+| `NPM` / `CLIENT_DIR` / `WEB_PORT` | `npm` / `client` / `5173` | Frontend dev server knobs | `make web WEB_PORT=3000` |
 | `CONFIRM` | *(empty)* | Acknowledgement for destructive targets | `make db-reset CONFIRM=1` |
 | `msg` / `f` / `rev` | *(empty)* | Required args: migration message, test file, downgrade revision | `make migration msg="..."` |
 | `FILE` | *(empty)* | Restore artifact path | `make restore FILE=... CONFIRM=1` |
@@ -88,6 +91,7 @@ environment, never from Makefile variables or files.
 
 - **`make up`** — app + worker + db + redis (needs `.env`; `_check-env`
   fails fast telling you to run `make env-template`).
+- **`make db-up`** — db + redis only (data services for local dev: migrate/api/test against them).
 - **`make down`** — stops everything, keeps volumes. **`make restart`** — `down` + `up`.
 - **`make logs` / `logs-app` / `logs-db`** — follow logs (all / app / postgres).
 - **`make tools`** — mailpit + minio profiles (dev email capture, S3 testing).
@@ -99,6 +103,8 @@ environment, never from Makefile variables or files.
 - **`make api [PORT=]`** — uvicorn with reload + app factory
   (`http://127.0.0.1:8000/docs`).
 - **`make worker [WORKERS=]`** — `taskiq worker app.worker:broker`.
+- **`make web-install`** — `npm ci` inside `$(CLIENT_DIR)` (shell-agnostic, works on Windows cmd too).
+- **`make web [WEB_PORT=]`** — Vite dev server (`http://localhost:5173`). Needs `client/.env` (`VITE_API_URL`) and backend CORS allowing the origin.
 
 ## Ops — backups, scaffolding, releases
 

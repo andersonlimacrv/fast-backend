@@ -17,6 +17,7 @@ SHELL := bash
 # --- Fork points (override, don't edit) ---
 UV ?= uv
 COMPOSE ?= docker compose
+DOCKER ?= docker
 ENV_FILE ?= .env
 HOST ?= 127.0.0.1
 PORT ?= 8000
@@ -26,6 +27,14 @@ BUILD_TARGET ?= prod
 IMAGE ?= fast-backend
 TAG ?= dev
 BACKUP_DIR ?= ./var/backups
+POSTGRES_IMAGE ?= postgres:17-alpine
+REDIS_IMAGE ?= valkey/valkey:9-alpine
+NPM ?= npm
+CLIENT_DIR ?= client
+WEB_PORT ?= 5173
+# Single source of truth for data-service images: `make up IMAGE=x` flows to
+# compose files (`${VAR:-default}`) and test fixtures alike.
+COMPOSE_ENV = POSTGRES_IMAGE=$(POSTGRES_IMAGE) REDIS_IMAGE=$(REDIS_IMAGE)
 
 ##@ 🚀 Setup
 
@@ -74,8 +83,8 @@ db-reset: _check-env ## Destroy volumes, recreate, migrate (⚠️ DESTRUCTIVE)
 	@if [ -z "$(CONFIRM)" ]; then \
 		echo "⚠️  Destroys local volumes. Re-run with CONFIRM=1"; exit 1; \
 	fi
-	$(COMPOSE) down -v
-	$(COMPOSE) up -d $(STACK_SERVICES)
+	$(COMPOSE_ENV) $(COMPOSE) down -v
+	$(COMPOSE_ENV) $(COMPOSE) up -d $(STACK_SERVICES)
 	$(UV) run alembic upgrade head
 
 ##@ 🧪 Tests
@@ -87,7 +96,7 @@ test-unit: ## Fast tests, no services
 	$(UV) run pytest -m "unit"
 
 test-integration: ## Postgres+Redis via testcontainers
-	$(UV) run pytest -m "integration"
+	DOCKER_BIN=$(DOCKER) POSTGRES_IMAGE=$(POSTGRES_IMAGE) REDIS_IMAGE=$(REDIS_IMAGE) $(UV) run pytest -m "integration"
 
 test-host: ## Full suite where Docker bridge is blocked
 	FB_TEST_NETWORK=host $(UV) run pytest
@@ -128,7 +137,10 @@ check: verify test-unit ## Local PR gate (static + fast tests)
 ##@ 🐳 Docker
 
 up: _check-env ## Start app + worker + db + redis
-	$(COMPOSE) up -d --build
+	$(COMPOSE_ENV) $(COMPOSE) up -d --build
+
+db-up: _check-env ## Start db + redis only (data services for local dev)
+	$(COMPOSE_ENV) $(COMPOSE) up -d $(STACK_SERVICES)
 
 down: ## Stop everything (keeps volumes)
 	$(COMPOSE) down
@@ -145,7 +157,7 @@ logs-db: ## Follow postgres logs only
 restart: down up ## Rebuild and restart everything
 
 tools: _check-env ## Start mailpit + minio profiles
-	$(COMPOSE) --profile tools up -d --build
+	$(COMPOSE_ENV) $(COMPOSE) --profile tools up -d --build
 
 build: ## Build prod image (IMAGE=... TAG=..., never :latest)
 	docker build --target $(BUILD_TARGET) -t "$(IMAGE):$(TAG)" .
@@ -157,6 +169,12 @@ api: ## API with reload (http://127.0.0.1:8000/docs)
 
 worker: ## Taskiq worker (WORKERS=2)
 	$(UV) run taskiq worker app.worker:broker --workers $(WORKERS)
+
+web-install: ## Install frontend deps (`npm ci` in client/)
+	cd $(CLIENT_DIR) && $(NPM) ci
+
+web: ## Frontend dev server (http://localhost:5173, WEB_PORT=...)
+	cd $(CLIENT_DIR) && $(NPM) run dev -- --port $(WEB_PORT) --strictPort
 
 ##@ 🛫 Ops
 
@@ -197,7 +215,7 @@ help-unclassified: ## Targets with ## but no ##@ section above (audit, must be e
 .PHONY: setup sync env-template migrate migration downgrade db-current db-history db-shell db-reset
 .PHONY: test test-unit test-integration test-host test-file clean
 .PHONY: lint format-fix types arch security verify check
-.PHONY: up down logs logs-app logs-db restart tools build
-.PHONY: api worker
+.PHONY: up db-up down logs logs-app logs-db restart tools build
+.PHONY: api worker web-install web
 .PHONY: backup restore new-project release-notes
 .PHONY: change help help-unclassified

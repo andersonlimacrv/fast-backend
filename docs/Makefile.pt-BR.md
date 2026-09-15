@@ -19,6 +19,9 @@
 | `BUILD_TARGET` | `prod` | Stage do Dockerfile p/ `build` | `make build BUILD_TARGET=dev` |
 | `IMAGE` / `TAG` | `fast-backend` / `dev` | Nome da imagem do `build` (nunca `:latest`) | `make build IMAGE=ghcr.io/org/app TAG=abc1234` |
 | `BACKUP_DIR` | `./var/backups` | Destino do `backup` | `make backup BACKUP_DIR=/mnt/backups` |
+| `POSTGRES_IMAGE` / `REDIS_IMAGE` | `postgres:17-alpine` / `valkey/valkey:9-alpine` | Imagens pinadas dos serviços de dados (fonte única; RULES §10) | `make db-up POSTGRES_IMAGE=postgres:18-alpine` |
+| `DOCKER` | `docker` | CLI do daemon usado pelos fixtures de teste | `make test-integration DOCKER=podman` (fixtures leem `DOCKER_BIN`) |
+| `NPM` / `CLIENT_DIR` / `WEB_PORT` | `npm` / `client` / `5173` | Knobs do servidor dev do frontend | `make web WEB_PORT=3000` |
 | `CONFIRM` | *(vazio)* | Confirmação p/ destrutivos | `make db-reset CONFIRM=1` |
 | `msg` / `f` / `rev` | *(vazio)* | Args obrigatórios: mensagem de migration, arquivo de teste, revisão de downgrade | `make migration msg="..."` |
 | `FILE` | *(vazio)* | Artefato do restore | `make restore FILE=... CONFIRM=1` |
@@ -88,6 +91,7 @@ ambiente, nunca de variáveis do Makefile ou arquivos.
 
 - **`make up`** — app + worker + db + redis (precisa `.env`; `_check-env`
   falha rápido mandando rodar `make env-template`).
+- **`make db-up`** — só db + redis (serviços de dados p/ dev local: migrate/api/test contra eles).
 - **`make down`** — para tudo, mantém volumes. **`make restart`** — `down` + `up`.
 - **`make logs` / `logs-app` / `logs-db`** — acompanha logs (todos / app / postgres).
 - **`make tools`** — profiles mailpit + minio (captura de email dev, teste S3).
@@ -99,6 +103,8 @@ ambiente, nunca de variáveis do Makefile ou arquivos.
 - **`make api [PORT=]`** — uvicorn com reload + factory do app
   (`http://127.0.0.1:8000/docs`).
 - **`make worker [WORKERS=]`** — `taskiq worker app.worker:broker`.
+- **`make web-install`** — `npm ci` dentro de `$(CLIENT_DIR)` (shell-agnostic, funciona até no cmd do Windows).
+- **`make web [WEB_PORT=]`** — servidor dev Vite (`http://localhost:5173`). Precisa de `client/.env` (`VITE_API_URL`) e CORS do backend liberando a origem.
 
 ## Ops — backups, scaffolding, releases
 

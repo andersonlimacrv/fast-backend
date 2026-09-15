@@ -33,6 +33,13 @@ HOST_NET = os.environ.get("FB_TEST_NETWORK") == "host"
 if HOST_NET:
     os.environ["TESTCONTAINERS_RYUK_DISABLED"] = "true"
 
+# Single source of truth for data-service images is the Makefile
+# (`POSTGRES_IMAGE` / `REDIS_IMAGE` / `DOCKER`); same defaults here so a bare
+# `pytest` (without make) resolves identical pins.
+POSTGRES_IMAGE = os.environ.get("POSTGRES_IMAGE", "postgres:17-alpine")
+REDIS_IMAGE = os.environ.get("REDIS_IMAGE", "valkey/valkey:9-alpine")
+DOCKER_BIN = os.environ.get("DOCKER_BIN", "docker")
+
 
 def wait_tcp(host: str, port: int, timeout: int = 90) -> None:
     """Block until a TCP port accepts (or raise). Works in both net modes.
@@ -160,10 +167,10 @@ def containers() -> Iterator[dict[str, str]]:
         import subprocess
 
         def run(*args: str) -> None:
-            subprocess.run(["docker", *args], check=True, capture_output=True)
+            subprocess.run([DOCKER_BIN, *args], check=True, capture_output=True)
 
-        run("pull", "postgres:16-alpine")
-        run("pull", "redis:7-alpine")
+        run("pull", POSTGRES_IMAGE)
+        run("pull", REDIS_IMAGE)
         run(
             "run",
             "-d",
@@ -178,9 +185,9 @@ def containers() -> Iterator[dict[str, str]]:
             "POSTGRES_PASSWORD=test",
             "-e",
             "POSTGRES_DB=test",
-            "postgres:16-alpine",
+            POSTGRES_IMAGE,
         )
-        run("run", "-d", "--rm", "--network", "host", "--name", "fb-test-redis", "redis:7-alpine")
+        run("run", "-d", "--rm", "--network", "host", "--name", "fb-test-redis", REDIS_IMAGE)
         try:
 
             async def wait_ready() -> None:
@@ -208,8 +215,8 @@ def containers() -> Iterator[dict[str, str]]:
             run("rm", "-f", "fb-test-pg")
             run("rm", "-f", "fb-test-redis")
         return
-    pg = PostgresContainer("postgres:16-alpine")
-    rd = RedisContainer("redis:7-alpine")
+    pg = PostgresContainer(POSTGRES_IMAGE)
+    rd = RedisContainer(REDIS_IMAGE)
     pg.start()
     rd.start()
     try:

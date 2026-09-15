@@ -93,3 +93,10 @@ Kubernetes, microservices, Kafka, event sourcing, CQRS completo, schema/database
 
 - Usuário (README, CONTRIBUTING, SECURITY, `docs/{ARCHITECTURE,SCALING,DEPLOYMENT}`, `guides/`, templates, CHANGELOG): **inglês padrão** + variante `.pt-BR.md` com banner de alternância.
 - Interno/processo (AGENTS.md, RULES, ROADMAP, ADRs, SKILLS-REGISTRY, ANALYSIS, openspec, agentes): PT-BR.
+
+## 10. Pin de versões (dependências externas)
+
+- Toda imagem/container e ferramenta externa deve ser pinada em `major.minor[-variant]` (ex.: `postgres:17-alpine`, `valkey/valkey:9-alpine`); **nunca** tag flutuante só-major (`redis:7`), nunca `:latest`.
+- Patches flutuam via tag minor (recebem CVE fixes); bumps de minor/major via OpenSpec change dedicada, com a suite verde como gate.
+- Fonte única: variáveis `?=` do `Makefile` (`POSTGRES_IMAGE`, `REDIS_IMAGE`, `COMPOSE`, `DOCKER`); composes consomem via `${VAR:-default}`, fixtures de teste via `os.getenv` com os mesmos defaults. Troca-se em 1 lugar.
+- Licença conta: preferir upstream mantido e OSI-aprovado/permissivo (BSD/MIT/Apache-2.0); source-available (RSAL/SSPL) ou copyleft forte (AGPL) exige decisão explícita registrada (esta seção ou ADR).
