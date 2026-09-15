@@ -22,6 +22,10 @@ export const ROUTES = {
   grants: "/grants",
   audit: "/audit",
   account: "/account",
+  admin: "/admin",
+  adminUsers: "/admin/users",
+  adminOrgs: "/admin/orgs",
+  adminAudit: "/admin/audit",
 } as const;
 
 export const ROLES = ["owner", "admin", "member"] as const;

@@ -56,6 +56,7 @@ export interface UserRead {
   email: string;
   is_active: boolean;
   is_superuser: boolean;
+  is_staff?: boolean;
 }
 
 export interface OrganizationRead {
@@ -101,6 +102,44 @@ interface TokenPair {
   access_token: string;
   refresh_token: string;
   token_type: string;
+}
+
+export interface AdminUserRead {
+  id: string;
+  email: string;
+  is_active: boolean;
+  is_superuser: boolean;
+  is_staff: boolean;
+  created_at: string;
+}
+
+export interface AdminOverview {
+  users: number;
+  organizations: number;
+  projects: number;
+}
+
+export interface AdminOrgRead {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface AdminAuditRead {
+  id: string;
+  tenant_id: string | null;
+  actor_user_id: string | null;
+  action: string;
+  resource_type: string;
+  resource_id: string;
+  metadata?: Record<string, unknown>;
+  audit_metadata?: Record<string, unknown>;
+  ip: string | null;
+  created_at: string;
+}
+
+export interface StatusAccepted {
+  status: string;
 }
 
 /* ---------- core request ---------- */
@@ -311,6 +350,72 @@ export async function upsertGrant(
 
 export async function listAudit(orgId: string): Promise<AuditRead[]> {
   return authed(`/organizations/${orgId}/audit`);
+}
+
+/* ---------- admin control plane (staff+; root-only where noted) ---------- */
+
+export async function getAdminOverview(): Promise<AdminOverview> {
+  return authed<AdminOverview>("/admin/overview");
+}
+
+export async function listAdminUsers(limit = 100, offset = 0): Promise<AdminUserRead[]> {
+  return authed<AdminUserRead[]>(`/admin/users?limit=${limit}&offset=${offset}`);
+}
+
+export async function getAdminUser(userId: string): Promise<AdminUserRead> {
+  return authed<AdminUserRead>(`/admin/users/${userId}`);
+}
+
+export async function createAdminUser(email: string, password: string, reason: string): Promise<AdminUserRead> {
+  return json<AdminUserRead>("/admin/users", "POST", { email, password, reason });
+}
+
+export async function disableAdminUser(userId: string, reason: string): Promise<AdminUserRead> {
+  return json<AdminUserRead>(`/admin/users/${userId}/disable`, "POST", { reason });
+}
+
+export async function enableAdminUser(userId: string, reason: string): Promise<AdminUserRead> {
+  return json<AdminUserRead>(`/admin/users/${userId}/enable`, "POST", { reason });
+}
+
+export async function revokeAdminSessions(userId: string, reason: string): Promise<StatusAccepted> {
+  return json<StatusAccepted>(`/admin/users/${userId}/revoke-sessions`, "POST", { reason });
+}
+
+export async function forceAdminPasswordReset(userId: string, reason: string): Promise<StatusAccepted> {
+  return json<StatusAccepted>(`/admin/users/${userId}/force-password-reset`, "POST", { reason });
+}
+
+export async function grantStaff(userId: string, reason: string): Promise<AdminUserRead> {
+  return json<AdminUserRead>(`/admin/staff/${userId}/grant`, "POST", { reason });
+}
+
+export async function revokeStaff(userId: string, reason: string): Promise<AdminUserRead> {
+  return json<AdminUserRead>(`/admin/staff/${userId}/revoke`, "POST", { reason });
+}
+
+export async function listAdminOrgs(limit = 100, offset = 0): Promise<AdminOrgRead[]> {
+  return authed<AdminOrgRead[]>(`/admin/organizations?limit=${limit}&offset=${offset}`);
+}
+
+export async function setAdminMembership(
+  orgId: string,
+  userId: string,
+  role: string,
+  reason: string,
+): Promise<StatusAccepted> {
+  return json<StatusAccepted>("/admin/memberships", "POST", { org_id: orgId, user_id: userId, role, reason });
+}
+
+export async function removeAdminMembership(orgId: string, userId: string, reason: string): Promise<StatusAccepted> {
+  return authed<StatusAccepted>(`/admin/memberships/${orgId}/${userId}`, {
+    method: "DELETE",
+    body: JSON.stringify({ reason }),
+  });
+}
+
+export async function listAdminAudit(limit = 100): Promise<AdminAuditRead[]> {
+  return authed<AdminAuditRead[]>(`/admin/audit?limit=${limit}`);
 }
 
 export async function getHealthz(): Promise<{ status: string }> {

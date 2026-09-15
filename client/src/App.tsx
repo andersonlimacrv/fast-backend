@@ -4,6 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout";
 import { AppToaster } from "@/components/ui/toaster";
 import { AccountPage } from "@/pages/Account";
+import { AdminAuditPage } from "@/pages/AdminAudit";
+import { AdminOrgsPage } from "@/pages/AdminOrgs";
+import { AdminOverviewPage } from "@/pages/AdminOverview";
+import { AdminUsersPage } from "@/pages/AdminUsers";
 import { LoginPage, RegisterPage } from "@/pages/Auth";
 import { AuditPage } from "@/pages/Audit";
 import { DashboardPage } from "@/pages/Dashboard";
@@ -39,6 +43,10 @@ export default function App() {
         <Route path="grants" element={<GrantsPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="account" element={<AccountPage />} />
+        <Route path="admin" element={<AdminOverviewPage />} />
+        <Route path="admin/users" element={<AdminUsersPage />} />
+        <Route path="admin/orgs" element={<AdminOrgsPage />} />
+        <Route path="admin/audit" element={<AdminAuditPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -33,6 +33,13 @@ const NAV = [
   { to: ROUTES.account, label: "Account" },
 ];
 
+const ADMIN_NAV = [
+  { to: ROUTES.admin, label: "Admin" },
+  { to: ROUTES.adminUsers, label: "Admin users" },
+  { to: ROUTES.adminOrgs, label: "Admin orgs" },
+  { to: ROUTES.adminAudit, label: "Admin audit" },
+];
+
 export function Layout({ children }: { children: React.ReactNode }) {
   const { user, orgs, activeOrgId, switchOrg, logout, logoutEverywhere } = useAuth();
   const navigate = useNavigate();
@@ -81,6 +88,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 {item.label}
               </NavLink>
             ))}
+            {(user?.is_staff || user?.is_superuser) &&
+              ADMIN_NAV.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  className={({ isActive }) =>
+                    cn(
+                      "rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                      isActive && "bg-accent text-accent-foreground",
+                    )
+                  }
+                >
+                  {item.label}
+                </NavLink>
+              ))}
           </nav>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             {orgs.length > 0 && (
