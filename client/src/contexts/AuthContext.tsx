@@ -5,16 +5,15 @@ import {
   clearSession,
   fetchMe,
   getAccessToken,
-  getActiveOrgId,
   listOrgs,
   login as apiLogin,
   logout as apiLogout,
   logoutEverywhere as apiLogoutEverywhere,
   register as apiRegister,
-  setActiveOrgId,
   switchOrganization,
 } from "@/lib/api";
 import type { OrganizationRead, UserRead } from "@/lib/api";
+import { getActiveOrgId, onSessionExpired, setActiveOrgId } from "@/services/session";
 
 interface AuthState {
   user: UserRead | null;
@@ -77,8 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setActiveOrg(null);
       setSessionNotice("Session invalidated (refresh reuse or expiry). Please log in again.");
     };
-    window.addEventListener("fb:session-expired", onExpired);
-    return () => window.removeEventListener("fb:session-expired", onExpired);
+    return onSessionExpired(onExpired);
   }, [loadSession]);
 
   const login = useCallback(

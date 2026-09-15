@@ -1,53 +1,30 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 
-import { useAuth } from "@/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBox, Field, PageHeader } from "@/components/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { createOrg, listOrgs } from "@/lib/api";
-import type { OrganizationRead } from "@/lib/api";
+import { useOrgs } from "@/hooks/useOrgs";
+import { ROUTES } from "@/lib/constants";
+import { createOrganization } from "@/services/orgs";
 
 export function OrgsPage() {
   const { switchOrg, activeOrgId, refreshUser } = useAuth();
-  const [orgs, setOrgs] = useState<OrganizationRead[]>([]);
+  const { items: orgs, error, loading, busy, mutate } = useOrgs();
   const [name, setName] = useState("");
-  const [error, setError] = useState<unknown>(null);
-  const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    try {
-      setOrgs(await listOrgs());
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      await createOrg(name);
+    const value = name;
+    await mutate(async () => {
+      await createOrganization(value);
       setName("");
-      await load();
       await refreshUser();
-    } catch (err) {
-      setError(err);
-    } finally {
-      setBusy(false);
-    }
+    });
   };
 
   return (
@@ -98,7 +75,7 @@ export function OrgsPage() {
                       </Button>
                     )}
                     <Button size="sm" variant="ghost" asChild>
-                      <Link to={`/orgs/${o.id}/members`}>Members</Link>
+                      <Link to={ROUTES.members(o.id)}>Members</Link>
                     </Button>
                   </div>
                 </TableCell>

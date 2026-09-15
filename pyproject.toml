@@ -81,6 +81,7 @@ known-first-party = ["app"]
 "app/modules/entitlements/router.py" = ["B008"]
 "app/modules/audit/router.py" = ["B008"]
 "scripts/backup.py" = ["S603"]
+"scripts/e2e_spa_flow.py" = ["S310"]
 "app/tests/**/*.py" = ["S105", "S106", "S107", "S603", "S607"]
 
 [tool.importlinter]

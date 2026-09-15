@@ -45,3 +45,28 @@ Useful flows to eyeball: `/health` (no auth) → register/login → `/` overview
 - Tokens live in `localStorage` for dev convenience. Never ship this to prod as-is.
 - Theme: Tailwind v4 CSS-first (`src/index.css`, `@theme` oklch). Paste tweakcn output
   over the `:root`/`.dark` blocks to re-theme.
+
+## Architecture
+
+```
+src/
+├── lib/        # transport (api.ts: fetch + ApiError + wire types), constants, utils — no React, no DOM
+├── services/   # domain without React (session, orgs, projects, members, grants, audit, health, account)
+├── hooks/      # React data layer (useAsync, useCollection, per-domain hooks)
+├── contexts/   # session state (AuthContext)
+├── external/   # non-backend integrations (theme)
+├── components/ # ui/ is shadcn (don't hand-edit); feedback, layout
+└── pages/      # composition + form state only
+```
+
+Import rule: `pages → hooks → services → lib`. Pages never import `@/lib/api`
+directly (use a hook); services never import React; `lib/api.ts` never touches
+`window`/`localStorage` (session side-effects live in `services/session.ts`).
+
+## Checks
+
+```bash
+npm run build    # tsc -b && vite build
+npm run lint     # oxlint
+npm run test:run # vitest (services + hooks)
+```

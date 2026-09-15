@@ -1,42 +1,20 @@
-import { useCallback, useEffect, useState } from "react";
-
 import { ErrorBox, PageHeader } from "@/components/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { API_BASE, getHealthz, getReadyz } from "@/lib/api";
+import { useHealth } from "@/hooks/useHealth";
+import { API_BASE } from "@/lib/constants";
 
 export function HealthPage() {
-  const [health, setHealth] = useState<{ status: string } | null>(null);
-  const [ready, setReady] = useState<{ status: string; db: string; redis: string } | null>(null);
-  const [error, setError] = useState<unknown>(null);
-  const [loading, setLoading] = useState(false);
-
-  const check = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [h, r] = await Promise.all([getHealthz(), getReadyz()]);
-      setHealth(h);
-      setReady(r);
-    } catch (err) {
-      setError(err);
-      setHealth(null);
-      setReady(null);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void check();
-  }, [check]);
+  const { data, error, loading, refresh } = useHealth();
+  const health = data?.health ?? null;
+  const ready = data?.ready ?? null;
 
   return (
     <div>
-      <PageHeader title="Backend health" description={`Probing ${API_BASE} — no auth required.`} />
+      <PageHeader title="Backend health" description={`Probing ${API_BASE} - no auth required.`} />
       <div className="mb-4">
-        <Button onClick={() => void check()} disabled={loading}>
+        <Button onClick={() => void refresh()} disabled={loading}>
           {loading ? "Checking…" : "Re-check"}
         </Button>
       </div>

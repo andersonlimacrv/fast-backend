@@ -1,45 +1,21 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
-import { useAuth } from "@/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBox, Field, PageHeader } from "@/components/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { addMember, changeMemberRole, listMembers, removeMember } from "@/lib/api";
-import type { MembershipRead } from "@/lib/api";
-
-const ROLES = ["owner", "admin", "member"];
+import { useMembers } from "@/hooks/useMembers";
+import { ROLES } from "@/lib/constants";
+import { inviteMember, kickMember, updateMemberRole } from "@/services/members";
 
 export function MembersPage() {
   const { activeOrgId } = useAuth();
-  const [members, setMembers] = useState<MembershipRead[]>([]);
+  const { items: members, error, loading, busy, mutate } = useMembers(activeOrgId);
   const [userId, setUserId] = useState("");
-  const [role, setRole] = useState("member");
-  const [error, setError] = useState<unknown>(null);
-  const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    if (!activeOrgId) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      setMembers(await listMembers(activeOrgId));
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeOrgId]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const [role, setRole] = useState<string>("member");
 
   if (!activeOrgId) {
     return (
@@ -51,37 +27,19 @@ export function MembersPage() {
 
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      await addMember(activeOrgId, userId, role);
+    const uid = userId;
+    await mutate(async () => {
+      await inviteMember(activeOrgId, uid, role);
       setUserId("");
-      await load();
-    } catch (err) {
-      setError(err);
-    } finally {
-      setBusy(false);
-    }
+    });
   };
 
   const changeRole = async (uid: string, next: string) => {
-    setError(null);
-    try {
-      await changeMemberRole(activeOrgId, uid, next);
-      await load();
-    } catch (err) {
-      setError(err);
-    }
+    await mutate(() => updateMemberRole(activeOrgId, uid, next));
   };
 
   const remove = async (uid: string) => {
-    setError(null);
-    try {
-      await removeMember(activeOrgId, uid);
-      await load();
-    } catch (err) {
-      setError(err);
-    }
+    await mutate(() => kickMember(activeOrgId, uid));
   };
 
   return (

@@ -1,7 +1,7 @@
 import { useState } from "react";
 
-import { useAuth } from "@/auth/AuthContext";
-import { changePassword } from "@/lib/api";
+import { useAuth } from "@/contexts/AuthContext";
+import { updatePassword } from "@/services/account";
 import { ErrorBox, Field, PageHeader } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +21,7 @@ export function AccountPage() {
     setError(null);
     setOk(false);
     try {
-      await changePassword(currentPassword, newPassword);
+      await updatePassword(currentPassword, newPassword);
       setOk(true);
       setCurrentPassword("");
       setNewPassword("");

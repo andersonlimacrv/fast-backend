@@ -1,6 +1,6 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
-import { useAuth } from "@/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout";
 import { AccountPage } from "@/pages/Account";
 import { LoginPage, RegisterPage } from "@/pages/Auth";

@@ -101,6 +101,9 @@ test-integration: ## Postgres+Redis via testcontainers
 test-host: ## Full suite where Docker bridge is blocked
 	FB_TEST_NETWORK=host $(UV) run pytest
 
+e2e: ## SPA-equivalent flow vs running API (needs `make api` + migrated db)
+	$(UV) run python scripts/e2e_spa_flow.py
+
 test-file: ## Single file (make test-file f=app/tests/unit/test_jwt.py)
 	@if [ -z "$(f)" ]; then echo "Usage: make test-file f=<path>"; exit 1; fi
 	$(UV) run pytest $(f)
@@ -176,6 +179,15 @@ web-install: ## Install frontend deps (`npm ci` in client/)
 web: ## Frontend dev server (http://localhost:5173, WEB_PORT=...)
 	cd $(CLIENT_DIR) && $(NPM) run dev -- --port $(WEB_PORT) --strictPort
 
+web-lint: ## Frontend lint (`oxlint` in client/)
+	cd $(CLIENT_DIR) && $(NPM) run lint
+
+web-test: ## Frontend tests (`vitest run` in client/)
+	cd $(CLIENT_DIR) && $(NPM) run test:run
+
+web-build: ## Frontend production build (`tsc` + `vite build` in client/)
+	cd $(CLIENT_DIR) && $(NPM) run build
+
 ##@ 🛫 Ops
 
 backup: ## Encrypted backup to BACKUP_DIR (needs BACKUP_PASSPHRASE)
@@ -213,9 +225,9 @@ help-unclassified: ## Targets with ## but no ##@ section above (audit, must be e
 	@awk 'FNR == 1 { section = "" } /^##@ / { section = substr($$0, 5); next } /^[a-zA-Z0-9_-]+:.*## / && section == "" { print "  " $$0 }' $(MAKEFILE_LIST)
 
 .PHONY: setup sync env-template migrate migration downgrade db-current db-history db-shell db-reset
-.PHONY: test test-unit test-integration test-host test-file clean
+.PHONY: test test-unit test-integration test-host test-file e2e clean
 .PHONY: lint format-fix types arch security verify check
 .PHONY: up db-up down logs logs-app logs-db restart tools build
-.PHONY: api worker web-install web
+.PHONY: api worker web-install web web-lint web-test web-build
 .PHONY: backup restore new-project release-notes
 .PHONY: change help help-unclassified

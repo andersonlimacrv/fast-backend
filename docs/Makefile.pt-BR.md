@@ -73,6 +73,7 @@ ambiente, nunca de variáveis do Makefile ou arquivos.
   sandboxes sem rede veth.
 - **`make test-file f=<path>`** — um arquivo. *Parâmetro* `f` (obrigatório):
   `make test-file f=app/tests/unit/test_jwt.py`.
+- **`make e2e`** — fluxo HTTP equivalente ao da SPA contra a API no ar (precisa de `make api` + banco migrado; `E2E_BASE_URL`/`E2E_SPA_ORIGIN` sobrescrevem).
 - **`make clean`** — remove caches (`__pycache__`, `.pytest_cache`,
   `.ruff_cache`, `.mypy_cache`). Seguro: nunca toca fonte.
 
@@ -105,6 +106,7 @@ ambiente, nunca de variáveis do Makefile ou arquivos.
 - **`make worker [WORKERS=]`** — `taskiq worker app.worker:broker`.
 - **`make web-install`** — `npm ci` dentro de `$(CLIENT_DIR)` (shell-agnostic, funciona até no cmd do Windows).
 - **`make web [WEB_PORT=]`** — servidor dev Vite (`http://localhost:5173`). Precisa de `client/.env` (`VITE_API_URL`) e CORS do backend liberando a origem.
+- **`make web-lint` / `web-test` / `web-build`** — `oxlint`, `vitest run`, `tsc -b && vite build` dentro de `$(CLIENT_DIR)`.
 
 ## Ops — backups, scaffolding, releases
 

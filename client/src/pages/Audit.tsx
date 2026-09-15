@@ -1,38 +1,13 @@
-import { useCallback, useEffect, useState } from "react";
-
-import { useAuth } from "@/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBox, PageHeader } from "@/components/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { listAudit } from "@/lib/api";
-import type { AuditRead } from "@/lib/api";
+import { useAudit } from "@/hooks/useAudit";
 
 export function AuditPage() {
   const { activeOrgId } = useAuth();
-  const [rows, setRows] = useState<AuditRead[]>([]);
-  const [error, setError] = useState<unknown>(null);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    if (!activeOrgId) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      setRows(await listAudit(activeOrgId));
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeOrgId]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
+  const { items: rows, error, loading, reload } = useAudit(activeOrgId);
 
   if (!activeOrgId) {
     return (
@@ -49,7 +24,7 @@ export function AuditPage() {
         description={`Admin-only GET /organizations/${activeOrgId}/audit (append-only)`}
       />
       <div className="mb-4">
-        <Button variant="outline" onClick={() => void load()} disabled={loading}>
+        <Button variant="outline" onClick={() => void reload()} disabled={loading}>
           {loading ? "Loading…" : "Reload"}
         </Button>
       </div>

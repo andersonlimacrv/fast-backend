@@ -1,74 +1,40 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
-import { useAuth } from "@/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBox, Field, PageHeader } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { createProject, deleteProject, listProjects, renameProject } from "@/lib/api";
-import type { ProjectRead } from "@/lib/api";
+import { useProjects } from "@/hooks/useProjects";
+import { createNewProject, removeProject, renameExistingProject } from "@/services/projects";
 
 export function ProjectsPage() {
   const { activeOrgId } = useAuth();
-  const [projects, setProjects] = useState<ProjectRead[]>([]);
+  const { items: projects, error, loading, busy, mutate } = useProjects(activeOrgId);
   const [name, setName] = useState("");
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
-  const [error, setError] = useState<unknown>(null);
-  const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      setProjects(await listProjects());
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load, activeOrgId]);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      await createProject(name);
+    const value = name;
+    await mutate(async () => {
+      await createNewProject(value);
       setName("");
-      await load();
-    } catch (err) {
-      setError(err);
-    } finally {
-      setBusy(false);
-    }
+    });
   };
 
   const saveRename = async () => {
     if (!editing) return;
-    setError(null);
-    try {
-      await renameProject(editing.id, editing.name);
+    const { id, name: newName } = editing;
+    await mutate(async () => {
+      await renameExistingProject(id, newName);
       setEditing(null);
-      await load();
-    } catch (err) {
-      setError(err);
-    }
+    });
   };
 
   const remove = async (id: string) => {
-    setError(null);
-    try {
-      await deleteProject(id);
-      await load();
-    } catch (err) {
-      setError(err);
-    }
+    await mutate(() => removeProject(id));
   };
 
   return (

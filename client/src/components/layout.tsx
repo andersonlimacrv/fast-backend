@@ -1,32 +1,36 @@
 import { Moon, Sun } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
-import { useAuth } from "@/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { API_BASE } from "@/lib/api";
+import { applyTheme, isDarkTheme } from "@/external/theme";
+import { API_BASE, ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 function ThemeToggle() {
-  const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-  }, [dark]);
+  const [dark, setDark] = useState(() => isDarkTheme());
+  const toggle = () => {
+    setDark((d) => {
+      applyTheme(!d);
+      return !d;
+    });
+  };
   return (
-    <Button variant="ghost" size="icon" onClick={() => setDark((d) => !d)} aria-label="Toggle theme">
+    <Button variant="ghost" size="icon" onClick={toggle} aria-label="Toggle theme">
       {dark ? <Sun /> : <Moon />}
     </Button>
   );
 }
 
 const NAV = [
-  { to: "/health", label: "Health" },
-  { to: "/orgs", label: "Orgs" },
-  { to: "/projects", label: "Projects" },
-  { to: "/grants", label: "Grants" },
-  { to: "/audit", label: "Audit" },
-  { to: "/account", label: "Account" },
+  { to: ROUTES.health, label: "Health" },
+  { to: ROUTES.orgs, label: "Orgs" },
+  { to: ROUTES.projects, label: "Projects" },
+  { to: ROUTES.grants, label: "Grants" },
+  { to: ROUTES.audit, label: "Audit" },
+  { to: ROUTES.account, label: "Account" },
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -47,19 +51,19 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const onLogout = async () => {
     await logout();
-    navigate("/login");
+    navigate(ROUTES.login);
   };
 
   const onLogoutEverywhere = async () => {
     await logoutEverywhere();
-    navigate("/login");
+    navigate(ROUTES.login);
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-10 border-b border-border bg-background/95 backdrop-blur">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-2 px-4 py-3">
-          <Link to="/" className="mr-4 text-sm font-bold tracking-tight">
+          <Link to={ROUTES.home} className="mr-4 text-sm font-bold tracking-tight">
             fast-backend<span className="text-muted-foreground"> /client</span>
           </Link>
           <nav className="flex flex-wrap items-center gap-1">

@@ -1,44 +1,21 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 
-import { useAuth } from "@/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBox, Field, PageHeader } from "@/components/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { listGrants, upsertGrant } from "@/lib/api";
-import type { GrantRead } from "@/lib/api";
+import { useGrants } from "@/hooks/useGrants";
+import { saveGrant } from "@/services/grants";
 
 export function GrantsPage() {
   const { activeOrgId } = useAuth();
-  const [grants, setGrants] = useState<GrantRead[]>([]);
+  const { items: grants, error, loading, busy, mutate } = useGrants(activeOrgId);
   const [key, setKey] = useState("projects.max");
   const [limit, setLimit] = useState("10");
   const [enabled, setEnabled] = useState(true);
-  const [error, setError] = useState<unknown>(null);
-  const [busy, setBusy] = useState(false);
-  const [loading, setLoading] = useState(true);
-
-  const load = useCallback(async () => {
-    if (!activeOrgId) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      setGrants(await listGrants(activeOrgId));
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeOrgId]);
-
-  useEffect(() => {
-    void load();
-  }, [load]);
 
   if (!activeOrgId) {
     return (
@@ -50,17 +27,7 @@ export function GrantsPage() {
 
   const upsert = async (e: React.FormEvent) => {
     e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      const parsed = limit.trim() === "" ? null : Number(limit);
-      await upsertGrant(activeOrgId, key.trim(), Number.isNaN(parsed) ? null : parsed, enabled);
-      await load();
-    } catch (err) {
-      setError(err);
-    } finally {
-      setBusy(false);
-    }
+    await mutate(() => saveGrant(activeOrgId, key, limit, enabled));
   };
 
   return (
