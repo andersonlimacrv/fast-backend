@@ -14,6 +14,9 @@ class Settings(BaseSettings):
 
     environment: str = "local"
 
+    # --- Release (change backend-release-meta; injected from git tag on release) ---
+    app_version: str = "0.1.0"
+
     # --- Auth ---
     secret_key: str = DEV_DEFAULT_SECRET
     jwt_issuer: str = "fast-backend"
@@ -110,6 +113,8 @@ class Settings(BaseSettings):
             raise ValueError("BOOTSTRAP_KEY must be empty or >=32 chars")
         if self.password_reset_ttl_minutes < 5 or self.password_reset_ttl_minutes > 24 * 60:
             raise ValueError("PASSWORD_RESET_TTL_MINUTES must be within 5..1440")
+        if not self.app_version or not self.app_version.strip():
+            raise ValueError("APP_VERSION must be non-empty")
         if self.environment == "production":
             if self.secret_key == DEV_DEFAULT_SECRET or len(self.secret_key) < 32:
                 raise ValueError("production requires a real SECRET_KEY (>=32 chars)")

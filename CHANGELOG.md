@@ -26,3 +26,7 @@ Tests: 98 (unit + real Postgres/Redis integration). Specs: 20 capabilities in `o
 - **C (`C-social-contract`)**: `core/contracts/social.py` Protocol + `linked_identities(provider,provider_sub)` unique, `SOCIAL_LOGIN_ENABLED=false`, no route (OAuth activation deferred with state+PKCE).
 
 Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REGISTRY` triage (SQLAdmin/CRUDAdmin/email/OIDC as evaluated-only), `.env.example` vars without secrets.
+
+## [Unreleased] — Landing, two-step login e LGPD (changes `backend-release-meta` → `lgpd-leak-audit`)
+
+- **`backend-release-meta`**: `GET /meta` público `{app, version, modules:[{key, enabled}]}` (allowlist, sem segredos/hosts/PII) + `APP_VERSION` (default `"0.1.0"`, injetado da tag no release); teste anti-vazamento varrendo o body; ADR 0008.

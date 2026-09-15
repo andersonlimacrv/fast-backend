@@ -22,6 +22,7 @@ from app.infrastructure.storage.local import LocalFilesystemStorage
 from app.infrastructure.storage.s3 import S3CompatibleStorage
 from app.interfaces.errors import install_error_handlers
 from app.interfaces.health import router as health_router
+from app.interfaces.meta import router as meta_router
 from app.modules.admin.router import router as admin_router
 from app.modules.admin.service import AdminService
 from app.modules.audit.router import router as audit_router
@@ -107,6 +108,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=settings.trusted_hosts)
     app.middleware("http")(request_id_middleware)
     app.include_router(health_router)
+    app.include_router(meta_router)
     app.include_router(identity_router)
     app.include_router(organization_router)
     app.include_router(org_auth_router)
