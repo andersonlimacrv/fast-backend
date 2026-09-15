@@ -27,3 +27,6 @@ export const ROUTES = {
 export const ROLES = ["owner", "admin", "member"] as const;
 
 export const AUDIT_LIMIT = 100;
+
+export const TOAST_LIMIT = 3;
+export const TOAST_TIMEOUT_MS = 5000;

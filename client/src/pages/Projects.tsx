@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useProjects } from "@/hooks/useProjects";
 import { createNewProject, removeProject, renameExistingProject } from "@/services/projects";
+import { notify } from "@/services/notify";
 
 export function ProjectsPage() {
   const { activeOrgId } = useAuth();
@@ -18,23 +19,26 @@ export function ProjectsPage() {
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     const value = name;
-    await mutate(async () => {
-      await createNewProject(value);
+    const created = await mutate(() => createNewProject(value));
+    if (created) {
       setName("");
-    });
+      notify.success("Project created", value);
+    }
   };
 
   const saveRename = async () => {
     if (!editing) return;
     const { id, name: newName } = editing;
-    await mutate(async () => {
-      await renameExistingProject(id, newName);
+    const saved = await mutate(() => renameExistingProject(id, newName));
+    if (saved) {
       setEditing(null);
-    });
+      notify.success("Project renamed", newName);
+    }
   };
 
   const remove = async (id: string) => {
-    await mutate(() => removeProject(id));
+    const done = await mutate(() => removeProject(id));
+    if (done !== null) notify.success("Project deleted");
   };
 
   return (

@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useMembers } from "@/hooks/useMembers";
 import { ROLES } from "@/lib/constants";
 import { inviteMember, kickMember, updateMemberRole } from "@/services/members";
+import { notify } from "@/services/notify";
 
 export function MembersPage() {
   const { activeOrgId } = useAuth();
@@ -28,18 +29,21 @@ export function MembersPage() {
   const add = async (e: React.FormEvent) => {
     e.preventDefault();
     const uid = userId;
-    await mutate(async () => {
-      await inviteMember(activeOrgId, uid, role);
+    const added = await mutate(() => inviteMember(activeOrgId, uid, role));
+    if (added) {
       setUserId("");
-    });
+      notify.success("Member added", uid);
+    }
   };
 
   const changeRole = async (uid: string, next: string) => {
-    await mutate(() => updateMemberRole(activeOrgId, uid, next));
+    const updated = await mutate(() => updateMemberRole(activeOrgId, uid, next));
+    if (updated) notify.success("Role updated", `${uid} → ${next}`);
   };
 
   const remove = async (uid: string) => {
-    await mutate(() => kickMember(activeOrgId, uid));
+    const done = await mutate(() => kickMember(activeOrgId, uid));
+    if (done !== null) notify.success("Member removed", uid);
   };
 
   return (

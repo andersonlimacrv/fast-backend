@@ -1,18 +1,7 @@
-import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { friendlyError } from "@/services/notify";
 
-export function friendlyError(err: unknown): { title: string; detail: string } {
-  if (err instanceof ApiError) {
-    if (err.status === 0) return { title: "Cannot reach backend", detail: err.message };
-    if (err.status === 401) return { title: "Unauthorized (401)", detail: err.message };
-    if (err.status === 403)
-      return { title: "Forbidden (403)", detail: `${err.message} — check membership, role or entitlement.` };
-    if (err.status === 404) return { title: "Not found (404)", detail: err.message };
-    if (err.status === 429) return { title: "Rate limited (429)", detail: err.message };
-    return { title: `Error (${err.status})`, detail: err.message };
-  }
-  return { title: "Unexpected error", detail: err instanceof Error ? err.message : String(err) };
-}
+export { friendlyError };
 
 export function ErrorBox({ error, className }: { error: unknown; className?: string }) {
   if (!error) return null;

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useGrants } from "@/hooks/useGrants";
 import { saveGrant } from "@/services/grants";
+import { notify } from "@/services/notify";
 
 export function GrantsPage() {
   const { activeOrgId } = useAuth();
@@ -27,7 +28,8 @@ export function GrantsPage() {
 
   const upsert = async (e: React.FormEvent) => {
     e.preventDefault();
-    await mutate(() => saveGrant(activeOrgId, key, limit, enabled));
+    const saved = await mutate(() => saveGrant(activeOrgId, key, limit, enabled));
+    if (saved) notify.success("Grant saved", key);
   };
 
   return (

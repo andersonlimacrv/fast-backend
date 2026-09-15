@@ -2,6 +2,7 @@ import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/layout";
+import { AppToaster } from "@/components/ui/toaster";
 import { AccountPage } from "@/pages/Account";
 import { LoginPage, RegisterPage } from "@/pages/Auth";
 import { AuditPage } from "@/pages/Audit";
@@ -25,7 +26,8 @@ function Protected() {
 
 export default function App() {
   return (
-    <Routes>
+    <>
+      <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route element={<Protected />}>
@@ -39,6 +41,8 @@ export default function App() {
         <Route path="account" element={<AccountPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+      <AppToaster />
+    </>
   );
 }

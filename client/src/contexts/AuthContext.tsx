@@ -14,6 +14,7 @@ import {
 } from "@/lib/api";
 import type { OrganizationRead, UserRead } from "@/lib/api";
 import { getActiveOrgId, onSessionExpired, setActiveOrgId } from "@/services/session";
+import { notify } from "@/services/notify";
 
 interface AuthState {
   user: UserRead | null;
@@ -84,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiLogin(email, password);
       setSessionNotice(null);
       await loadSession();
+      notify.success("Logged in", email);
     },
     [loadSession],
   );
@@ -94,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await apiLogin(email, password);
       setSessionNotice(null);
       await loadSession();
+      notify.success("Account created", email);
     },
     [loadSession],
   );
@@ -103,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setOrgs([]);
     setActiveOrg(null);
+    notify.info("Logged out");
   }, []);
 
   const logoutEverywhere = useCallback(async () => {
@@ -110,11 +114,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setOrgs([]);
     setActiveOrg(null);
+    notify.info("Logged out everywhere");
   }, []);
 
   const switchOrg = useCallback(async (orgId: string) => {
     await switchOrganization(orgId);
     setActiveOrg(orgId);
+    notify.success("Tenant switched");
   }, []);
 
   const dismissNotice = useCallback(() => setSessionNotice(null), []);

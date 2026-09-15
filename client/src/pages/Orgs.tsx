@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useOrgs } from "@/hooks/useOrgs";
 import { ROUTES } from "@/lib/constants";
 import { createOrganization } from "@/services/orgs";
+import { notify } from "@/services/notify";
 
 export function OrgsPage() {
   const { switchOrg, activeOrgId, refreshUser } = useAuth();
@@ -20,11 +21,22 @@ export function OrgsPage() {
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
     const value = name;
-    await mutate(async () => {
-      await createOrganization(value);
+    const org = await mutate(async () => {
+      const created = await createOrganization(value);
       setName("");
       await refreshUser();
+      return created;
     });
+    if (org) {
+      notify.confirm("Organization created", value, {
+        label: "Switch",
+        onClick: () => void switchOrg(org.id),
+      });
+    }
+  };
+
+  const switchTo = async (orgId: string) => {
+    await switchOrg(orgId);
   };
 
   return (
@@ -70,7 +82,7 @@ export function OrgsPage() {
                     {o.id === activeOrgId ? (
                       <Badge>active</Badge>
                     ) : (
-                      <Button size="sm" variant="outline" onClick={() => void switchOrg(o.id)}>
+                      <Button size="sm" variant="outline" onClick={() => void switchTo(o.id)}>
                         Switch
                       </Button>
                     )}

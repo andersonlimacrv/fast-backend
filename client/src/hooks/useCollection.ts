@@ -8,7 +8,7 @@ export interface CollectionState<T> {
   loading: boolean;
   busy: boolean;
   reload: () => Promise<unknown>;
-  mutate: (fn: () => Promise<unknown>) => Promise<void>;
+  mutate: <R>(fn: () => Promise<R>) => Promise<R | null>;
   setError: (err: unknown) => void;
   setBusy: (busy: boolean) => void;
 }
@@ -22,14 +22,16 @@ export function useCollection<T>(fetchList: () => Promise<T[]>, deps: unknown[] 
   const [manualError, setManualError] = useState<unknown>(null);
   const state = useAsync<T[]>(fetchList, deps);
 
-  const mutate = async (fn: () => Promise<unknown>): Promise<void> => {
+  const mutate = async <R,>(fn: () => Promise<R>): Promise<R | null> => {
     setBusy(true);
     setManualError(null);
     try {
-      await fn();
+      const result = await fn();
       await state.reload();
+      return result;
     } catch (err) {
       setManualError(err);
+      return null;
     } finally {
       setBusy(false);
     }

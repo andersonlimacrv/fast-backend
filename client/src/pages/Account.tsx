@@ -1,30 +1,29 @@
 import { useState } from "react";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { updatePassword } from "@/services/account";
 import { ErrorBox, Field, PageHeader } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { updatePassword } from "@/services/account";
+import { notify } from "@/services/notify";
 
 export function AccountPage() {
   const { user, logout, logoutEverywhere } = useAuth();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [error, setError] = useState<unknown>(null);
-  const [ok, setOk] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const change = async (e: React.FormEvent) => {
     e.preventDefault();
     setBusy(true);
     setError(null);
-    setOk(false);
     try {
       await updatePassword(currentPassword, newPassword);
-      setOk(true);
       setCurrentPassword("");
       setNewPassword("");
+      notify.success("Password changed");
     } catch (err) {
       setError(err);
     } finally {
@@ -61,7 +60,6 @@ export function AccountPage() {
               <Input type="password" required minLength={8} value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
             </Field>
             <ErrorBox error={error} />
-            {ok && <p className="text-sm text-green-600">Password changed.</p>}
             <Button type="submit" disabled={busy}>
               {busy ? "Saving…" : "Change password"}
             </Button>
