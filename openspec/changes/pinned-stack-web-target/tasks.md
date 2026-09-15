@@ -26,5 +26,14 @@
 - [x] 5.1 `grep` sem `16-alpine`/`redis:7-alpine`/`redis-cli`/`redis-server` nos 3 arquivos-fonte
 - [x] 5.2 `make db-up` (via Git Bash) → `db`+`redis` healthy (PG17 accepting connections, Valkey PONG)
 - [x] 5.3 Infra/frontend: `compose config` local+prod resolve pins; `make web-install` (npm ci, 0 vuln); Vite `:5173` → HTTP 200
-- [ ] 5.4 `make test-integration` verde — BLOQUEADO: `uv` ausente no PATH e `.env` vazio (ações do usuário)
-- [x] 5.5 `git status --short` só previstos (`node_modules` gitignored); sem segredo
+- [x] 5.4 Suite: unit 49/49; integration 48/49 (PG17+Valkey 9; Ryuk desligado no Desktop Windows)
+- [ ] 5.5 `test_backup_restore_drill` — gap de ambiente: sem `pg_dump`/`psql` neste Windows (vale no CI/Linux)
+- [x] 5.6 `git status --short` só previstos (`node_modules` gitignored); sem segredo
+
+## 6. Fixes Windows-compat encontrados ao testar (test-harness, sem `app/`)
+
+- [x] 6.1 `scripts/new_project.py`: `as_posix()` na exclusão `openspec/changes/` (backslash quebrava o filtro)
+- [x] 6.2 `test_settings_validation.py`: `monkeypatch.chdir(tmp_path)` no teste do default secret (imune ao `.env` local)
+- [x] 6.3 `conftest.py` `ServiceContainer`: poll de NAT bindings (Desktop Windows atrasa o mapeamento)
+- [x] 6.4 `test_architecture.py`: detecção do binário `lint-imports` por `None` (`.EXE` quebrava o `endswith`); v2 validado (12 contratos kept)
+- [x] 6.5 `ruff check` + `format --check` nos 4 arquivos tocados

@@ -36,8 +36,8 @@ def new_project(name: str, dest: Path, *, source: Path) -> Path:
     if dest.exists() and any(dest.iterdir()):
         raise ValueError(f"destination not empty: {dest}")
     for root, dirs, files in os.walk(source):
-        rel = Path(root).relative_to(source)
-        if any(str(rel) == prefix.rstrip("/") or str(rel).startswith(prefix) for prefix in EXCLUDE_PREFIXES):
+        rel = Path(root).relative_to(source).as_posix()
+        if any(rel == prefix.rstrip("/") or rel.startswith(prefix) for prefix in EXCLUDE_PREFIXES):
             dirs[:] = []
             continue
         dirs[:] = sorted(d for d in dirs if d not in EXCLUDE_DIRS)

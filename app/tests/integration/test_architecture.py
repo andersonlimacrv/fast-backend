@@ -12,10 +12,13 @@ PROBE = REPO_ROOT / "app" / "interfaces" / "_probe_forbidden.py"
 
 
 def _run_lint() -> subprocess.CompletedProcess[str]:
-    binary = shutil.which("lint-imports") or sys.executable
-    args = [] if binary.endswith("lint-imports") else ["-m", "importlinter.cli"]
+    binary = shutil.which("lint-imports")
+    # NOTE: compare against None, not a suffix — on Windows the binary is
+    # `lint-imports.EXE`, and the `-m importlinter.cli` fallback no longer
+    # exists in import-linter v2 (locked in uv.lock).
+    cmd = [binary] if binary is not None else [sys.executable, "-m", "importlinter.cli"]
     return subprocess.run(
-        [binary, *args],
+        cmd,
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,

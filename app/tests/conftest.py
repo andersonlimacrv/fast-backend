@@ -135,6 +135,8 @@ class ServiceContainer:
             )
             self.ports = {port: port for port in self._tcp_ports}
         else:
+            import time
+
             self._container = client.containers.run(
                 image,
                 command=command,
@@ -144,8 +146,16 @@ class ServiceContainer:
                 detach=True,
                 auto_remove=True,
             )
+            # Docker Desktop (notably Windows) may report NAT bindings a beat
+            # after create: poll briefly before reading them back.
             self._container.reload()
             bound = self._container.ports or {}
+            for _ in range(60):
+                if all((bound.get(f"{port}/tcp") or []) for port in self._tcp_ports):
+                    break
+                time.sleep(0.5)
+                self._container.reload()
+                bound = self._container.ports or {}
             self.ports = {}
             for port in self._tcp_ports:
                 bindings = bound.get(f"{port}/tcp") or []

@@ -12,7 +12,10 @@ def test_local_defaults_boot() -> None:
 
 
 @pytest.mark.unit
-def test_production_rejects_default_secret() -> None:
+def test_production_rejects_default_secret(tmp_path, monkeypatch) -> None:
+    # Settings reads `.env` from cwd: isolate from any developer `.env` so the
+    # dev-default secret (not a local real one) is what gets validated.
+    monkeypatch.chdir(tmp_path)
     with pytest.raises(ValidationError):
         Settings(environment="production", trusted_hosts=["example.com"])
 
