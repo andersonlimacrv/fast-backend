@@ -58,6 +58,11 @@ _check-env:
 		echo ".env not found — run 'make env-template'"; exit 1; \
 	fi
 
+_check-web-env:
+	@if [ ! -f $(CLIENT_DIR)/.env ]; then \
+		echo "$(CLIENT_DIR)/.env not found — copy $(CLIENT_DIR)/.env.example (VITE_API_URL=http://localhost:8000)"; exit 1; \
+	fi
+
 ##@ 🗄️ Database
 
 migrate: ## Apply migrations (`alembic upgrade head`)
@@ -145,6 +150,16 @@ up: _check-env ## Start app + worker + db + redis
 db-up: _check-env ## Start db + redis only (data services for local dev)
 	$(COMPOSE_ENV) $(COMPOSE) up -d $(STACK_SERVICES)
 
+dev: _check-env _check-web-env db-up migrate up ## Full dev loop: backend stack (docker) + frontend (Ctrl+C stops vite; `make dev-down` stops stack)
+	@if ! grep -q "$(WEB_PORT)" $(ENV_FILE); then \
+		echo "hint: $(ENV_FILE) may not allow http://localhost:$(WEB_PORT) — add it to CORS_ORIGINS"; \
+	fi
+	@echo "API: http://127.0.0.1:$(PORT)/docs | SPA: http://localhost:$(WEB_PORT) | stop stack: make dev-down"
+	cd $(CLIENT_DIR) && $(NPM) run dev -- --port $(WEB_PORT) --strictPort
+
+dev-down: ## Stop the dev stack (keeps volumes)
+	$(COMPOSE) down
+
 down: ## Stop everything (keeps volumes)
 	$(COMPOSE) down
 
@@ -230,7 +245,7 @@ help-unclassified: ## Targets with ## but no ##@ section above (audit, must be e
 .PHONY: setup sync env-template migrate migration downgrade db-current db-history db-shell db-reset
 .PHONY: test test-unit test-integration test-host test-file e2e clean
 .PHONY: lint format-fix types arch security verify check
-.PHONY: up db-up down logs logs-app logs-db restart tools build
+.PHONY: up db-up dev dev-down down logs logs-app logs-db restart tools build
 .PHONY: api worker web-install web web-lint web-test web-build
 .PHONY: backup restore new-project admin-bootstrap release-notes
 .PHONY: change help help-unclassified

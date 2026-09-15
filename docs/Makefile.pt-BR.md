@@ -93,6 +93,7 @@ ambiente, nunca de variáveis do Makefile ou arquivos.
 - **`make up`** — app + worker + db + redis (precisa `.env`; `_check-env`
   falha rápido mandando rodar `make env-template`).
 - **`make db-up`** — só db + redis (serviços de dados p/ dev local: migrate/api/test contra eles).
+- **`make dev`** — loop dev completo: `_check-env` + `_check-web-env` (`client/.env` com `VITE_API_URL`) → `db-up` → `migrate` → `up` (stack detached) → dica de CORS se `$(WEB_PORT)` fora do `.env` → `web` em foreground. API em `:8000/docs`, SPA em `:5173`. Ctrl+C para só o Vite; **`make dev-down`** para a stack (mantém volumes).
 - **`make down`** — para tudo, mantém volumes. **`make restart`** — `down` + `up`.
 - **`make logs` / `logs-app` / `logs-db`** — acompanha logs (todos / app / postgres).
 - **`make tools`** — profiles mailpit + minio (captura de email dev, teste S3).
