@@ -1,4 +1,6 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBox, Field, PageHeader } from "@/components/feedback";
@@ -11,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAdminUsers } from "@/hooks/useAdmin";
 import {
   createUser,
+  createUserSchema,
   disableUser,
   enableUser,
   forceUserPasswordReset,
@@ -19,15 +22,23 @@ import {
   normalizeReason,
   revokeUserSessions,
   revokeUserStaff,
+  type CreateUserInput,
 } from "@/services/admin";
 import { notify } from "@/services/notify";
 
 export function AdminUsersPage() {
   const { user: me } = useAuth();
   const { items: users, error, loading, busy, mutate, setError } = useAdminUsers();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [reason, setReason] = useState("");
+  const {
+    register: field,
+    handleSubmit,
+    reset: resetCreate,
+    formState: { errors: createErrors },
+  } = useForm<CreateUserInput>({
+    resolver: zodResolver(createUserSchema),
+    defaultValues: { email: "", password: "", reason: "" },
+  });
 
   const takeReason = (): string | null => {
     const ok = normalizeReason(reason);
@@ -35,14 +46,10 @@ export function AdminUsersPage() {
     return ok;
   };
 
-  const create = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const ok = takeReason();
-    if (!ok) return;
-    const created = await mutate(() => createUser(email, password, ok));
+  const create = async (input: CreateUserInput) => {
+    const created = await mutate(() => createUser(input.email, input.password, input.reason));
     if (created) {
-      setEmail("");
-      setPassword("");
+      resetCreate();
       notify.success("User created", created.email);
     }
   };
@@ -65,21 +72,45 @@ export function AdminUsersPage() {
       <PageHeader title="Admin users" description="GET/POST /admin/users + action endpoints (staff+; staff grant/revoke are root-only)" />
       <Card className="mb-4">
         <CardContent className="pt-6">
-          <form onSubmit={(e) => void create(e)} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <form onSubmit={(e) => void handleSubmit(create)(e)} className="flex flex-col gap-2 sm:flex-row sm:items-end" noValidate>
             <div className="flex-1">
               <Field label="Email">
-                <Input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <Input type="email" autoComplete="off" aria-invalid={!!createErrors.email} {...field("email")} />
               </Field>
+              {createErrors.email && (
+                <p className="text-xs text-destructive" role="alert">
+                  {createErrors.email.message}
+                </p>
+              )}
             </div>
             <div className="flex-1">
               <Field label="Password">
-                <Input required type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <Input
+                  type="password"
+                  autoComplete="new-password"
+                  aria-invalid={!!createErrors.password}
+                  {...field("password")}
+                />
               </Field>
+              {createErrors.password && (
+                <p className="text-xs text-destructive" role="alert">
+                  {createErrors.password.message}
+                </p>
+              )}
             </div>
             <div className="flex-1">
               <Field label="Reason (audited)">
-                <Input required value={reason} onChange={(e) => setReason(e.target.value)} placeholder="why is this needed?" />
+                <Input
+                  aria-invalid={!!createErrors.reason}
+                  placeholder="why is this needed?"
+                  {...field("reason")}
+                />
               </Field>
+              {createErrors.reason && (
+                <p className="text-xs text-destructive" role="alert">
+                  {createErrors.reason.message}
+                </p>
+              )}
             </div>
             <Button type="submit" disabled={busy}>
               {busy ? "Creating…" : "Create user"}
@@ -88,6 +119,15 @@ export function AdminUsersPage() {
         </CardContent>
       </Card>
       <ErrorBox error={error} className="mb-4" />
+      <div className="mb-4 flex max-w-md flex-col gap-2">
+        <Field label="Reason for row actions (audited)">
+          <Input
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            placeholder="why is this needed? (min 8 chars)"
+          />
+        </Field>
+      </div>
       {loading ? (
         <p className="text-sm text-muted-foreground">Loading…</p>
       ) : (

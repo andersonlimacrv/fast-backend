@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 
-import { isRoot, isStaff, normalizeReason, REASON_MIN_LENGTH } from "@/services/admin";
+import {
+  adminMembershipSchema,
+  createUserSchema,
+  isRoot,
+  isStaff,
+  normalizeReason,
+  REASON_MIN_LENGTH,
+} from "@/services/admin";
 
 describe("normalizeReason", () => {
   it.each([
@@ -37,5 +44,32 @@ describe("isStaff / isRoot", () => {
     expect(isStaff(null)).toBe(false);
     expect(isStaff(undefined)).toBe(false);
     expect(isRoot(null)).toBe(false);
+  });
+});
+
+describe("admin schemas", () => {
+  it("createUser mirrors backend bounds (email, password 8..256, reason 8..500)", () => {
+    const ok = createUserSchema.safeParse({ email: "a@b.c", password: "long-enough!", reason: "needs access" });
+    expect(ok.success).toBe(true);
+    expect(createUserSchema.safeParse({ email: "nope", password: "long-enough!", reason: "needs access" }).success).toBe(
+      false,
+    );
+    expect(createUserSchema.safeParse({ email: "a@b.c", password: "short", reason: "needs access" }).success).toBe(
+      false,
+    );
+    expect(createUserSchema.safeParse({ email: "a@b.c", password: "long-enough!", reason: "short" }).success).toBe(
+      false,
+    );
+  });
+
+  it("membership requires org, user, fixed role and reason", () => {
+    const ok = adminMembershipSchema.safeParse({ orgId: "o1", userId: "u1", role: "admin", reason: "needs access" });
+    expect(ok.success).toBe(true);
+    expect(
+      adminMembershipSchema.safeParse({ orgId: "", userId: "u1", role: "admin", reason: "needs access" }).success,
+    ).toBe(false);
+    expect(
+      adminMembershipSchema.safeParse({ orgId: "o1", userId: "u1", role: "ownerX", reason: "needs access" }).success,
+    ).toBe(false);
   });
 });

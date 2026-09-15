@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { ErrorBox, Field, PageHeader } from "@/components/feedback";
@@ -10,13 +11,21 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useMembers } from "@/hooks/useMembers";
 import { ROLES } from "@/lib/constants";
 import { inviteMember, kickMember, updateMemberRole } from "@/services/members";
+import { inviteMemberSchema, type InviteMemberInput } from "@/services/members";
 import { notify } from "@/services/notify";
 
 export function MembersPage() {
   const { activeOrgId } = useAuth();
   const { items: members, error, loading, busy, mutate } = useMembers(activeOrgId);
-  const [userId, setUserId] = useState("");
-  const [role, setRole] = useState<string>("member");
+  const {
+    register: field,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<InviteMemberInput>({
+    resolver: zodResolver(inviteMemberSchema),
+    defaultValues: { userId: "", role: "member" },
+  });
 
   if (!activeOrgId) {
     return (
@@ -26,13 +35,11 @@ export function MembersPage() {
     );
   }
 
-  const add = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const uid = userId;
-    const added = await mutate(() => inviteMember(activeOrgId, uid, role));
+  const add = async (input: InviteMemberInput) => {
+    const added = await mutate(() => inviteMember(activeOrgId, input.userId, input.role));
     if (added) {
-      setUserId("");
-      notify.success("Member added", uid);
+      reset();
+      notify.success("Member added", input.userId);
     }
   };
 
@@ -54,17 +61,21 @@ export function MembersPage() {
       />
       <Card className="mb-4">
         <CardContent className="pt-6">
-          <form onSubmit={(e) => void add(e)} className="flex flex-col gap-2 sm:flex-row sm:items-end">
+          <form onSubmit={(e) => void handleSubmit(add)(e)} className="flex flex-col gap-2 sm:flex-row sm:items-end" noValidate>
             <div className="flex-1">
               <Field label="User id">
-                <Input required value={userId} onChange={(e) => setUserId(e.target.value)} />
+                <Input aria-invalid={!!errors.userId} {...field("userId")} />
               </Field>
+              {errors.userId && (
+                <p className="text-xs text-destructive" role="alert">
+                  {errors.userId.message}
+                </p>
+              )}
             </div>
             <Field label="Role">
               <select
                 className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
+                {...field("role")}
               >
                 {ROLES.map((r) => (
                   <option key={r} value={r}>
