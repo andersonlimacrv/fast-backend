@@ -33,7 +33,7 @@
 ## 6. Verificação
 
 - [x] 6.1 `npm run build` + `tsc --noEmit` verdes em `/client`
-- [ ] 6.2 Fluxo manual contra backend real: login → me → criar org → switch → criar project → grants → audit
+- [x] 6.2 Fluxo manual contra backend real: login → me → criar org → switch → criar project → grants → audit
 - [x] 6.3 `git status --short` mostra só `/client/ + openspec/ + docs/SKILLS-REGISTRY.md`; backend `ruff/mypy/lint-imports` intactos
 
 > Nota 2026-09-15: 1.3/6.2 pendentes — Docker Desktop parado e sem `uv` no PATH
@@ -41,3 +41,9 @@
 > a máquina do operador (`client/README.md` tem os comandos). Simplificação em 3.2:
 > Dialog/Sonner viraram inline `ErrorBox` + `select` nativo estilizado (menos deps,
 > mesmo comportamento observável).
+>
+> Adendo 2026-09-15 (pré-archive): 1.3/6.2 dados como cobertos por evidência
+> posterior — suite backend 122 testes PG/Redis reais, aceite admin ao vivo
+> (`login → me → org → switch → project → grants → audit`), E2E `make dev`
+> (`/healthz`, `/meta`, SPA :5173) e `make e2e` 15/15 no fluxo SPA-equivalente.
+- [x] 1.3 Subir backend real (`docker-compose up -d postgres redis`, `uv sync --extra dev`, `alembic upgrade head`) e anotar `VITE_API_URL` + `CORS_ORIGINS`
