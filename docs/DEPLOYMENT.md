@@ -16,6 +16,24 @@ mkdir -p ~/fast-backend && cd ~/fast-backend
 
 `ENVIRONMENT=production`, real `SECRET_KEY` (≥32), `TRUSTED_HOSTS=[domain]`, `DATABASE_URL`/`POSTGRES_*`, `REDIS_URL`, `TASK_BROKER_URL`, `CORS_ORIGINS`, `BILLING_ENABLED` + `STRIPE_*` if applicable. Boot fails fast on insecure config (validated in `Settings`).
 
+**Phase 9 additions (admin control plane + recovery):** `BOOTSTRAP_KEY` (≥32, required in production — one-shot root audit), `ADMIN_ENABLED=true` (leaf module flag), `PASSWORD_RESET_TTL_MINUTES` (default 60), `FRONTEND_URL=https://...` (https-only in prod — reset links), `SOCIAL_LOGIN_ENABLED=false` (contract only). Production SMTP to a remote host requires `SMTP_USE_TLS=true` (dev Mailpit on `localhost:1025` exempt).
+
+## Root bootstrap (one-shot, change A)
+
+```bash
+# on the VPS / container with the production .env (BOOTSTRAP_KEY set):
+uv run python scripts/bootstrap_root.py --email root@example.com
+# or: make admin-bootstrap   (BOOTSTRAP_KEY + ROOT_EMAIL from env, password via prompt)
+```
+
+Fail-closed: wrong key OR existing root → generic `bootstrap failed`, exit 1 (never reveals which). Second run always fails (partial unique index `uq_single_root`). Audited as `root.bootstrap`.
+
+## Password recovery operations (change B)
+
+- Self-service: `POST /auth/password/forgot` (always `202 accepted`) → outbox `email.template` → worker renders `password_reset.*` and sends → payload redacted after send. Dev: `make tools` (Mailpit `:8025` UI, SMTP `:1025`).
+- Admin: `POST /admin/users/{id}/force-password-reset` (`reason`, staff+) returns `{status:accepted}` without secrets.
+- Maintenance: Taskiq `password.purge` (expired/used rows); suggested beat/cron alongside backup.
+
 ## Deploy (automatic on push to main)
 
 1. Build `:sha` → push GHCR → SSH → `migrate` (`alembic upgrade head`) → `up app+worker` → 30× `GET /readyz`.

@@ -34,8 +34,45 @@ def test_production_rejects_wildcard_hosts() -> None:
 
 @pytest.mark.unit
 def test_production_valid_boots() -> None:
-    s = Settings(environment="production", secret_key="x" * 32, trusted_hosts=["example.com"])
+    s = Settings(
+        environment="production",
+        secret_key="x" * 32,
+        trusted_hosts=["example.com"],
+        bootstrap_key="y" * 32,
+        frontend_url="https://app.example.com",
+    )
     assert s.trusted_hosts == ["example.com"]
+
+
+@pytest.mark.unit
+def test_production_rejects_missing_bootstrap_key() -> None:
+    with pytest.raises(ValidationError):
+        Settings(environment="production", secret_key="x" * 32, trusted_hosts=["example.com"])
+
+
+@pytest.mark.unit
+def test_production_rejects_http_frontend_url() -> None:
+    with pytest.raises(ValidationError):
+        Settings(
+            environment="production",
+            secret_key="x" * 32,
+            trusted_hosts=["example.com"],
+            bootstrap_key="y" * 32,
+            frontend_url="http://app.example.com",
+        )
+
+
+@pytest.mark.unit
+def test_short_bootstrap_key_rejected() -> None:
+    with pytest.raises(ValidationError):
+        Settings(secret_key="x" * 32, bootstrap_key="short")
+
+
+@pytest.mark.unit
+def test_reset_ttl_bounds() -> None:
+    with pytest.raises(ValidationError):
+        Settings(secret_key="x" * 32, password_reset_ttl_minutes=2)
+    assert Settings(secret_key="x" * 32).password_reset_ttl_minutes == 60
 
 
 @pytest.mark.unit

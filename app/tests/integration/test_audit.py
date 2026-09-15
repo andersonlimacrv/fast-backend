@@ -120,7 +120,9 @@ async def test_audit_surface_is_append_only() -> None:
     from app.modules.audit.service import AuditService
 
     public = {name for name in dir(AuditService) if not name.startswith("_")}
-    assert public == {"record", "list_for_org"}
+    # `list_recent` is read-only (root-only route in the admin leaf module);
+    # append-only still holds: no update/delete API exists anywhere.
+    assert public == {"record", "list_for_org", "list_recent"}
     get_routes = [route for route in router.routes if "GET" in getattr(route, "methods", set())]
     assert len(get_routes) == 1
     assert all(getattr(route, "methods", set()) == {"GET"} for route in router.routes)

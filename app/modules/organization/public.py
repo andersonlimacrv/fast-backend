@@ -7,8 +7,12 @@ __all__ = [
     "Membership",
     "Organization",
     "OrganizationService",
+    "admin_remove_membership",
+    "admin_set_membership",
     "assert_membership",
+    "count_organizations",
     "get_membership",
+    "list_organizations",
     "list_user_orgs",
     "role_at_least",
 ]
@@ -29,3 +33,23 @@ async def assert_membership(
 async def list_user_orgs(service: OrganizationService, *, user_id: str):
     """Deliberately exposed listing for tenancy single-mode resolution."""
     return await service.list_user_orgs(user_id=user_id)
+
+
+async def count_organizations(service: OrganizationService) -> int:
+    """Global org count (admin control plane only)."""
+    return await service.count_organizations()
+
+
+async def list_organizations(service: OrganizationService, *, limit: int = 100, offset: int = 0):
+    """Global org listing (admin control plane only)."""
+    return await service.list_organizations(limit=limit, offset=offset)
+
+
+async def admin_set_membership(service: OrganizationService, *, org_id: str, user_id: str, role: str):
+    """Cross-org membership write (admin control plane only)."""
+    return await service.admin_set_membership(org_id=org_id, user_id=user_id, role=role)
+
+
+async def admin_remove_membership(service: OrganizationService, *, org_id: str, user_id: str) -> None:
+    """Cross-org membership removal (admin control plane only)."""
+    await service.admin_remove_membership(org_id=org_id, user_id=user_id)

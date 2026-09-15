@@ -41,6 +41,10 @@ class Settings(BaseSettings):
     # --- Tenancy (Fase 1: single only; row enforced in Fase 3) ---
     tenancy_mode: str = "single"
 
+    # --- Admin control plane (change A; leaf module, flag-gated like billing) ---
+    admin_enabled: bool = True
+    bootstrap_key: str = ""
+
     # --- Email ---
     email_backend: str = "log"  # log | smtp
     smtp_host: str = "localhost"
@@ -70,6 +74,13 @@ class Settings(BaseSettings):
     stripe_signature_tolerance: int = 300
     stripe_price_map: dict = {}
 
+    # --- Password recovery (change B) ---
+    password_reset_ttl_minutes: int = 60
+    frontend_url: str = "http://localhost:5173"
+
+    # --- Social login (change C; contract only, no active provider) ---
+    social_login_enabled: bool = False
+
     # --- HTTP hardening ---
     trusted_hosts: list[str] = ["*"]
     cors_origins: list[str] = []
@@ -95,11 +106,21 @@ class Settings(BaseSettings):
             raise ValueError(f"unknown STORAGE_BACKEND: {self.storage_backend!r}")
         if self.billing_enabled and not self.stripe_webhook_secret:
             raise ValueError("BILLING_ENABLED requires STRIPE_WEBHOOK_SECRET")
+        if self.bootstrap_key and len(self.bootstrap_key) < 32:
+            raise ValueError("BOOTSTRAP_KEY must be empty or >=32 chars")
+        if self.password_reset_ttl_minutes < 5 or self.password_reset_ttl_minutes > 24 * 60:
+            raise ValueError("PASSWORD_RESET_TTL_MINUTES must be within 5..1440")
         if self.environment == "production":
             if self.secret_key == DEV_DEFAULT_SECRET or len(self.secret_key) < 32:
                 raise ValueError("production requires a real SECRET_KEY (>=32 chars)")
             if self.trusted_hosts == ["*"]:
                 raise ValueError("production requires explicit TRUSTED_HOSTS")
+            if not self.bootstrap_key or len(self.bootstrap_key) < 32:
+                raise ValueError("production requires BOOTSTRAP_KEY (>=32 chars, root bootstrap audit)")
+            if self.email_backend == "smtp" and not self.smtp_use_tls and self.smtp_host not in ("localhost", "127.0.0.1"):
+                raise ValueError("production smtp to a remote host requires SMTP_USE_TLS=true")
+            if not self.frontend_url.startswith("https://"):
+                raise ValueError("production requires FRONTEND_URL https (reset links)")
         return self
 
 

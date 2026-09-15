@@ -6,10 +6,12 @@ from app.core.contracts.audit import audit_request
 from app.modules.identity.dependencies import Principal, current_principal
 from app.modules.identity.schemas import (
     ChangePasswordRequest,
+    ForgotPasswordRequest,
     LoginRequest,
     LogoutRequest,
     RefreshRequest,
     RegisterRequest,
+    ResetPasswordRequest,
     TokenPair,
     UserRead,
 )
@@ -84,3 +86,18 @@ async def me(request: Request, principal: Principal = Depends(current_principal)
     user = await _service(request).get_user(user_id=principal.user_id)
     assert user is not None
     return UserRead.model_validate(user)
+
+
+@router.post("/password/forgot", status_code=202)
+async def forgot_password(payload: ForgotPasswordRequest, request: Request) -> dict[str, str]:
+    """Always 202 generic (anti-enumeration); audit only when a user exists."""
+    actor = await _service(request).request_reset(email=str(payload.email), ip=_client_ip(request))
+    if actor is not None:
+        await audit_request(request, action="auth.password_reset_request", actor_user_id=actor, resource_type="user")
+    return {"status": "accepted"}
+
+
+@router.post("/password/reset", status_code=204)
+async def reset_password(payload: ResetPasswordRequest, request: Request) -> None:
+    await _service(request).reset_password(token=payload.token, new_password=payload.new_password, ip=_client_ip(request))
+    await audit_request(request, action="auth.password_reset_confirm", resource_type="user")

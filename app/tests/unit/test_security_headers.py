@@ -34,7 +34,13 @@ async def test_base_headers_present_no_hsts_on_local_http(bare_client: AsyncClie
 
 @pytest.mark.unit
 async def test_hsts_in_production() -> None:
-    settings = Settings(secret_key="x" * 32, environment="production", trusted_hosts=["example.com"])
+    settings = Settings(
+        secret_key="x" * 32,
+        environment="production",
+        trusted_hosts=["example.com"],
+        bootstrap_key="y" * 32,
+        frontend_url="https://example.com",
+    )
     ac, app = _client_for(settings)
     try:
         resp = await ac.get("/healthz", headers={"Host": "example.com"})

@@ -23,6 +23,7 @@ class Principal:
     user_id: str
     email: str
     is_superuser: bool
+    is_staff: bool
     active_org_id: str | None
     token_iat: int
 
@@ -66,6 +67,7 @@ async def current_principal(
         user_id=user.id,
         email=user.email,
         is_superuser=user.is_superuser,
+        is_staff=user.is_staff or user.is_superuser,
         active_org_id=payload.get("active_org_id"),
         token_iat=iat,
     )

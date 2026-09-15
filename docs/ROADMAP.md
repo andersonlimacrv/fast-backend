@@ -68,6 +68,10 @@ Aceite: webhook 3x → 1 efeito; core funciona com `BILLING_ENABLED=false` (flag
 
 Pipeline `PR → ruff → mypy → unit → integration → security → build`; prod `build:sha → push → deploy VPS → migrate (expand/contract) → healthcheck → traffic`; rollback p/ imagem anterior. Docs finais: `README.md` operacional, `docs/DEPLOYMENT.md` (runbook), `CHANGELOG.md`, ADRs; bootstrap de 2º projeto via `scripts/new_project.py` (testado).
 
+## Fase 9 — Admin Control Plane + Recovery ✅
+
+`A-admin-control-plane` (root one-shot via CLI + `BOOTSTRAP_KEY`, `is_staff`, módulo folha `admin/` com endpoints-ação, `reason+success` em `audit.metadata`, ADRs 0005) → `B-password-recovery` (token opaco single-use, boundary event, force-reset administrativo, Mailpit, ADR 0006) → `C-social-contract` (contrato + tabela, flag off, ADR 0007). Specs: `admin`, `recovery`, `social-contract` em `openspec/specs/`. Suite: 122 testes (60 unit + 62 integration, Postgres/Redis reais).
+
 ## Gates de verificação (comandos atuais)
 
 ```bash

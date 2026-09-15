@@ -71,6 +71,8 @@ ignore = ["S101"]
 known-first-party = ["app"]
 
 [tool.ruff.lint.per-file-ignores]
+"app/modules/admin/router.py" = ["B008"]
+"app/modules/admin/dependencies.py" = ["B008"]
 "app/modules/identity/router.py" = ["B008"]
 "app/modules/identity/dependencies.py" = ["B008"]
 "app/modules/organization/router.py" = ["B008"]
@@ -110,7 +112,7 @@ broken_contract_guidance = "See docs/RULES.md §4: adapters never import modules
 [[tool.importlinter.contracts]]
 name = "audit-internals-private"
 type = "forbidden"
-source_modules = ["app.modules.billing_stripe", "app.modules.entitlements", "app.modules.identity", "app.modules.organization", "app.modules.projects", "app.modules.tenancy"]
+source_modules = ["app.modules.billing_stripe", "app.modules.entitlements", "app.modules.identity", "app.modules.organization", "app.modules.projects", "app.modules.tenancy", "app.modules.admin"]
 allow_indirect_imports = true
 forbidden_modules = [
     "app.modules.audit.models",
@@ -125,7 +127,7 @@ broken_contract_guidance = "See docs/RULES.md §4: depend only on modules/<name>
 [[tool.importlinter.contracts]]
 name = "billing_stripe-internals-private"
 type = "forbidden"
-source_modules = ["app.modules.audit", "app.modules.entitlements", "app.modules.identity", "app.modules.organization", "app.modules.projects", "app.modules.tenancy"]
+source_modules = ["app.modules.audit", "app.modules.entitlements", "app.modules.identity", "app.modules.organization", "app.modules.projects", "app.modules.tenancy", "app.modules.admin"]
 allow_indirect_imports = true
 forbidden_modules = [
     "app.modules.billing_stripe.models",
@@ -140,7 +142,7 @@ broken_contract_guidance = "See docs/RULES.md §4: depend only on modules/<name>
 [[tool.importlinter.contracts]]
 name = "entitlements-internals-private"
 type = "forbidden"
-source_modules = ["app.modules.audit", "app.modules.billing_stripe", "app.modules.identity", "app.modules.organization", "app.modules.projects", "app.modules.tenancy"]
+source_modules = ["app.modules.audit", "app.modules.billing_stripe", "app.modules.identity", "app.modules.organization", "app.modules.projects", "app.modules.tenancy", "app.modules.admin"]
 allow_indirect_imports = true
 forbidden_modules = [
     "app.modules.entitlements.models",
@@ -155,7 +157,7 @@ broken_contract_guidance = "See docs/RULES.md §4: depend only on modules/<name>
 [[tool.importlinter.contracts]]
 name = "identity-internals-private"
 type = "forbidden"
-source_modules = ["app.modules.audit", "app.modules.billing_stripe", "app.modules.entitlements", "app.modules.organization", "app.modules.projects", "app.modules.tenancy"]
+source_modules = ["app.modules.audit", "app.modules.billing_stripe", "app.modules.entitlements", "app.modules.organization", "app.modules.projects", "app.modules.tenancy", "app.modules.admin"]
 allow_indirect_imports = true
 forbidden_modules = [
     "app.modules.identity.models",
@@ -170,7 +172,7 @@ broken_contract_guidance = "See docs/RULES.md §4: depend only on modules/<name>
 [[tool.importlinter.contracts]]
 name = "organization-internals-private"
 type = "forbidden"
-source_modules = ["app.modules.audit", "app.modules.billing_stripe", "app.modules.entitlements", "app.modules.identity", "app.modules.projects", "app.modules.tenancy"]
+source_modules = ["app.modules.audit", "app.modules.billing_stripe", "app.modules.entitlements", "app.modules.identity", "app.modules.projects", "app.modules.tenancy", "app.modules.admin"]
 allow_indirect_imports = true
 forbidden_modules = [
     "app.modules.organization.models",
@@ -185,7 +187,7 @@ broken_contract_guidance = "See docs/RULES.md §4: depend only on modules/<name>
 [[tool.importlinter.contracts]]
 name = "projects-internals-private"
 type = "forbidden"
-source_modules = ["app.modules.audit", "app.modules.billing_stripe", "app.modules.entitlements", "app.modules.identity", "app.modules.organization", "app.modules.tenancy"]
+source_modules = ["app.modules.audit", "app.modules.billing_stripe", "app.modules.entitlements", "app.modules.identity", "app.modules.organization", "app.modules.tenancy", "app.modules.admin"]
 allow_indirect_imports = true
 forbidden_modules = [
     "app.modules.projects.models",
@@ -200,7 +202,7 @@ broken_contract_guidance = "See docs/RULES.md §4: depend only on modules/<name>
 [[tool.importlinter.contracts]]
 name = "tenancy-internals-private"
 type = "forbidden"
-source_modules = ["app.modules.audit", "app.modules.billing_stripe", "app.modules.entitlements", "app.modules.identity", "app.modules.organization", "app.modules.projects"]
+source_modules = ["app.modules.audit", "app.modules.billing_stripe", "app.modules.entitlements", "app.modules.identity", "app.modules.organization", "app.modules.projects", "app.modules.admin"]
 allow_indirect_imports = true
 forbidden_modules = [
     "app.modules.tenancy.models",
@@ -209,6 +211,22 @@ forbidden_modules = [
     "app.modules.tenancy.dependencies",
     "app.modules.tenancy.router",
     "app.modules.tenancy.schemas",
+]
+broken_contract_guidance = "See docs/RULES.md §4: depend only on modules/<name>/public.py, core/contracts, or Taskiq events. When adding a module, add its contract and list it in the others."
+
+[[tool.importlinter.contracts]]
+name = "admin-internals-private"
+type = "forbidden"
+source_modules = ["app.modules.audit", "app.modules.billing_stripe", "app.modules.entitlements", "app.modules.identity", "app.modules.organization", "app.modules.projects", "app.modules.tenancy"]
+allow_indirect_imports = true
+forbidden_modules = [
+    "app.modules.admin.models",
+    "app.modules.admin.repository",
+    "app.modules.admin.service",
+    "app.modules.admin.dependencies",
+    "app.modules.admin.router",
+    "app.modules.admin.schemas",
+    "app.modules.admin.policies",
 ]
 broken_contract_guidance = "See docs/RULES.md §4: depend only on modules/<name>/public.py, core/contracts, or Taskiq events. When adding a module, add its contract and list it in the others."
 

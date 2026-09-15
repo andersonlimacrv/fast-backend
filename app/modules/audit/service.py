@@ -47,3 +47,9 @@ class AuditService:
                 )
             ).scalars()
             return list(rows.all())
+
+    async def list_recent(self, *, limit: int = 100) -> list[AuditLog]:
+        """Cross-org recent trail (admin control plane, root-only route)."""
+        async with self._sessions() as session:
+            rows = (await session.execute(select(AuditLog).order_by(desc(AuditLog.created_at)).limit(limit))).scalars()
+            return list(rows.all())

@@ -3,6 +3,8 @@
 Postgres decides; Taskiq/Redis only transports. No HTTPException here.
 """
 
+from datetime import UTC, datetime
+
 from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
@@ -93,3 +95,21 @@ class OutboxService:
     async def get(self, *, message_id: str) -> OutboxMessage | None:
         async with self._sessions() as session:
             return await session.get(OutboxMessage, message_id)
+
+    async def redact_payload(self, *, message_id: str) -> None:
+        """Shrink a delivered `email.template` payload to metadata (change B).
+
+        Reset tokens live in `payload.context` between enqueue and dispatch;
+        after a successful send only `{redacted, to, subject, template}` remain.
+        """
+        async with self._sessions() as session:
+            async with session.begin():
+                row = await session.get(OutboxMessage, message_id)
+                if row is None:
+                    return
+                payload = row.payload or {}
+                redacted: dict = {"redacted": True, "sent_at": datetime.now(UTC).isoformat()}
+                for key in ("to", "subject", "template"):
+                    if key in payload:
+                        redacted[key] = payload[key]
+                row.payload = redacted

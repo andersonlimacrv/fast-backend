@@ -69,3 +69,9 @@ class ProjectService:
             project = await repo.get(Project, project_id)
             assert project is None or isinstance(project, Project)
             return project
+
+    async def count_all(self, *, superuser: SuperuserContext) -> int:
+        """Explicit cross-tenant count (admin control plane only)."""
+        async with self._sessions() as session:
+            TenantScopedRepository.scoped_for_superuser(session, superuser)
+            return int(await session.scalar(select(func.count()).select_from(Project)) or 0)

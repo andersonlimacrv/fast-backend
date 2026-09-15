@@ -54,6 +54,17 @@ Pesquisa via `npx skills find` para a SPA `/client` (Vite + React + shadcn + Tai
 
 Nota: tweakcn sem skill relevante — tema via CSS-first do Tailwind v4 (`@theme` oklch).
 
+## Triagem admin-control-plane + recovery + social (2026-09-15, changes A/B/C)
+
+Nenhuma instalada — só triagem; instalação exige SHA/tag + auditoria do `SKILL.md` + entrada em Instaladas. SQLAdmin/CRUDAdmin são referência de proteções (rate-limit, CSRF, IP, audit), nunca autoridade (`/admin → ORM → UPDATE` ignoraria policies; ADR 0005).
+
+| Nome | Origem | Uso pretendido | Status | Risco + mitigação | Dono |
+|---|---|---|---|---|---|
+| `sqladmin-reference` (SQLAdmin, FastAPI/SQLAlchemy) | `github.com/aminalaee/sqladmin` (avaliação conceitual, sem instalar) | UX administrativa madura como referência p/ dashboard futuro | avaliada, só referência | Baixo-médio — não instalar como dependência do control plane; usar ideias | planner |
+| `crudadmin-reference` (Benav Labs crudadmin) | `github.com/benavlabs/crudadmin` (avaliação conceitual, sem instalar) | Proteções de admin (sessões, CSRF, rate-limit, audit, IP) como checklist | avaliada, só referência | Médio — ecossistema próprio mas acoplaria arquitetura; usar como checklist OWASP | planner |
+| `transactional-email-deliverability` | a definir (SPF/DKIM/DMARC p/ prod) | Entregabilidade SMTP prod (recovery) | avaliada, não instalada | Baixo — só docs quando prod exigir | docs-writer |
+| `oauth-oidc-best-practices` | a definir (provedor OIDC na ativação) | Ativação futura Google/GitHub (state+PKCE, JWKS) | avaliada, não instalada | Médio — só na change de ativação, com segredos | planner |
+
 ## Como aprovar/instalar (quando autorizado)
 
 1. `docs-writer` preenche SHA/data nesta tabela e muda `avaliada → aprovada`.

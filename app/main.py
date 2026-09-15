@@ -22,6 +22,8 @@ from app.infrastructure.storage.local import LocalFilesystemStorage
 from app.infrastructure.storage.s3 import S3CompatibleStorage
 from app.interfaces.errors import install_error_handlers
 from app.interfaces.health import router as health_router
+from app.modules.admin.router import router as admin_router
+from app.modules.admin.service import AdminService
 from app.modules.audit.router import router as audit_router
 from app.modules.audit.service import AuditService
 from app.modules.billing_stripe.router import router as billing_router
@@ -75,7 +77,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.email_sender = SmtpEmailSender(settings) if settings.email_backend == "smtp" else LogEmailSender()
     app.state.storage = S3CompatibleStorage(settings) if settings.storage_backend == "s3" else LocalFilesystemStorage(settings)
     app.state.outbox = OutboxService(settings=settings, session_factory=session_factory)
+    # Outbox must exist before auth: recovery enqueues `email.template` (change B).
+    app.state.auth_service._outbox = app.state.outbox
     app.state.audit_service = AuditService(session_factory=session_factory)
+    app.state.admin_service = AdminService(
+        identity=app.state.auth_service,
+        organizations=app.state.org_service,
+        projects=app.state.project_service,
+        audit=app.state.audit_service,
+    )
     if settings.billing_enabled:
         app.state.billing_service = BillingService(
             settings=settings,
@@ -103,6 +113,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(entitlements_router)
     app.include_router(audit_router)
     app.include_router(projects_router)
+    if settings.admin_enabled:
+        app.include_router(admin_router)
     if settings.billing_enabled:
         app.include_router(billing_router)
 

@@ -37,6 +37,18 @@ class LastOwnerProtectedError(DomainError):
     """Refusing to remove/demote the last owner of an organization."""
 
 
+class LastRootProtectedError(DomainError):
+    """Refusing to disable/demote the last root (change A admin control plane)."""
+
+
+class PasswordResetError(DomainError):
+    """Reset token unknown, expired, or already used (intentionally generic, change B)."""
+
+
+class AuditUnavailableError(DomainError):
+    """Privileged action refused: audit recorder missing (fail-closed, change A)."""
+
+
 class SlugUnavailableError(DomainError):
     """Could not mint a unique organization slug after retries."""
 

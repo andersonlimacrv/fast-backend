@@ -57,7 +57,10 @@ async def test_backup_restore_drill(base_settings) -> None:
             await conn.run_sync(Base.metadata.create_all)
         async with engine.connect() as conn:
             await conn.execute(
-                text("INSERT INTO users (id, email, is_active, is_superuser) VALUES ('u1', 'drill@example.com', TRUE, FALSE)")
+                text(
+                    "INSERT INTO users (id, email, is_active, is_superuser, is_staff)"
+                    " VALUES ('u1', 'drill@example.com', TRUE, FALSE, FALSE)"
+                )
             )
             await conn.execute(text("INSERT INTO organizations (id, name, slug) VALUES ('o1', 'Drill', 'drill')"))
             await conn.execute(text("INSERT INTO memberships (id, user_id, org_id, role) VALUES ('m1', 'u1', 'o1', 'owner')"))

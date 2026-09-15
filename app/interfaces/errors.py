@@ -4,13 +4,16 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from app.core.errors import (
+    AuditUnavailableError,
     DomainError,
     EmailAlreadyRegisteredError,
     EntitlementDeniedError,
     InvalidCredentialsError,
     LastOwnerProtectedError,
+    LastRootProtectedError,
     OrganizationAccessDeniedError,
     OrganizationSwitchDeniedError,
+    PasswordResetError,
     RefreshTokenInvalidError,
     RefreshTokenReuseError,
     ResourceNotFoundError,
@@ -34,6 +37,12 @@ def _status_for(exc: DomainError) -> int:
         return 403
     if isinstance(exc, (LastOwnerProtectedError, SlugUnavailableError)):
         return 409
+    if isinstance(exc, LastRootProtectedError):
+        return 409
+    if isinstance(exc, PasswordResetError):
+        return 400
+    if isinstance(exc, AuditUnavailableError):
+        return 500
     if isinstance(exc, UserNotFoundError):
         return 404
     if isinstance(exc, ResourceNotFoundError):

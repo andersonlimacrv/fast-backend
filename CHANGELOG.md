@@ -18,3 +18,11 @@ Format: delivered phases (Conventional Commits in git tell the fine-grained stor
 - **Phase 8** (`release-template`): multi-stage Dockerfile, composes, worker, rollback deploy, `new_project.py`, runbook.
 
 Tests: 98 (unit + real Postgres/Redis integration). Specs: 20 capabilities in `openspec/specs/`.
+
+## [Unreleased] — Phase 9 — Admin Control Plane + Recovery (changes A/B/C)
+
+- **A (`A-admin-control-plane`)**: `users.is_staff` + `CHECK (superuser ⇒ staff)` + partial index `uq_single_root`; CLI `scripts/bootstrap_root.py` (`make admin-bootstrap`, `BOOTSTRAP_KEY` constant-time, fail-closed, audited `root.bootstrap`); leaf module `app/modules/admin/` (policies pure, `AdminContext`, `require_staff/require_root`, action endpoints staff vs root, never `PATCH is_*`, `SuperuserContext(reason=...)` explicit); `reason+success` in `audit.metadata` (AdminAction via metadata, no new table); `LastRootProtectedError` → 409; `ADMIN_ENABLED` flag; 13th import-linter contract.
+- **B (`B-password-recovery`)**: `password_resets{token_hash,expires_at,used_at}` hash-only, TTL 60min, `SELECT FOR UPDATE` single-use; `POST /auth/password/forgot` (always 202, throttled, no enumeration) → outbox `email.template` → worker renders/sends/redacts; `POST /auth/password/reset` boundary event (Argon2id + `tokens_valid_after` + refresh revoke + sibling invalidation); `POST /admin/users/{id}/force-password-reset` (`accepted`, no secret); `password_reset.*` templates (`StrictUndefined`); `LogEmailSender.send_template` never logs context; Taskiq `password.purge`; Mailpit dev via `make tools`.
+- **C (`C-social-contract`)**: `core/contracts/social.py` Protocol + `linked_identities(provider,provider_sub)` unique, `SOCIAL_LOGIN_ENABLED=false`, no route (OAuth activation deferred with state+PKCE).
+
+Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REGISTRY` triage (SQLAdmin/CRUDAdmin/email/OIDC as evaluated-only), `.env.example` vars without secrets.

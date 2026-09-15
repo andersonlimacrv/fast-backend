@@ -125,7 +125,7 @@ format-fix: ## Auto-format code
 types: ## mypy strict-ish
 	$(UV) run mypy app scripts
 
-arch: ## Module DAG + boundaries (`import-linter`, 12 contracts)
+arch: ## Module DAG + boundaries (`import-linter`, 13 contracts)
 	$(UV) run lint-imports
 
 security: ## bandit (0 Medium+) + pip-audit + gitleaks
@@ -206,6 +206,9 @@ new-project: ## Scaffold sibling (make new-project name=x dest=../x)
 	@if [ -z "$(name)" ] || [ -z "$(dest)" ]; then echo "Usage: make new-project name=<kebab> dest=<dir>"; exit 1; fi
 	$(UV) run python scripts/new_project.py --name "$(name)" --dest "$(dest)"
 
+admin-bootstrap: ## Create the one-shot root user (BOOTSTRAP_KEY from env, never logs secrets)
+	$(UV) run python scripts/bootstrap_root.py
+
 release-notes: ## Notes for a version (make release-notes v=v1.1.0)
 	@if [ -z "$(v)" ]; then echo "Usage: make release-notes v=vX.Y.Z"; exit 1; fi
 	$(UV) run python scripts/release_notes.py --version "$(v)"
@@ -229,5 +232,5 @@ help-unclassified: ## Targets with ## but no ##@ section above (audit, must be e
 .PHONY: lint format-fix types arch security verify check
 .PHONY: up db-up down logs logs-app logs-db restart tools build
 .PHONY: api worker web-install web web-lint web-test web-build
-.PHONY: backup restore new-project release-notes
+.PHONY: backup restore new-project admin-bootstrap release-notes
 .PHONY: change help help-unclassified

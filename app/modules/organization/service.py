@@ -135,3 +135,48 @@ class OrganizationService:
                     raise LastOwnerProtectedError("cannot demote the last owner")
                 target.role = role
             return target
+
+    # --- Admin control plane (change A): global reads/writes. Called ONLY via
+    # modules/admin after require_staff/require_root + explicit reason + audit. ---
+
+    async def count_organizations(self) -> int:
+        async with self._sessions() as session:
+            return int(await session.scalar(select(func.count()).select_from(Organization)) or 0)
+
+    async def list_organizations(self, *, limit: int = 100, offset: int = 0) -> list[Organization]:
+        async with self._sessions() as session:
+            rows = await session.execute(select(Organization).order_by(Organization.created_at).limit(limit).offset(offset))
+            return list(rows.scalars().all())
+
+    async def admin_set_membership(self, *, org_id: str, user_id: str, role: str) -> Membership:
+        """Cross-org membership write without actor membership (admin path)."""
+        if await get_user_by_id(self._identity, user_id=user_id) is None:
+            raise UserNotFoundError("user not found")
+        async with self._sessions() as session:
+            async with session.begin():
+                if await session.get(Organization, org_id) is None:
+                    raise OrganizationAccessDeniedError("access denied")
+                existing = await session.scalar(
+                    select(Membership).where(Membership.user_id == user_id, Membership.org_id == org_id)
+                )
+                if existing is not None:
+                    if existing.role == OWNER and role != OWNER and await self._owner_count(session, org_id) <= 1:
+                        raise LastOwnerProtectedError("cannot demote the last owner")
+                    existing.role = role
+                    return existing
+                membership = Membership(user_id=user_id, org_id=org_id, role=role)
+                session.add(membership)
+            return membership
+
+    async def admin_remove_membership(self, *, org_id: str, user_id: str) -> None:
+        """Cross-org membership removal without actor membership (admin path)."""
+        async with self._sessions() as session:
+            async with session.begin():
+                target = await session.scalar(
+                    select(Membership).where(Membership.user_id == user_id, Membership.org_id == org_id)
+                )
+                if target is None:
+                    return
+                if target.role == OWNER and await self._owner_count(session, org_id) <= 1:
+                    raise LastOwnerProtectedError("cannot remove the last owner")
+                await session.delete(target)

@@ -5,7 +5,7 @@ from email.message import EmailMessage
 from pathlib import Path
 
 import aiosmtplib
-from jinja2 import Environment, FileSystemLoader, StrictUndefined, TemplateNotFound
+from jinja2 import Environment, FileSystemLoader, StrictUndefined
 
 from app.core.settings import Settings
 
@@ -26,12 +26,10 @@ class SmtpEmailSender:
         )
 
     def render(self, template: str, context: dict) -> tuple[str, str]:
-        try:
-            html = self._env.get_template(f"{template}.html").render(context)
-            text = self._env.get_template(f"{template}.txt").render(context)
-        except TemplateNotFound as exc:
-            raise ValueError(f"unknown email template: {template}") from exc
-        return html, text
+        """Render a template pair (delegates to the shared renderer contract)."""
+        from app.infrastructure.email.renderer import EmailRenderer
+
+        return EmailRenderer(templates_dir=TEMPLATES_DIR).render(template, context)
 
     async def send_template(self, *, to: str, subject: str, template: str, context: dict) -> None:
         html, text = self.render(template, context)
@@ -62,3 +60,8 @@ class LogEmailSender:
 
     async def send(self, *, to: str, subject: str, html: str, text: str | None = None) -> None:
         logger.info("email (log backend) to=%s subject=%s html_bytes=%d", to, subject, len(html))
+
+    async def send_template(self, *, to: str, subject: str, template: str, context: dict | None = None) -> None:
+        """Log the intent without the context: reset tokens must never hit logs."""
+        _ = context
+        logger.info("email (log backend) to=%s template=%s subject=%s", to, template, subject)
