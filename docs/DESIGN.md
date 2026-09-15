@@ -637,3 +637,12 @@ Cada ficha segue o formato: nome · descrição · auditoria/segurança · adoç
 - **MCPs que fecham o loop design→código→validação:** Figma MCP (design→contexto, com `get_design_context`/`get_variable_defs`/`create_design_system_rules`), shadcn MCP + 21st MCP (contexto→código, o antigo Magic MCP), Chrome DevTools MCP oficial do Google (código→auditoria de performance/acessibilidade) — os três cobrem o ciclo completo dentro do próprio editor do agente.
 - **Acessibilidade não é opcional em dashboard:** contraste AA, foco visível, nunca codificar estado só por cor, e alternativa textual para gráficos — validado continuamente via MCP de DevTools/Lighthouse, não apenas antes do lançamento.
 
+---
+
+## Decisões deste projeto (fast-backend) — log datado (§1)
+
+- **2026-09 (PR2):** sem Google Fonts — `index.css` usa stacks 100% do sistema (offline-safe, LGPD-limpo); nada de `@import` de terceiros.
+- **2026-09 (PR2):** `--radius: 0rem` mantido do tema tweakcn (identidade sharp); mapeamento `@theme inline` é superconjunto do esqueleto §4.2 (popover/sidebar extras vindos do export).
+- **2026-09 (PR2):** sem `tw-animate-css` — animação via `motion` (PR3) + keyframes de toast existentes; nada duplicado.
+- **2026-09 (PR2):** densidade via `--row-gap` (confortável default, `[data-density="compact"]` opt-in); alvos touch `h-9` (36px) dentro da faixa §4.4.
+
