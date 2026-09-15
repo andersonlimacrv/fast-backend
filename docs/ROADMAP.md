@@ -72,6 +72,10 @@ Pipeline `PR → ruff → mypy → unit → integration → security → build`;
 
 `A-admin-control-plane` (root one-shot via CLI + `BOOTSTRAP_KEY`, `is_staff`, módulo folha `admin/` com endpoints-ação, `reason+success` em `audit.metadata`, ADRs 0005) → `B-password-recovery` (token opaco single-use, boundary event, force-reset administrativo, Mailpit, ADR 0006) → `C-social-contract` (contrato + tabela, flag off, ADR 0007). Specs: `admin`, `recovery`, `social-contract` em `openspec/specs/`. Suite: 122 testes (60 unit + 62 integration, Postgres/Redis reais).
 
+## Fase 10 — Landing pública, two-step login e LGPD ✅
+
+`backend-release-meta` (`GET /meta` allowlist + `APP_VERSION`, ADR 0008) → `client-landing-home` (`/` pública com fallback offline, home logada em `/~`, capability `client-landing`) → `two-step-login` (`LoginForm` always-advance + modal, dummy Argon2, ADR 0009, capability `two-step-login`) → `lgpd-leak-audit` (`docs/PRIVACY.md` +pt-BR, seção anti-enumeração em `SECURITY.md` +pt-BR, `test_leak_audit.py`, skills Vercel pinadas; capabilities `privacy-docs`, `leak-audit-tests`).
+
 ## Gates de verificação (comandos atuais)
 
 ```bash

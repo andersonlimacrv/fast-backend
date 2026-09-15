@@ -16,6 +16,8 @@
 | `cmd-makefile` | `github.com/olshansk/agent-skills` @`dd50876` (2026-09-11) · `.opencode/skills/cmd-makefile/SKILL.md` | Makefiles python-uv/fastapi/postgres (só a SKILL.md; templates adaptados manualmente) | Base p/ Makefile + skill `makefile-keeper` | **instalada** | Baixo-médio — markdown puro sem scripts; grep limpo; `skillci audit`: só FPs heurísticos em trechos defensivos sobre `.env` (nunca commitar/sobrescrever) | backend-implementer, docs-writer |
 | `writing-makefiles` | `github.com/redhat-community-ai-tools/claude-plugins` @`b91c530` (2026-09-11) · `.opencode/skills/writing-makefiles/SKILL.md` | Padrão `help` autodocumentado, pitfalls, teste de Makefiles | Base p/ Makefile + skill `makefile-keeper` | **instalada** | Baixo — org reputável; markdown puro; grep limpo; `skillci audit` sem achados críticos | backend-implementer, docs-writer |
 | `makefile-keeper` | Autoria local (2026-09-11) · `.opencode/skills/makefile-keeper/SKILL.md` | Manter o `Makefile` do repo no padrão (help-first, guards, docs sync) | Dono do Makefile + `docs/Makefile.md` | **instalada** | Baixo — markdown puro, sem scripts/rede | backend-implementer, docs-writer |
+| `vercel-react-best-practices` | `github.com/vercel-labs/agent-skills` @`063bee9` (2026-09-15) · `.opencode/skills/vercel-react-best-practices/SKILL.md` (+`rules/`, `AGENTS.md`) | Runbook de React/TS (perf, waterfalls, bundle, rerender) p/ landing + login two-step | **instalada** | Baixo — oficial Vercel, MIT, markdown-only auditado (zero scripts); `allowed-tools` restrito a leitura | planner, backend-implementer |
+| `web-design-guidelines` | `github.com/vercel-labs/agent-skills` @`063bee9` (2026-09-15) · `.opencode/skills/web-design-guidelines/SKILL.md` | Auditoria de UI (a11y, formulários, foco, UX) p/ landing + login | **instalada** | Baixo — oficial Vercel, MIT, SKILL.md único auditado (busca guidelines remotas só no uso); `allowed-tools` restrito a leitura | planner, docs-writer |
 
 ## Uso registrado (por que "não se vê" skill sendo usada)
 
@@ -64,6 +66,15 @@ Nenhuma instalada — só triagem; instalação exige SHA/tag + auditoria do `SK
 | `crudadmin-reference` (Benav Labs crudadmin) | `github.com/benavlabs/crudadmin` (avaliação conceitual, sem instalar) | Proteções de admin (sessões, CSRF, rate-limit, audit, IP) como checklist | avaliada, só referência | Médio — ecossistema próprio mas acoplaria arquitetura; usar como checklist OWASP | planner |
 | `transactional-email-deliverability` | a definir (SPF/DKIM/DMARC p/ prod) | Entregabilidade SMTP prod (recovery) | avaliada, não instalada | Baixo — só docs quando prod exigir | docs-writer |
 | `oauth-oidc-best-practices` | a definir (provedor OIDC na ativação) | Ativação futura Google/GitHub (state+PKCE, JWKS) | avaliada, não instalada | Médio — só na change de ativação, com segredos | planner |
+
+## Triagem landing + two-step + LGPD (2026-09-15, changes `client-landing-home`, `two-step-login`, `lgpd-leak-audit`)
+
+Pesquisa via skill `find-skills` + web (leaderboard skills.sh). Instalação acima com SHA pinado + auditoria integral do conteúdo.
+
+| Nome | Origem | Uso neste projeto | Veredito |
+|---|---|---|---|
+| LGPD/privacy skill | busca `privacy lgpd` — nenhum resultado confiável | Inventário, retenção, direitos | **avaliada, sem skill existente** — docs-first (`docs/PRIVACY.md`); reavaliar se surgir fonte oficial |
+| `security-reviewer` (genérico) | ecossistema | SAST/OWASP | **não instalada** — precedente mantido (`bandit/pip-audit/gitleaks` + `security-auditor` cobrem) |
 
 ## Como aprovar/instalar (quando autorizado)
 
