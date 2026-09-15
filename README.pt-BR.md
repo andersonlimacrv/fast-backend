@@ -26,55 +26,116 @@ Modular Monolith Async FastAPI SaaS Kernel — auth própria (JWT + refresh opac
 
 ## Começando
 
+O `Makefile` é o ponto único de entrada — rode `make help` para listar tudo (manual em `docs/Makefile.pt-BR.md`).
+
 ```bash
-cp .env.example .env
-uv sync --extra dev
-uv run alembic upgrade head
-uv run uvicorn app.main:create_app --factory --reload
-# → http://127.0.0.1:8000/docs
+make setup   # .env + deps + migrations
+make api     # API com reload → http://127.0.0.1:8000/docs
 ```
+
+<details>
+<summary>Por baixo dos panos</summary>
+
+```bash
+cp .env.example .env                       # make env-template (nunca sobrescreve)
+uv sync --extra dev                        # make sync
+uv run alembic upgrade head                # make migrate
+uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload  # make api
+```
+
+</details>
 
 Com Docker (app + worker + postgres + redis; `tools` p/ mailpit/minio):
 
 ```bash
-cp .env.example .env
-docker compose up --build
-docker compose --profile tools up --build
+make up      # app + worker + db + redis
+make tools   # profiles mailpit + minio
 ```
+
+<details>
+<summary>Por baixo dos panos</summary>
+
+```bash
+docker compose up -d --build                # make up (precisa de .env)
+docker compose --profile tools up -d --build  # make tools
+```
+
+</details>
 
 ## Testar / verificar
 
 ```bash
-uv run pytest -m "unit"                       # rápidos, sem serviços
-uv run pytest -m "integration"                # Postgres+Redis reais (testcontainers)
-FB_TEST_NETWORK=host uv run pytest            # alternativa onde bridge Docker é bloqueada
-uv run ruff check app scripts && uv run ruff format --check app scripts
-uv run mypy app scripts
-uv run lint-imports                            # DAG de módulos
-uv run bandit -r app scripts -q -ll && uv run pip-audit && gitleaks detect --source . --no-git
+make test-unit   # rápidos, sem serviços
+make check       # gate local de PR: lint + types + arch + testes unitários
+make test        # suite completa (precisa de Docker)
 ```
+
+<details>
+<summary>Por baixo dos panos</summary>
+
+```bash
+uv run pytest -m "unit"                       # make test-unit
+uv run pytest -m "integration"                # make test-integration (Postgres+Redis reais via testcontainers)
+FB_TEST_NETWORK=host uv run pytest            # make test-host (onde bridge Docker é bloqueada)
+uv run ruff check app scripts && uv run ruff format --check app scripts  # make lint
+uv run mypy app scripts                       # make types
+uv run lint-imports                            # make arch (DAG de módulos)
+uv run bandit -r app scripts -q -ll && uv run pip-audit && gitleaks detect --source . --no-git  # make security
+```
+
+</details>
 
 ## Build / deploy
 
 ```bash
-docker build --target prod -t ghcr.io/<org>/fast-backend:<sha> .
+make build IMAGE=ghcr.io/<org>/fast-backend TAG=<sha>
+```
+
+<details>
+<summary>Por baixo dos panos</summary>
+
+```bash
+docker build --target prod -t ghcr.io/<org>/fast-backend:<sha> .  # make build (BUILD_TARGET=prod, nunca :latest)
 IMAGE=ghcr.io/<org>/fast-backend:<sha> docker compose -f docker-compose.prod.yml up -d
 ```
+
+</details>
 
 Push na `main` deploya via `.github/workflows/deploy.yml` (migrate → healthcheck `/readyz` → rollback automático). Rollback manual: `rollback.yml` com a SHA. Detalhes em `docs/DEPLOYMENT.md`.
 
 ## Backup
 
 ```bash
-BACKUP_PASSPHRASE=... python scripts/backup.py --database-url ... --dest ./var/backups
-python scripts/backup.py --restore <artifact> --database-url ...
+make backup              # backup criptografado p/ ./var/backups (precisa BACKUP_PASSPHRASE + DATABASE_URL)
+make restore FILE=<artefato> CONFIRM=1
 ```
+
+<details>
+<summary>Por baixo dos panos</summary>
+
+```bash
+BACKUP_PASSPHRASE=... python scripts/backup.py --database-url ... --dest ./var/backups
+python scripts/backup.py --restore <artefato> --database-url ...
+```
+
+</details>
 
 ## Novo projeto a partir daqui
 
 ```bash
+make new-project name=my-saas dest=/path/to/my-saas
+```
+
+<details>
+<summary>Por baixo dos panos</summary>
+
+```bash
 python scripts/new_project.py --name my-saas --dest /path/to/my-saas
 ```
+
+Copia a árvore menos VCS/venvs/caches/archives, renomeia o pacote e valida o resultado.
+
+</details>
 
 ## Estrutura
 
@@ -91,7 +152,7 @@ openspec/             # specs (20 capabilities) + changes arquivadas
 docs/                 # RULES, ROADMAP, ARCHITECTURE, SCALING, DEPLOYMENT, guides/, ADRs
 ```
 
-Rode `make help` para todos os comandos (documentados em `docs/Makefile.pt-BR.md`).
+Rode `make help` para todos os comandos (manual em `docs/Makefile.pt-BR.md`). Sobrescreva variáveis `?=` na linha de comando em vez de editar receitas — ex. `make api PORT=9000`, `make build IMAGE=minhaorg/app TAG=abc1234`.
 
 ## Skills
 
