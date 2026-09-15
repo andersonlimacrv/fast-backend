@@ -203,6 +203,15 @@ web-test: ## Frontend tests (`vitest run` in client/)
 web-build: ## Frontend production build (`tsc` + `vite build` in client/)
 	cd $(CLIENT_DIR) && $(NPM) run build
 
+web-e2e-install: ## Install Playwright Chromium (version follows client/package.json)
+	cd $(CLIENT_DIR) && $(NPM) exec playwright install chromium
+
+web-e2e: ## Browser E2E: axe + snapshots vs preview build (run `web-build` first)
+	cd $(CLIENT_DIR) && $(NPM) run e2e
+
+web-e2e-update: ## Refresh screenshot baselines (ubuntu CI only — never from local Windows)
+	cd $(CLIENT_DIR) && $(NPM) run e2e -- --update-snapshots
+
 ##@ 🛫 Ops
 
 backup: ## Encrypted backup to BACKUP_DIR (needs BACKUP_PASSPHRASE)
@@ -246,6 +255,6 @@ help-unclassified: ## Targets with ## but no ##@ section above (audit, must be e
 .PHONY: test test-unit test-integration test-host test-file e2e clean
 .PHONY: lint format-fix types arch security verify check
 .PHONY: up db-up dev dev-down down logs logs-app logs-db restart tools build
-.PHONY: api worker web-install web web-lint web-test web-build
+.PHONY: api worker web-install web web-lint web-test web-build web-e2e-install web-e2e web-e2e-update
 .PHONY: backup restore new-project admin-bootstrap release-notes
 .PHONY: change help help-unclassified
