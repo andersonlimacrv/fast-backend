@@ -33,7 +33,7 @@ export function AccountPage() {
 
   return (
     <div className="max-w-xl">
-      <PageHeader title="Account" description="GET /auth/me · password change · global logout." />
+      <PageHeader title="Account" description="GET /auth/me, password change and global logout." />
       <Card className="mb-4">
         <CardHeader>
           <CardTitle>Profile</CardTitle>

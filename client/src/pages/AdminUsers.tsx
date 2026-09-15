@@ -8,6 +8,7 @@ import { RequireStaff } from "@/components/require-staff";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { CopyButton } from "@/components/ui/copy-button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAdminUsers } from "@/hooks/useAdmin";
@@ -144,7 +145,8 @@ export function AdminUsersPage() {
               <TableRow key={u.id}>
                 <TableCell>
                   <span className="text-sm">{u.email}</span>{" "}
-                  <span className="font-mono text-xs text-muted-foreground">{u.id.slice(0, 8)}</span>
+                  <span className="font-mono text-xs text-muted-foreground">{u.id.slice(0, 8)}</span>{" "}
+                  <CopyButton content={u.id} />
                 </TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">

@@ -19,4 +19,11 @@ describe("KpiCard", () => {
     render(<KpiCard label="Projects" value="7" />);
     expect(screen.queryByLabelText(/percent/i)).toBeNull();
   });
+
+  it("renders an optional footer", () => {
+    render(
+      <KpiCard label="Users" value="128" footer={<a href="/admin/users">Manage</a>} />,
+    );
+    expect(screen.getByRole("link", { name: "Manage" })).toBeTruthy();
+  });
 });
