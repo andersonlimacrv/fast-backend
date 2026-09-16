@@ -41,6 +41,8 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 
 ## [Unreleased]
 
+- **`client-design-unification`**: shell admin (sidebar drawer<md/rail md–xl/full+cookie, topbar, rotas aninhadas), `lib/icons.tsx` regra de ouro (lucide+react-icons+SVGs), primitivos `dialog`/`toggle-group`/`floating-input`/`circular-progress`, portes `theme-toggle`/`ErrorOne`/`file-uploader`/`credit-usage-card`/`run-action-button`/`gooey-menu`, tipografia Inter/JetBrains Mono, `KpiGrid`/`PageHeader` actions/`EmptyState`; change em `client/openspec/changes/design-unification/`, debate em `docs/review-design.md`.
+
 <!-- copy/paste template (delete this comment when adding an entry):
 - **`scope`**: what changed + affected spec/endpoint.
   Behavior PRs must add one entry here; docs-only PRs pass without it.
