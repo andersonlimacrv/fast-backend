@@ -39,7 +39,7 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 - **`client-reformulation` (6 PRs com CI verde)**: PR1 fundação (`docs/DESIGN.md` adotado, trio `ui-designer`/`frontend-implementer`/`design-auditor`, Playwright axe+snapshot + job `web` no CI); PR2 tokens (`@theme` ⇐ DESIGN.md §4, system fonts); PR3 catálogo `/references` com `motion` pinado; PR4 base + RHF/Zod; PR5 páginas sem clichês; PR6 auditoria total (2 violações AA reais corrigidas) + baselines linux via workflow dedicado. Capabilities `design-system-link`, `browser-e2e` (+ `client-landing`, `two-step-login`).
 - **`docs-release-audit`**: sync de status/contagens (138 backend + 71 vitest + 10 Playwright, 36 specs, Fases 0–11), `make dev` no README, Fase 11 no ROADMAP. `CHANGELOG.md` mantido na raiz por decisão (convenção + `release_notes.py` + `release.yml`).
 
-## [Unreleased]
+## [v0.1.2] — 2026-09-16
 
 - **`client-design-unification`**: shell admin (sidebar drawer<md/rail md–xl/full+cookie, topbar, rotas aninhadas), `lib/icons.tsx` regra de ouro (lucide+react-icons+SVGs), primitivos `dialog`/`toggle-group`/`floating-input`/`circular-progress`, portes `theme-toggle`/`ErrorOne`/`file-uploader`/`credit-usage-card`/`run-action-button`/`gooey-menu`, tipografia Inter/JetBrains Mono, `KpiGrid`/`PageHeader` actions/`EmptyState`; change em `client/openspec/changes/design-unification/`, debate em `docs/review-design.md`.
 
@@ -47,4 +47,6 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 - **`scope`**: what changed + affected spec/endpoint.
   Behavior PRs must add one entry here; docs-only PRs pass without it.
 -->
+
+## [Unreleased]
 
