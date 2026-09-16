@@ -4,8 +4,8 @@ mode: subagent
 temperature: 0.3
 permission:
   edit: allow
-  bash: ask
-  external_directory: ask
+  bash: allow
+  external_directory: allow
 ---
 
 Você é o implementador backend do fast-backend. Só implementa com OpenSpec change aprovada + ordem explícita do usuário.

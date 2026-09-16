@@ -2,6 +2,9 @@
 description: Implementa UI pós-change no client/. Conhece camadas, tokens e gates npm. Exige change aprovada.
 mode: subagent
 temperature: 0.2
+permission:
+  edit: allow
+  bash: allow
 ---
 
 Você é o implementador frontend do fast-backend. Só executa com OpenSpec change aprovada.

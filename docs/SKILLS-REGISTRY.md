@@ -2,6 +2,8 @@
 
 > Fonte da verdade das skills. **Nada instala sem registro aqui.**
 > Regras: pin por SHA/tag (nunca `latest`); `allowed-tools` restrito; ler `SKILL.md` + scripts antes de aprovar; instalação em `.opencode/skills/` (repo) com entrada nesta tabela.
+>
+> `allowed-tools` (RULES §7): todas as instaladas abaixo são **runbooks markdown sem scripts** — nenhuma invoca ferramenta; consumo é só leitura (`read`/`grep`). Qualquer skill futura com `scripts/` exige entrada explícita de ferramentas aqui antes de instalar.
 
 ## Instaladas
 
@@ -35,6 +37,9 @@ Nota de arquitetura: este ambiente **não expõe Skill como ferramenta invocáve
 | Todas (8 verifies) | `openspec-verify-change` | report 3 dimensões (Completude/Correção/Coerência) antes de cada archive |
 | Todas (8 archives) | `openspec-archive-change` | `openspec archive <nome> -y` + specs sincronizadas (20 capabilities em `openspec/specs/`) |
 | 0 | `openspec-new-change`, `openspec-explore`, `openspec-continue-change`, `openspec-sync-specs`, `openspec-apply-change` | instaladas via init; fluxos equivalentes executados manualmente (nenhuma change exigiu continue/sync separado) |
+| reformulação client (PR1–PR6) | `vercel-react-best-practices`, `web-design-guidelines` | runbooks de estrutura/a11y em landing, login two-step, catálogo `ui/`; auditoria axe do `design-auditor` espelha a skill |
+| `readme-badges-refresh` | `docs-writer` via `Task` (estreia do fluxo `agent-flow`) | corpo + espelho delegados; 2 correções inline (URLs verificadas, bandeiras restauradas), registradas no verify |
+| triagem LGPD (2026-09-16) | `find-skills` | pesquisa que achou `LucasCabral10/lgpd-skills` + 4 alternativas (ver Triagem LGPD) |
 
 ## Avaliadas, não instaladas (triagem 2026-09-11)
 
@@ -81,6 +86,27 @@ Pesquisa via skill `find-skills` + web (leaderboard skills.sh). Instalação aci
 |---|---|---|---|
 | LGPD/privacy skill | busca `privacy lgpd` — nenhum resultado confiável | Inventário, retenção, direitos | **avaliada, sem skill existente** — docs-first (`docs/PRIVACY.md`); reavaliar se surgir fonte oficial |
 | `security-reviewer` (genérico) | ecossistema | SAST/OWASP | **não instalada** — precedente mantido (`bandit/pip-audit/gitleaks` + `security-auditor` cobrem) |
+
+## Triagem LGPD (2026-09-16)
+
+Pesquisa via skill `find-skills` + web (leaderboard skills.sh). Nada instalado — só triagem; instalação exige SHA/tag + auditoria do `SKILL.md` + entrada em Instaladas + DPO ciente.
+
+| Nome | Origem | Uso pretendido | Status | Risco + mitigação | Dono |
+|---|---|---|---|---|---|
+| `LucasCabral10/lgpd-skills` | `github.com/LucasCabral10/lgpd-skills` (BR, MIT, OpenCode, 19 skills: maestro `lgpd-audit` + ROPA/RIPD/DSAR/incidentes) | Auditoria LGPD/ANPD ponta a ponta do repo | **triada, candidata a aprovada** | Médio — autor individual (não org); mitigar com SHA pinado + auditoria integral + artefatos `.lgpd/` revisados antes de commitar | planner |
+| `mferreiradb/lgpd-reviewer-skill` | `github.com/mferreiradb/lgpd-reviewer-skill` | Relatório tabular de adequação (classificação + base legal + ciclo de vida) | avaliada, só referência | Baixo-médio — scanner é p/ Prisma (N/A p/ SQLAlchemy); usar formato do relatório como inspiração | planner |
+| `mukul975/privacy-data-protection-skills` | base com 282 skills multi-regulação | Cobertura ampla | descartada | Genérica e pesada p/ necessidade BR atual; reavaliar se operar fora do BR | planner |
+| `shiplightai/agent-skills@privacy-review` | skills.sh | Review GDPR/CCPA | descartada | Sem foco BR; sobreposição com as acima | planner |
+| `borghei/claude-skills@privacy-compliance` | agent-skills.md | Multi-regulação + DSAR tracker | descartada | Genérica; reavaliar se operar fora do BR | planner |
+
+## Patches locais (divergência documentada do pin)
+
+### P1 — links do pacote Vercel (2026-09-16)
+
+- **Pacote:** `vercel-labs/agent-skills` @`063bee9` (pin original mantido; reinstalação limpa reaplica este patch).
+- **Arquivo:** `.opencode/skills/vercel-react-best-practices/AGENTS.md` (3 ocorrências).
+- **Antes → depois:** `./async-defer-await.md` → `./rules/async-defer-await.md` (idem `async-cheap-condition-before-await`, `server-hoist-static-io`).
+- **Motivo:** links quebrados do upstream; conteúdo funcional intacto, zero scripts tocados.
 
 ## Como aprovar/instalar (quando autorizado)
 
