@@ -48,7 +48,9 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
   Behavior PRs must add one entry here; docs-only PRs pass without it.
 -->
 
-## [Unreleased]
+## [v0.2.0] — 2026-09-16
 
 - **`auto-release-bump-infer`**: `auto_release.py --bump auto` (default) infere semver do título (`feat`→minor, `fix`-class→patch, `BREAKING CHANGE`/`!`→major); explícito sempre vence; change em `openspec/changes/auto-release-bump-infer/`.
+
+## [Unreleased]
 
