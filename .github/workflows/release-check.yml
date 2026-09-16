@@ -1,0 +1,25 @@
+# Release gate: behavior PRs must carry a CHANGELOG entry. Read-only, cheap.
+name: release-check
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev --frozen
+      - name: Dry-run plus changelog gate
+        run: |
+          uv run python scripts/auto_release.py --dry-run --pr-title "${{ github.event.pull_request.title }}"
+          git diff "origin/${{ github.base_ref }}...HEAD" --name-only > /tmp/files.txt
+          git diff "origin/${{ github.base_ref }}...HEAD" -- CHANGELOG.md > /tmp/changelog.diff
+          uv run python scripts/auto_release.py --check --files "$(cat /tmp/files.txt)" --diff-file /tmp/changelog.diff

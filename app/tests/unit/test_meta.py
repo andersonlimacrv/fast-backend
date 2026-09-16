@@ -31,7 +31,8 @@ async def test_meta_shape_anonymous(bare_client: AsyncClient) -> None:
     assert resp.status_code == 200
     body = resp.json()
     assert body["app"] == "fast-backend"
-    assert body["version"] == "0.1.0"
+    # Never hardcode: auto-release bumps the default (bot commit chore(release)).
+    assert body["version"] == Settings.model_fields["app_version"].default
     assert {m["key"] for m in body["modules"]} == {
         "identity",
         "organization",

@@ -114,6 +114,70 @@ def _git(*args: str) -> str:
     return result.stdout
 
 
+# Paths that never require a changelog entry (docs, metadata, vendored text).
+EXEMPT_PREFIXES = ("docs/", "openspec/", ".opencode/", ".lgpd/")
+EXEMPT_SUFFIXES = (".md", ".MD")
+EXEMPT_FILES = {"LICENSE", ".gitignore", ".gitattributes", ".env.example"}
+
+
+def files_need_release(files: list[str]) -> bool:
+    """True when any changed file affects behavior (i.e. is not docs-only)."""
+    for path in files:
+        name = path.strip().replace("\\", "/")
+        if not name or name in EXEMPT_FILES:
+            continue
+        if name.startswith(EXEMPT_PREFIXES) or name.endswith(EXEMPT_SUFFIXES):
+            continue
+        return True
+    return False
+
+
+def has_unreleased_addition(changelog_diff: str) -> bool:
+    """True when the diff adds a non-blank, non-header line under `[Unreleased]`."""
+    in_unreleased = False
+    for raw in changelog_diff.splitlines():
+        if raw.startswith(("+++ ", "--- ")):
+            continue
+        if raw.startswith("@@"):
+            in_unreleased = False
+            continue
+        if not raw or raw[0] not in " +-":
+            in_unreleased = False
+            continue
+        content = raw[1:]
+        if content.startswith("## [Unreleased]"):
+            in_unreleased = True
+            continue
+        if content.startswith("## ["):
+            in_unreleased = False
+            continue
+        if in_unreleased and raw[0] == "+" and content.strip():
+            return True
+    return False
+
+
+def unreleased_bodies(text: str) -> list[str]:
+    """Bodies of every `[Unreleased]` section (shared with finalize_changelog)."""
+    bodies: list[str] = []
+    for match in _UNRELEASED_RE.finditer(text):
+        start = match.end()
+        nxt = _SECTION_RE.search(text, start)
+        end = nxt.start() if nxt else len(text)
+        body = text[start:end].strip("\n").strip()
+        if body:
+            bodies.append(body)
+    return bodies
+
+
+def check_pr(changed_files: list[str], changelog_diff: str) -> str | None:
+    """Return a failure reason, or None when the PR satisfies the release rule."""
+    if not files_need_release(changed_files):
+        return None
+    if has_unreleased_addition(changelog_diff):
+        return None
+    return "behavior change without a [Unreleased] CHANGELOG entry (add one, or keep the PR docs-only)"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Finalize Unreleased into a versioned release.")
     parser.add_argument("--pr-title", default="", help="Fallback entry when Unreleased is empty")
@@ -121,14 +185,42 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--date", default="")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--root", default=str(REPO_ROOT))
+    parser.add_argument("--check", action="store_true", help="read-only PR gate (with --files/--diff-file)")
+    parser.add_argument("--files", default="", help="newline-separated changed paths for --check")
+    parser.add_argument("--diff-file", default="", help="unified diff of CHANGELOG.md for --check ('-' reads stdin)")
+    parser.add_argument(
+        "--if-needed",
+        action="store_true",
+        help="exit 0 doing nothing when the merge carries nothing releasable",
+    )
     args = parser.parse_args(argv)
+
+    if args.check:
+        if args.diff_file == "-":
+            diff_text = sys.stdin.read()
+        elif args.diff_file:
+            diff_text = Path(args.diff_file).read_text(encoding="utf-8")
+        else:
+            diff_text = ""
+        reason = check_pr([f for f in args.files.splitlines() if f.strip()], diff_text)
+        if reason is not None:
+            sys.stdout.write(f"release check failed: {reason}\n")
+            return 1
+        sys.stdout.write("release check: OK\n")
+        return 0
 
     root = Path(args.root)
     date = args.date or datetime.date.today().isoformat()
+    changelog = root / "CHANGELOG.md"
+    text = changelog.read_text(encoding="utf-8")
+    if args.if_needed and not unreleased_bodies(text):
+        changed = {f.replace("\\", "/").split("/")[-1] for f in _git("diff", "HEAD~1", "--name-only").split()}
+        if "CHANGELOG.md" not in changed:
+            sys.stdout.write("nothing to release\n")
+            return 0
     tags = _git("tag", "--list").split()
     version = next_version(tags, args.bump)
-    changelog = root / "CHANGELOG.md"
-    new_text = finalize_changelog(changelog.read_text(encoding="utf-8"), version, date, args.pr_title)
+    new_text = finalize_changelog(text, version, date, args.pr_title)
     if args.dry_run:
         sys.stdout.write(f"would release v{version} on {date}\n")
         return 0

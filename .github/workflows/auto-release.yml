@@ -45,6 +45,7 @@ jobs:
           GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
         run: |
           uv run python scripts/auto_release.py \
+            --if-needed \
             --pr-title "$PR_TITLE" \
             --bump "${{ inputs.bump || 'patch' }}" \
             ${{ inputs.dry-run && '--dry-run' || '' }}

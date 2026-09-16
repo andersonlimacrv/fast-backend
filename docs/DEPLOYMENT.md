@@ -46,6 +46,8 @@ Migrations follow expand/contract when versions are incompatible.
 
 Merging to `main` runs `auto-release.yml`: `[Unreleased]` is finalized into `## [vX.Y.Z] — date` (patch bump from the highest tag; minor/major via manual dispatch), version files sync, commit + tag push, and `release.yml` creates the GitHub Release from the section. Rollback of a bad release: delete the tag and Release on GitHub, then `git revert` the `chore(release)` commit. Never force-push.
 
+Two guardrails: `release-check.yml` fails the PR when behavior changes lack an `[Unreleased]` entry (docs-only PRs pass), and `--if-needed` keeps silent merges tagless (`nothing to release`, exit 0).
+
 ## Privacy operations
 
 - DPO contact: `PRIVACY_CONTACT` (no default — set before production).

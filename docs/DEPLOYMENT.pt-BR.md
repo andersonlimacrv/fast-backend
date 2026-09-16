@@ -46,6 +46,8 @@ Migrations seguem expand/contract quando houver incompatibilidade entre versões
 
 Merge na `main` roda o `auto-release.yml`: `[Unreleased]` é finalizado em `## [vX.Y.Z] — data` (patch a partir da maior tag; minor/major via dispatch manual), arquivos de versão sincronizam, commit + tag com push, e o `release.yml` cria o GitHub Release a partir da seção. Rollback de release ruim: deleta tag e Release no GitHub e dá `git revert` no commit `chore(release)`. Nunca force-push.
 
+Duas travas: o `release-check.yml` reprova a PR quando há mudança de comportamento sem entrada `[Unreleased]` (PRs só-docs passam), e o `--if-needed` mantém merges silenciosos sem tag (`nothing to release`, exit 0).
+
 ## Operações de privacidade
 
 - Contato do DPO: `PRIVACY_CONTACT` (sem default — definir antes da produção).
