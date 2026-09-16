@@ -1,16 +1,19 @@
 """Automate releases on merged PRs: finalize `[Unreleased]` into a version.
 
 Flow (see `.github/workflows/auto-release.yml`): every PR merged to `main`
-bumps patch, consolidates `[Unreleased]` sections into `## [vX.Y.Z] — date`,
-syncs version files, commits, tags and pushes (`--follow-tags`, one command).
+infers the bump from the PR title (`feat` → minor, `fix` → patch,
+`BREAKING CHANGE`/`!` → major; anything else → patch), consolidates
+`[Unreleased]` sections into `## [vX.Y.Z] — date`, syncs version files,
+commits, tags and pushes (`--follow-tags`, one command).
 The existing `release.yml` (on tag) then creates the GitHub Release — no loop,
-because pushes never open PRs.
+because pushes never open PRs. An explicit `--bump` (manual dispatch) always
+wins over inference.
 
 Pure functions below are unit-tested without git/network
 (`app/tests/unit/test_auto_release.py`); only `main()` touches git.
 
 Usage:
-  python scripts/auto_release.py --pr-title "..." [--bump patch|minor|major] [--dry-run] [--date YYYY-MM-DD]
+  python scripts/auto_release.py --pr-title "..." [--bump auto|patch|minor|major] [--dry-run] [--date YYYY-MM-DD]
 """
 
 from __future__ import annotations
@@ -28,6 +31,8 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 _VERSION_RE = re.compile(r"^v?(\d+)\.(\d+)\.(\d+)$")
 _UNRELEASED_RE = re.compile(r"^## \[Unreleased\].*$", re.MULTILINE)
 _SECTION_RE = re.compile(r"^## \[.+\].*$", re.MULTILINE)
+_CONVENTIONAL_RE = re.compile(r"^\s*([A-Za-z]+)(?:\([^)]*\))?(!)?:")
+_PATCH_TYPES = frozenset({"fix", "perf", "refactor", "docs", "test", "chore", "ci", "build", "style", "revert"})
 
 
 def parse_version(tag: str) -> tuple[int, int, int] | None:
@@ -49,6 +54,37 @@ def next_version(tags: list[str], bump: str = "patch") -> str:
     if bump != "patch":
         raise ValueError(f"unknown bump: {bump!r}")
     return f"{major}.{minor}.{patch + 1}"
+
+
+def infer_bump(pr_title: str, pr_body: str = "") -> str:
+    """Infer `major|minor|patch` from a Conventional Commits PR title.
+
+    `BREAKING CHANGE` (title or body) or a `!` marker → major; `feat` → minor;
+    known fix-class types → patch; anything else (unknown type, no prefix,
+    empty) → patch (conservative default: never bump up by accident).
+    """
+    text = f"{pr_title}\n{pr_body}"
+    if "BREAKING CHANGE" in text.upper():
+        return "major"
+    match = _CONVENTIONAL_RE.match(pr_title or "")
+    if not match:
+        return "patch"
+    kind, bang = match.group(1).lower(), match.group(2)
+    if bang:
+        return "major"
+    if kind == "feat":
+        return "minor"
+    if kind in _PATCH_TYPES:
+        return "patch"
+    return "patch"
+
+
+def resolve_bump(bump_arg: str, pr_title: str, pr_body: str = "") -> str:
+    """Resolve the effective bump: explicit `patch|minor|major` always wins;
+    `auto` (or anything unknown, defensively) falls back to inference."""
+    if bump_arg in ("patch", "minor", "major"):
+        return bump_arg
+    return infer_bump(pr_title, pr_body)
 
 
 def finalize_changelog(text: str, version: str, date: str, fallback_title: str) -> str:
@@ -181,7 +217,12 @@ def check_pr(changed_files: list[str], changelog_diff: str) -> str | None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Finalize Unreleased into a versioned release.")
     parser.add_argument("--pr-title", default="", help="Fallback entry when Unreleased is empty")
-    parser.add_argument("--bump", default="patch", choices=["patch", "minor", "major"])
+    parser.add_argument(
+        "--bump",
+        default="auto",
+        choices=["auto", "patch", "minor", "major"],
+        help="explicit bump wins; 'auto' infers from --pr-title",
+    )
     parser.add_argument("--date", default="")
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument("--root", default=str(REPO_ROOT))
@@ -219,7 +260,7 @@ def main(argv: list[str] | None = None) -> int:
             sys.stdout.write("nothing to release\n")
             return 0
     tags = _git("tag", "--list").split()
-    version = next_version(tags, args.bump)
+    version = next_version(tags, resolve_bump(args.bump, args.pr_title))
     new_text = finalize_changelog(text, version, date, args.pr_title)
     if args.dry_run:
         sys.stdout.write(f"would release v{version} on {date}\n")
