@@ -62,9 +62,9 @@ def _rename(dest: Path, name: str) -> None:
     readme = dest / "README.md"
     if readme.exists():
         text = readme.read_text()
-        text = re.sub(r"^# .*", f"# {name}", text, count=1, flags=re.MULTILINE)
-        # Brand header is a banner (no H1 since readme-brand-badges):
-        # swap the banner alt brand so the fork carries the new name.
+        # Brand header is a banner + tagline H1 (no bare "# name" heading):
+        # the fork carries the new name in the banner alt; the H1 tagline
+        # stays untouched (must NOT be replaced by the project name).
         text = text.replace('alt="FastBACKEND', f'alt="{name}', 1)
         readme.write_text(text)
 
