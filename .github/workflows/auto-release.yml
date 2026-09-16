@@ -51,3 +51,11 @@ jobs:
       - name: Push commit and tag (one command, no force)
         if: ${{ !inputs.dry-run }}
         run: git push --follow-tags
+      - name: Create GitHub Release (token pushes don't trigger release.yml)
+        if: ${{ !inputs.dry-run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="$(git describe --tags --abbrev=0)"
+          uv run python scripts/release_notes.py --version "$TAG" > /tmp/notes.md
+          gh release create "$TAG" --title "$TAG" --notes-file /tmp/notes.md
