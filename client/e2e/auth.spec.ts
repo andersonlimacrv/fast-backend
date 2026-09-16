@@ -44,7 +44,7 @@ describeWithApi("member console", () => {
     await gotoAuthed(page, "/audit", session, orgId);
     await expect(page.getByText(/forbidden|403/i).first()).toBeVisible();
     await expectNoSeriousA11y(page);
-    for (const path of ["/admin/users", "/admin/audit"]) {
+    for (const path of ["/admin/users", "/admin/audit", "/admin/gallery"]) {
       await gotoAuthed(page, path, session, orgId);
       await expect(page.getByText(/forbidden|403/i).first()).toBeVisible();
       await expectNoSeriousA11y(page);

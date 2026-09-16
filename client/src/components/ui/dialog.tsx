@@ -49,9 +49,10 @@ const DialogPopup = React.forwardRef<
       {...props}
     >
       <motion.div
+        /* Upstream spring enter (stiffness ~350, damping ~30 settles <250ms). */
         initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.15, ease: "easeOut" }}
+        transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 30 }}
       >
         {children}
       </motion.div>

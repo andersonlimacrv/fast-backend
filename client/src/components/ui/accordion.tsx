@@ -1,5 +1,5 @@
 import { Accordion } from "@base-ui/react/accordion";
-import { motion } from "motion/react";
+import { motion, useReducedMotion, type Transition } from "motion/react";
 import * as React from "react";
 
 import { ChevronDown } from "@/lib/icons";
@@ -7,7 +7,11 @@ import { ChevronDown } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 /* Accordion on Base UI primitives with a motion height reveal on open.
- * (Panel unmounts on close, so only the opening transition animates.) */
+ * (Panel unmounts on close, so only the opening transition animates.)
+ * Spring preset adopted from upstream animate-ui base accordion
+ * (default `{ type: 'spring', stiffness: 150, damping: 22 }`). */
+
+const PANEL_TRANSITION: Transition = { type: "spring", stiffness: 150, damping: 22 };
 
 const AccordionRoot = Accordion.Root;
 
@@ -28,7 +32,7 @@ const AccordionTrigger = React.forwardRef<
       ref={ref}
       className={cn(
         "flex w-full items-center justify-between py-3 text-left text-sm font-medium outline-none",
-        "hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring",
+        "hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
         className,
       )}
@@ -47,18 +51,21 @@ AccordionTrigger.displayName = "AccordionTrigger";
 const AccordionContent = React.forwardRef<
   React.ElementRef<typeof Accordion.Panel>,
   React.ComponentPropsWithoutRef<typeof Accordion.Panel>
->(({ className, children, ...props }, ref) => (
-  <Accordion.Panel ref={ref} className={cn("overflow-hidden text-sm", className)} {...props}>
-    <motion.div
-      initial={{ height: 0, opacity: 0 }}
-      animate={{ height: "auto", opacity: 1 }}
-      transition={{ duration: 0.16, ease: "easeOut" }}
-      className="pb-3 text-muted-foreground"
-    >
-      {children}
-    </motion.div>
-  </Accordion.Panel>
-));
+>(({ className, children, ...props }, ref) => {
+  const reduceMotion = useReducedMotion();
+  return (
+    <Accordion.Panel ref={ref} className={cn("overflow-hidden text-sm", className)} {...props}>
+      <motion.div
+        initial={reduceMotion ? false : { height: 0, opacity: 0 }}
+        animate={{ height: "auto", opacity: 1 }}
+        transition={reduceMotion ? { duration: 0 } : PANEL_TRANSITION}
+        className="pb-3 text-muted-foreground"
+      >
+        {children}
+      </motion.div>
+    </Accordion.Panel>
+  );
+});
 AccordionContent.displayName = "AccordionContent";
 
 export {

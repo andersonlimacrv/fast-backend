@@ -13,6 +13,7 @@ import { LoginPage, RegisterPage } from "@/pages/Auth";
 import { AuditPage } from "@/pages/Audit";
 import { DashboardPage } from "@/pages/Dashboard";
 import { GrantsPage } from "@/pages/Grants";
+import { GalleryPage } from "@/pages/Gallery";
 import { HealthPage } from "@/pages/Health";
 import { MembersPage } from "@/pages/Members";
 import { NotFoundPage } from "@/pages/NotFound";
@@ -50,6 +51,7 @@ export default function App() {
         <Route path="admin/users" element={<AdminUsersPage />} />
         <Route path="admin/orgs" element={<AdminOrgsPage />} />
         <Route path="admin/audit" element={<AdminAuditPage />} />
+        <Route path="admin/gallery" element={<GalleryPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
       </Routes>

@@ -1,4 +1,5 @@
 import { Tabs } from "@base-ui/react/tabs";
+import { motion, useReducedMotion } from "motion/react";
 import * as React from "react";
 
 import { cn } from "@/lib/utils";
@@ -60,4 +61,68 @@ const TabsPanel = React.forwardRef<
 ));
 TabsPanel.displayName = "TabsPanel";
 
-export { TabsRoot as Tabs, TabsList, TabsTab as TabsTrigger, TabsIndicator, TabsPanel as TabsContent };
+type TabsPanelsProps = Omit<
+  React.HTMLAttributes<HTMLDivElement>,
+  "onDrag" | "onDragStart" | "onDragEnd" | "onAnimationStart"
+> & {
+  transition?: React.ComponentProps<typeof motion.div>["transition"];
+};
+
+/* Upstream TabsPanels (auto-height): Base-UI hides inactive panels, so a
+ * ResizeObserver on the inner content tracks the visible panel height.
+ * (Selected value lives in Base-UI's internal TabsRootContext, not the
+ * public @base-ui/react@1.8.0 API, so keying by value is not possible.) */
+const TabsPanels = React.forwardRef<HTMLDivElement, TabsPanelsProps>(
+  ({ className, children, transition, ...props }, ref) => {
+    const reduceMotion = useReducedMotion();
+    const innerRef = React.useRef<HTMLDivElement>(null);
+    const [height, setHeight] = React.useState<number | "auto">("auto");
+
+    React.useEffect(() => {
+      if (reduceMotion) return;
+      const el = innerRef.current;
+      if (!el || typeof ResizeObserver === "undefined") return;
+      const measure = () => {
+        const h = el.offsetHeight;
+        setHeight((prev) => (prev === h ? prev : h));
+      };
+      measure();
+      const ro = new ResizeObserver(measure);
+      ro.observe(el);
+      return () => ro.disconnect();
+    }, [reduceMotion]);
+
+    if (reduceMotion) {
+      return (
+        <div ref={ref} className={cn("overflow-hidden", className)} {...props}>
+          {children}
+        </div>
+      );
+    }
+
+    return (
+      <motion.div
+        ref={ref}
+        className={cn("overflow-hidden", className)}
+        initial={false}
+        animate={{ height }}
+        transition={transition ?? { type: "spring", stiffness: 300, damping: 30 }}
+        {...props}
+      >
+        <div ref={innerRef}>{children}</div>
+      </motion.div>
+    );
+  },
+);
+TabsPanels.displayName = "TabsPanels";
+
+export {
+  TabsRoot as Tabs,
+  TabsList,
+  TabsTab,
+  TabsTab as TabsTrigger,
+  TabsIndicator,
+  TabsPanel,
+  TabsPanel as TabsContent,
+  TabsPanels,
+};
