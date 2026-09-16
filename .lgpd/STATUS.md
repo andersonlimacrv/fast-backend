@@ -17,9 +17,11 @@
 - `.lgpd/discovery.md` — v1, 2026-09-16
 - `.lgpd/gaps.md` — v1, 2026-09-16
 - `.lgpd/data-map.md` — v1, 2026-09-16 (8 atividades, 0 sensíveis, 0 menores, 2 alto risco → RIPD pendente)
+- `.lgpd/legal-basis.md` — v1, 2026-09-16 (6× contrato, 2× legítimo interesse)
+- `.lgpd/lia/a005.md`, `.lgpd/lia/a006.md` — v1 draft (decisão pendente de Encarregado)
 
 ## Gaps abertos
 Ver `.lgpd/gaps.md` (3 críticos, 4 altos, 3 médios, 1 baixo).
 
 ## Próximo passo
-L3 `lgpd-legal-basis` (base legal retroativa por atividade) — aguardando ordem.
+L4 `lgpd-vendor-audit` (operadores SMTP/S3/Stripe por deploy) — aguardando ordem. L3 concluída sem checkpoint marcado; revisão humana bem-vinda a qualquer ponto.
