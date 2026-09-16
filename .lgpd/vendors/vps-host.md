@@ -17,6 +17,8 @@
 - [ ] Auxílio DSAR; eliminação de discos ao fim do contrato + atestado
 - [ ] Incidentes ≤ 24h; sem histórico omisso
 
+Modelo contratual: [`dpa-template.md`](./dpa-template.md) (preencher por vendor com jurídico).
+
 ## Avaliação — VPS
 - Eliminatórios (🚫): **REPROVADO em: DPA, base Art. 33** — bloqueado até contratação com DPA
 - Veredito: **REPROVADO — contratar antes do primeiro deploy com dados reais**

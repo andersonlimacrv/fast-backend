@@ -46,6 +46,8 @@
 - [ ] Revisão semestral agendada
 - [ ] Owner interno definido
 
+Modelo contratual: [`dpa-template.md`](./dpa-template.md) (preencher por vendor com jurídico).
+
 ## Avaliação — provedor SMTP
 - Itens atendidos: 1/19 (só TLS, por exigência do código)
 - Eliminatórios (🚫): **REPROVADO em: DPA, base Art. 33, histórico** — bloqueado até contratação com DPA

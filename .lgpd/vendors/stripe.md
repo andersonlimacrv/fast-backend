@@ -15,6 +15,8 @@
 - [ ] Auxílio DSAR/eliminação; retenção compatível
 - [ ] Incidentes ≤ 24h; canal definido
 
+Modelo contratual: [`dpa-template.md`](./dpa-template.md) (preencher por vendor com jurídico).
+
 ## Avaliação — Stripe
 - Eliminatórios (🚫): **pendentes até ativação** (DPA + Art. 33)
 - Veredito: **APROVADO COM RESSALVAS — só ligar a flag após DPA + cláusulas anexadas aqui**

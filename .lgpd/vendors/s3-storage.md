@@ -17,6 +17,8 @@
 - [ ] Auxílio DSAR + eliminação com atestado + retenção compatível
 - [ ] Incidentes ≤ 24h, sem histórico omisso, canal definido
 
+Modelo contratual: [`dpa-template.md`](./dpa-template.md) (preencher por vendor com jurídico).
+
 ## Avaliação — storage S3
 - Eliminatórios (🚫): **REPROVADO em: DPA, base Art. 33** — bloqueado até contratação com DPA
 - Veredito: **REPROVADO — contratar antes de qualquer upload produtivo** (MinIO local/dev fora do escopo: sem PII real)

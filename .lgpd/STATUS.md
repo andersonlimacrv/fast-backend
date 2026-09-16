@@ -19,7 +19,7 @@
 - `.lgpd/data-map.md` — v1, 2026-09-16 (8 atividades, 0 sensíveis, 0 menores, 2 alto risco → RIPD pendente)
 - `.lgpd/legal-basis.md` — v1, 2026-09-16 (6× contrato, 2× legítimo interesse)
 - `.lgpd/lia/a005.md`, `.lgpd/lia/a006.md` — v1 draft (decisão pendente de Encarregado)
-- `.lgpd/vendors/` — smtp-provider, s3-storage, stripe, vps-host (todos bloqueados/ressalvados até DPA; sem deploy produtivo hoje)
+- `.lgpd/vendors/` — smtp-provider, s3-storage, stripe, vps-host + `dpa-template.md` adotado (12 cláusulas; preencher por vendor com jurídico)
 - `.lgpd/retention.md` — v1, 2026-09-16 (2 regras ativas, 4 propostas; nada destrutivo implementado aqui)
 - `.lgpd/anonymization.md` — N/A fundamentado, 2026-09-16 (zero pipelines/datasets; guardrails já atendidos)
 - `.lgpd/dsar/workflow.md` — v1 spec, 2026-09-16 (1/9 completos, 3 parciais, 3 inexistentes, 3 N/A; SLA ainda não operacional)
@@ -31,7 +31,12 @@
 Ver `.lgpd/gaps.md` (3 críticos, 4 altos, 3 médios, 1 baixo).
 
 ## Próximo passo
-L12 `lgpd-dpa` (12 cláusulas p/ SMTP/S3/Stripe/VPS quando contratados) — aguardando ordem.
+L13 `lgpd-international-transfer` (Cláusulas-Padrão Res. 19/2024 p/ Stripe US e afins) — aguardando ordem.
+
+## F — DPA ✓ (L12, template)
+- `dpa-template.md` adotado (12 cláusulas, proveniência registrada, placeholders intactos)
+- 4 fichas amarradas ao modelo; 0 DPAs assinados (sem vendors contratados — bloqueio honesto mantido)
+- Próximo: lgpd-international-transfer (L13)
 
 ## F — RIPD ✓ (L11, draft)
 - 2 RIPDs (A001, A006) com matriz ISO 31000, salvaguardas e risco residual condicionado
