@@ -20,12 +20,13 @@
 - `.lgpd/legal-basis.md` — v1, 2026-09-16 (6× contrato, 2× legítimo interesse)
 - `.lgpd/lia/a005.md`, `.lgpd/lia/a006.md` — v1 draft (decisão pendente de Encarregado)
 - `.lgpd/vendors/` — smtp-provider, s3-storage, stripe, vps-host (todos bloqueados/ressalvados até DPA; sem deploy produtivo hoje)
+- `.lgpd/retention.md` — v1, 2026-09-16 (2 regras ativas, 4 propostas; nada destrutivo implementado aqui)
 
 ## Gaps abertos
 Ver `.lgpd/gaps.md` (3 críticos, 4 altos, 3 médios, 1 baixo).
 
 ## Próximo passo
-L5 `lgpd-retention-erasure` (retenção do audit + famílias refresh + outbox) — aguardando ordem.
+L6 `lgpd-anonymization` (avaliar necessidade — sem analytics hoje, provável N/A) ou L7 `lgpd-dsar` (endpoint de eliminação) — aguardando ordem.
 
 ## F — Vendor audit ✓ (L4)
 - 4 operadores inventariados (1 Crítico, 3 Alto)
