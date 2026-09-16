@@ -2,15 +2,34 @@
 
 > 🇬🇧 **English** | [Português (BR)](README.pt-BR.md) — deep docs (`docs/`) are in PT-BR for now.
 
+<!-- status -->
 [![CI](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml)
 [![Release](https://img.shields.io/github/v/release/andersonlimacrv/fast-backend)](https://github.com/andersonlimacrv/fast-backend/releases)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.11-blue)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-138%20passing-brightgreen)](app/tests)
+[![Tests](https://img.shields.io/github/actions/workflow/status/andersonlimacrv/fast-backend/ci.yml?label=tests&logo=github)](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml)
+<!-- backend stack -->
+![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat-square&logo=postgresql)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?style=flat-square&logo=sqlalchemy)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker)
+<!-- frontend stack -->
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript)
+![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react)
+![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss)
+<!-- test tiers -->
+![backend-unit](https://img.shields.io/badge/backend--unit-blue?style=flat-square)
+![backend-integration](https://img.shields.io/badge/backend--integration-blue?style=flat-square)
+![client-vitest](https://img.shields.io/badge/client--vitest-blue?style=flat-square)
+![browser-e2e](https://img.shields.io/badge/browser--e2e-blue?style=flat-square)
 
 Modular Monolith Async FastAPI SaaS Kernel — own auth (JWT + opaque refresh), row-level tenancy, RBAC + entitlements, email/storage/jobs, audit, backup, optional Stripe billing, admin control plane, and a React visualization SPA with public landing.
 
-> **Status: v1.0.0 shipped** (tag `0.1.0`) — Phases 0–10 done, 138 green backend tests (73 unit + 65 integration, real Postgres/Redis), 71 vitest + 10 Playwright browser tests in `client/`, 36 capabilities in `openspec/specs/`.
+> **Status: v1.0.0 shipped** (tag `0.1.0`) — Phases 0–11 done, 138 green backend tests (73 unit + 65 integration, real Postgres/Redis), 71 vitest + 10 Playwright browser tests in `client/`, 36 capabilities in `openspec/specs/`.
+> **Release notes:** see [`CHANGELOG.md`](./CHANGELOG.md).
+> Releases are cut automatically on every merged PR (ADR 0011).
 
 ## Contents
 
@@ -171,12 +190,12 @@ Copies the tree minus VCS/venvs/caches/archives, renames the package, and valida
 app/                  # package (imports from app.*)
 ├── core/             # errors, settings, security port, contracts/
 ├── infrastructure/   # auth, db, email, storage, jobs, observability, payments, security
-├── modules/          # identity, organization, tenancy, entitlements, projects, audit, billing_stripe
-├── interfaces/       # errors, health (/healthz, /readyz)
-├── migrations/       # Alembic 0001–0005
+├── modules/          # admin, audit, billing_stripe, entitlements, identity, organization, projects, tenancy
+├── interfaces/       # errors, health (/healthz, /readyz), meta (/meta)
+├── migrations/       # Alembic 0001–0008
 └── tests/            # unit, integration, e2e, fixtures
-scripts/              # backup.py, deploy.py, new_project.py, release_notes.py
-openspec/             # specs (20 capabilities) + archived changes
+scripts/              # auto_release.py, backup.py, bootstrap_root.py, deploy.py, e2e_spa_flow.py, env_check.py, new_project.py, release_notes.py
+openspec/             # specs (36 capabilities) + archived changes
 docs/                 # RULES, ROADMAP, ARCHITECTURE, SCALING, DEPLOYMENT, guides/, ADRs
 ```
 
