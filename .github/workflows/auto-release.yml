@@ -8,11 +8,11 @@ on:
   workflow_dispatch:
     inputs:
       bump:
-        description: Semver part to bump
+        description: Semver part to bump (auto infers from the PR title)
         required: false
-        default: patch
+        default: auto
         type: choice
-        options: [patch, minor, major]
+        options: [auto, patch, minor, major]
       dry-run:
         description: Print the plan without committing, tagging or pushing
         required: false
@@ -47,7 +47,7 @@ jobs:
           uv run python scripts/auto_release.py \
             --if-needed \
             --pr-title "$PR_TITLE" \
-            --bump "${{ inputs.bump || 'patch' }}" \
+            --bump "${{ inputs.bump || 'auto' }}" \
             ${{ inputs.dry-run && '--dry-run' || '' }}
       - name: Push commit and tag (one command, no force)
         if: ${{ !inputs.dry-run }}

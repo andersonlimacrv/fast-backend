@@ -7,8 +7,10 @@ from scripts.auto_release import (
     files_need_release,
     finalize_changelog,
     has_unreleased_addition,
+    infer_bump,
     next_version,
     parse_version,
+    resolve_bump,
     sync_files,
     unreleased_bodies,
 )
@@ -107,6 +109,37 @@ def test_check_pr_gate() -> None:
 def test_unreleased_bodies_shared_helper() -> None:
     assert unreleased_bodies("# Log\n\n## [Unreleased]\n\n- a\n\n## [0.1.0]\n") == ["- a"]
     assert unreleased_bodies("# Log\n\n## [0.1.0]\n") == []
+
+
+@pytest.mark.unit
+def test_infer_bump_from_conventional_title() -> None:
+    assert infer_bump("feat: dashboard shell") == "minor"
+    assert infer_bump("feat(client): sidebar") == "minor"
+    assert infer_bump("Feat: capitalized") == "minor"
+    for prefix in ("fix", "perf", "refactor", "docs", "test", "chore", "ci", "build", "style", "revert"):
+        assert infer_bump(f"{prefix}: something") == "patch", prefix
+    assert infer_bump("fix(api)!: drop field") == "major"
+    assert infer_bump("feat!: new auth") == "major"
+    assert infer_bump("feat: x", "body with BREAKING CHANGE inside") == "major"
+    assert infer_bump("chore: BREAKING CHANGE here") == "major"
+
+
+@pytest.mark.unit
+def test_infer_bump_conservative_default() -> None:
+    assert infer_bump("") == "patch"
+    assert infer_bump("wip stuff") == "patch"
+    assert infer_bump("custom: our own type") == "patch"
+    assert infer_bump("feat") == "patch"  # no colon, not conventional
+
+
+@pytest.mark.unit
+def test_resolve_bump_explicit_wins() -> None:
+    assert resolve_bump("minor", "fix: typo") == "minor"
+    assert resolve_bump("patch", "feat: big") == "patch"
+    assert resolve_bump("major", "fix: typo") == "major"
+    assert resolve_bump("auto", "feat: big") == "minor"
+    assert resolve_bump("auto", "fix: typo") == "patch"
+    assert resolve_bump("auto", "") == "patch"
 
 
 @pytest.mark.unit
