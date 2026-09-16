@@ -25,12 +25,19 @@
 - `.lgpd/dsar/workflow.md` — v1 spec, 2026-09-16 (1/9 completos, 3 parciais, 3 inexistentes, 3 N/A; SLA ainda não operacional)
 - `.lgpd/policies/privacy-policy-v1-draft.md` — DRAFT, 2026-09-16 (13 elementos; **não publicar sem revisão jurídica**)
 - `.lgpd/encarregado.md` — PENDENTE (ato formal vazio; gap crítico nº 1 segue aberto)
+- `.lgpd/RIPD/` — ripd-a001-credentials + ripd-a006-admin (v1-draft, decisão pendente; risco residual médio-baixo e médio condicionados)
 
 ## Gaps abertos
 Ver `.lgpd/gaps.md` (3 críticos, 4 altos, 3 médios, 1 baixo).
 
 ## Próximo passo
-L11 `lgpd-ripd` (RIPD para A001 credenciais e A006 admin — alto risco) — aguardando ordem.
+L12 `lgpd-dpa` (12 cláusulas p/ SMTP/S3/Stripe/VPS quando contratados) — aguardando ordem.
+
+## F — RIPD ✓ (L11, draft)
+- 2 RIPDs (A001, A006) com matriz ISO 31000, salvaguardas e risco residual condicionado
+- 0 aprovados (decisão pendente de Encarregado/jurídico — checkpoint da skill)
+- Follow-ups: MFA staff/root, revisão trimestral, catálogo de motivos, `dsar-endpoints`
+- Próximo: lgpd-dpa (L12)
 
 ## F — Encarregado ✓/pendente (L10)
 - Ato formal estruturado em `.lgpd/encarregado.md` (campos vazios honestos + nota ATPP)
