@@ -20,15 +20,13 @@ Releases are automatic: every PR merged to `main` finalizes `[Unreleased]` into 
 
 Tests: 98 (unit + real Postgres/Redis integration). Specs: 20 capabilities in `openspec/specs/`.
 
-## [Unreleased] — Phase 9 — Admin Control Plane + Recovery (changes A/B/C)
+## [v0.1.1] — 2026-09-16
 
 - **A (`A-admin-control-plane`)**: `users.is_staff` + `CHECK (superuser ⇒ staff)` + partial index `uq_single_root`; CLI `scripts/bootstrap_root.py` (`make admin-bootstrap`, `BOOTSTRAP_KEY` constant-time, fail-closed, audited `root.bootstrap`); leaf module `app/modules/admin/` (policies pure, `AdminContext`, `require_staff/require_root`, action endpoints staff vs root, never `PATCH is_*`, `SuperuserContext(reason=...)` explicit); `reason+success` in `audit.metadata` (AdminAction via metadata, no new table); `LastRootProtectedError` → 409; `ADMIN_ENABLED` flag; 13th import-linter contract.
 - **B (`B-password-recovery`)**: `password_resets{token_hash,expires_at,used_at}` hash-only, TTL 60min, `SELECT FOR UPDATE` single-use; `POST /auth/password/forgot` (always 202, throttled, no enumeration) → outbox `email.template` → worker renders/sends/redacts; `POST /auth/password/reset` boundary event (Argon2id + `tokens_valid_after` + refresh revoke + sibling invalidation); `POST /admin/users/{id}/force-password-reset` (`accepted`, no secret); `password_reset.*` templates (`StrictUndefined`); `LogEmailSender.send_template` never logs context; Taskiq `password.purge`; Mailpit dev via `make tools`.
 - **C (`C-social-contract`)**: `core/contracts/social.py` Protocol + `linked_identities(provider,provider_sub)` unique, `SOCIAL_LOGIN_ENABLED=false`, no route (OAuth activation deferred with state+PKCE).
 
 Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REGISTRY` triage (SQLAdmin/CRUDAdmin/email/OIDC as evaluated-only), `.env.example` vars without secrets.
-
-## [Unreleased] — Landing, two-step login e LGPD (changes `backend-release-meta` → `lgpd-leak-audit`)
 
 - **`backend-release-meta`**: `GET /meta` público `{app, version, modules:[{key, enabled}]}` (allowlist, sem segredos/hosts/PII) + `APP_VERSION` (default `"0.1.0"`, injetado da tag no release); teste anti-vazamento varrendo o body; ADR 0008.
 - **`client-landing-home`**: landing pública `/` (versão/módulos/flags ao vivo de `/meta`, fallback estático offline, zero terceiros); home logada em `/~`; `Protected` sem sessão → `/`; `services/meta.ts` + `useMeta` + `Landing.tsx`; capability `client-landing`.
@@ -38,3 +36,6 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 - **`make-env-check`**: `make env-check` reporta drift do `.env` vs `.env.example` (chaves + formas, nunca valores; exit 0/1/2) e roda dentro do `setup`; chaves `ARGON2_*` documentadas no exemplo.
 - **`client-reformulation` (6 PRs com CI verde)**: PR1 fundação (`docs/DESIGN.md` adotado, trio `ui-designer`/`frontend-implementer`/`design-auditor`, Playwright axe+snapshot + job `web` no CI); PR2 tokens (`@theme` ⇐ DESIGN.md §4, system fonts); PR3 catálogo `/references` com `motion` pinado; PR4 base + RHF/Zod; PR5 páginas sem clichês; PR6 auditoria total (2 violações AA reais corrigidas) + baselines linux via workflow dedicado. Capabilities `design-system-link`, `browser-e2e` (+ `client-landing`, `two-step-login`).
 - **`docs-release-audit`**: sync de status/contagens (138 backend + 71 vitest + 10 Playwright, 36 specs, Fases 0–11), `make dev` no README, Fase 11 no ROADMAP. `CHANGELOG.md` mantido na raiz por decisão (convenção + `release_notes.py` + `release.yml`).
+
+## [Unreleased]
+

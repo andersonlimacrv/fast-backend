@@ -15,7 +15,7 @@ class Settings(BaseSettings):
     environment: str = "local"
 
     # --- Release (change backend-release-meta; injected from git tag on release) ---
-    app_version: str = "0.1.0"
+    app_version: str = "0.1.1"
 
     # --- Auth ---
     secret_key: str = DEV_DEFAULT_SECRET
