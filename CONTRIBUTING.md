@@ -30,3 +30,7 @@ Rule details: `AGENTS.md` → `docs/RULES.md` → `docs/ROADMAP.md` → `docs/ad
 ## Adding a module
 
 See `docs/guides/add-module.md` (5 steps) + register the matching `<mod>-internals-private` contract.
+
+## Privacy checklist (new PII?)
+
+New personal data (fields, logs, vendors, cookies/trackers) requires, in the same change: data-map entry (`.lgpd/`), legal basis, retention rule, audit/`reason` coverage, and `docs/PRIVACY.md` (+pt-BR) sync. No new third-party SDK without vendor file + DPA track.

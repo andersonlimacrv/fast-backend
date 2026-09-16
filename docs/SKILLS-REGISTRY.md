@@ -85,7 +85,7 @@ Pesquisa via skill `find-skills` + web (leaderboard skills.sh). Instalação aci
 
 | Nome | Origem | Uso neste projeto | Veredito |
 |---|---|---|---|
-| LGPD/privacy skill | busca `privacy lgpd` — nenhum resultado confiável | Inventário, retenção, direitos | **avaliada, sem skill existente** — docs-first (`docs/PRIVACY.md`); reavaliar se surgir fonte oficial |
+| LGPD/privacy skill | busca `privacy lgpd` — achou `LucasCabral10/lgpd-skills` (instalada @`d85d79a`, ver Instaladas) | Inventário, retenção, direitos | **instalada** | Médio — ver linha de Instaladas | planner |
 | `security-reviewer` (genérico) | ecossistema | SAST/OWASP | **não instalada** — precedente mantido (`bandit/pip-audit/gitleaks` + `security-auditor` cobrem) |
 
 ## Triagem LGPD (2026-09-16)
