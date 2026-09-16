@@ -1,35 +1,49 @@
-# fast-backend
+<p align="center">
+  <img src="docs/assets/fast-backend.webp" alt="FastBACKEND — FastAPI + Backend Boilerplate" width="640" />
+</p>
 
 > 🇬🇧 **English** | [Português (BR)](README.pt-BR.md) — deep docs (`docs/`) are in PT-BR for now.
 
 <!-- status -->
-[![CI](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/andersonlimacrv/fast-backend)](https://github.com/andersonlimacrv/fast-backend/releases)
-[![Python](https://img.shields.io/badge/python-%3E%3D3.11-blue)](pyproject.toml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml)
+<p align="center">
+  <a href="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml"><img src="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="https://github.com/andersonlimacrv/fast-backend/releases"><img src="https://img.shields.io/github/v/release/andersonlimacrv/fast-backend" alt="Release" /></a>
+  <a href="pyproject.toml"><img src="https://img.shields.io/badge/python-%3E%3D3.11-blue" alt="Python" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
+  <a href="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml"><img src="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml/badge.svg" alt="Tests" /></a>
+</p>
 <!-- backend stack -->
-![FastAPI](https://img.shields.io/badge/FastAPI-222?style=flat-square&logo=fastapi)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-222?style=flat-square&logo=postgresql)
-![Redis](https://img.shields.io/badge/Redis-222?style=flat-square&logo=redis)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-222?style=flat-square&logo=sqlalchemy)
-![Docker](https://img.shields.io/badge/Docker-222?style=flat-square&logo=docker)
+<p align="center">
+  <img src="https://img.shields.io/badge/FastAPI-222?style=flat-square&logo=fastapi" alt="FastAPI" />
+  <img src="https://img.shields.io/badge/PostgreSQL-222?style=flat-square&logo=postgresql" alt="PostgreSQL" />
+  <img src="https://img.shields.io/badge/Redis-222?style=flat-square&logo=redis" alt="Redis" />
+  <img src="https://img.shields.io/badge/SQLAlchemy-222?style=flat-square&logo=sqlalchemy" alt="SQLAlchemy" />
+  <img src="https://img.shields.io/badge/Docker-222?style=flat-square&logo=docker" alt="Docker" />
+</p>
 <!-- frontend stack -->
-![TypeScript](https://img.shields.io/badge/TypeScript-222?style=flat-square&logo=typescript)
-![React](https://img.shields.io/badge/React-222?style=flat-square&logo=react)
-![Vite](https://img.shields.io/badge/Vite-222?style=flat-square&logo=vite)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-222?style=flat-square&logo=tailwindcss)
+<p align="center">
+  <img src="https://img.shields.io/badge/TypeScript-222?style=flat-square&logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/React-222?style=flat-square&logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/Vite-222?style=flat-square&logo=vite" alt="Vite" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-222?style=flat-square&logo=tailwindcss" alt="Tailwind CSS" />
+</p>
 <!-- test tiers (measured 2026-09-16: pytest --collect-only 85 unit + 65 integration, vitest json 71, playwright --list 10) -->
-![backend-unit](https://img.shields.io/badge/backend_unit-85_tests-0AAAB8?style=flat-square&labelColor=222)
-![backend-integration](https://img.shields.io/badge/backend_integration-65_tests-0AAAB8?style=flat-square&labelColor=222)
-![client-vitest](https://img.shields.io/badge/client_vitest-71_tests-0AAAB8?style=flat-square&labelColor=222)
-![browser-e2e](https://img.shields.io/badge/browser_e2e-10_tests-0AAAB8?style=flat-square&labelColor=222)
+<p align="center">
+  <img src="https://img.shields.io/badge/backend_unit-85_tests-0AAAB8?style=flat-square&labelColor=222" alt="backend-unit" />
+  <img src="https://img.shields.io/badge/backend_integration-65_tests-0AAAB8?style=flat-square&labelColor=222" alt="backend-integration" />
+  <img src="https://img.shields.io/badge/client_vitest-71_tests-0AAAB8?style=flat-square&labelColor=222" alt="client-vitest" />
+  <img src="https://img.shields.io/badge/browser_e2e-10_tests-0AAAB8?style=flat-square&labelColor=222" alt="browser-e2e" />
+</p>
 
 Stop rebuilding auth, tenancy, and billing for every SaaS — clone this Argon2id + JWT-rotation + row-tenancy kernel (150 backend tests green on real Postgres/Redis, staff admin + append-only audit + encrypted backups built in) and ship your product in days, not months.
 
-| Release | Tests | Specs | Docs |
-|---|---|---|---|
-| [`v0.1.1`](https://github.com/andersonlimacrv/fast-backend/releases) (kernel `0.1.0`, Phases 0–11) | 150 backend (85 unit + 65 integration, real Postgres/Redis) + 71 vitest + 10 Playwright | 37 capabilities in [`openspec/specs/`](openspec/specs/) | 12 ADRs in [`docs/adr/`](docs/adr/) |
+| Fact | Value |
+|---|---|
+| Release | [`v0.1.1`](https://github.com/andersonlimacrv/fast-backend/releases) (kernel `0.1.0`, Phases 0–11) |
+| Backend | 150 tests — 85 unit + 65 integration (real Postgres/Redis) |
+| Frontend | 71 vitest + 10 Playwright (`client/`) |
+| Specs | 37 capabilities in [`openspec/specs/`](openspec/specs/) |
+| Decisions | 12 ADRs in [`docs/adr/`](docs/adr/) · auto-release ([ADR 0011](docs/adr/0011-auto-release.md)) + guard ([ADR 0012](docs/adr/0012-release-guard.md)) |
 
 - **Release notes:** [`CHANGELOG.md`](./CHANGELOG.md) — releases cut automatically on every merged PR ([ADR 0011](docs/adr/0011-auto-release.md)), behavior PRs gated by [`release-check.yml`](.github/workflows/release-check.yml) ([ADR 0012](docs/adr/0012-release-guard.md)).
 - **Start here:** [Getting started](#getting-started) (`make setup` → `make dev` → `make check`) · commands manual [`docs/Makefile.md`](docs/Makefile.md).
