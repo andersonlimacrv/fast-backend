@@ -26,12 +26,18 @@
 - `.lgpd/policies/privacy-policy-v1-draft.md` — DRAFT, 2026-09-16 (13 elementos; **não publicar sem revisão jurídica**)
 - `.lgpd/encarregado.md` — PENDENTE (ato formal vazio; gap crítico nº 1 segue aberto)
 - `.lgpd/RIPD/` — ripd-a001-credentials + ripd-a006-admin (v1-draft, decisão pendente; risco residual médio-baixo e médio condicionados)
+- `.lgpd/transfers/assessment.md` — v1, 2026-09-16 (0 transferências ocorrendo; política de residência + Stripe condicional)
 
 ## Gaps abertos
 Ver `.lgpd/gaps.md` (3 críticos, 4 altos, 3 médios, 1 baixo).
 
 ## Próximo passo
-L13 `lgpd-international-transfer` (Cláusulas-Padrão Res. 19/2024 p/ Stripe US e afins) — aguardando ordem.
+Pipeline B **concluído**. Revisão anual de vendors ou ao contratar/ativar flag.
+
+## F — Transferências internacionais ✓ (L13)
+- 0 operadores fora do BR em operação; política de residência definida
+- Stripe condicional documentado (cláusulas na ativação da flag)
+- Próximo: revisão anual (ou `dsar-endpoints` como change, fora da auditoria)
 
 ## F — DPA ✓ (L12, template)
 - `dpa-template.md` adotado (12 cláusulas, proveniência registrada, placeholders intactos)
