@@ -23,12 +23,18 @@
 - `.lgpd/retention.md` — v1, 2026-09-16 (2 regras ativas, 4 propostas; nada destrutivo implementado aqui)
 - `.lgpd/anonymization.md` — N/A fundamentado, 2026-09-16 (zero pipelines/datasets; guardrails já atendidos)
 - `.lgpd/dsar/workflow.md` — v1 spec, 2026-09-16 (1/9 completos, 3 parciais, 3 inexistentes, 3 N/A; SLA ainda não operacional)
+- `.lgpd/policies/privacy-policy-v1-draft.md` — DRAFT, 2026-09-16 (13 elementos; **não publicar sem revisão jurídica**)
 
 ## Gaps abertos
 Ver `.lgpd/gaps.md` (3 críticos, 4 altos, 3 médios, 1 baixo).
 
 ## Próximo passo
-L9 `lgpd-privacy-policy` (política Art. 9) — aguardando ordem.
+L10 `lgpd-dpo-encarregado` (designação + publicação) — aguardando ordem.
+
+## F — Privacy policy ✓ (L9, DRAFT)
+- v1 draft em `.lgpd/policies/privacy-policy-v1-draft.md` (13 elementos, PT-BR claro, TL;DR)
+- **Aguardando revisão jurídica** — não publicar, não mover para final
+- Próximo: lgpd-dpo-encarregado (L10)
 
 ## F — Incident response ✓ (L8, preparatório)
 
