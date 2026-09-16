@@ -1,7 +1,7 @@
 ---
 description: Propõe tokens e componentes a partir de docs/DESIGN.md. Read-only, nunca implementa.
 mode: subagent
-temperature: 0.3
+temperature: 0.4
 permission:
   edit: deny
   bash:
