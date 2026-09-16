@@ -1,14 +1,15 @@
 import { Toast } from "@base-ui/react/toast";
-import { AlertTriangle, CheckCircle2, Info, X, XCircle } from "lucide-react";
+
+import { CircleCheck, CircleX, Info, TriangleAlert, X } from "@/lib/icons";
 
 import { TOAST_PROVIDER, toastManager, type ToastKind } from "@/services/notify";
 import { cn } from "@/lib/utils";
 
 const KIND_ICON: Record<ToastKind, typeof Info> = {
-  success: CheckCircle2,
+  success: CircleCheck,
   info: Info,
-  warning: AlertTriangle,
-  error: XCircle,
+  warning: TriangleAlert,
+  error: CircleX,
 };
 
 function ToastItem({ toast }: { toast: Toast.Root.ToastObject }) {

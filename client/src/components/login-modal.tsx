@@ -1,5 +1,6 @@
 import { Dialog } from "@base-ui/react/dialog";
-import { X } from "lucide-react";
+
+import { X } from "@/lib/icons";
 
 import { LoginForm } from "@/components/login-form";
 import { cn } from "@/lib/utils";

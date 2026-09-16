@@ -22,6 +22,7 @@ test("snapshots: login and 404", async ({ page }) => {
 
   await page.goto("/nope-not-a-route");
   await expect(page.getByRole("heading", { name: /not found/i })).toBeVisible();
+  await expectNoSeriousA11y(page);
   await expect(page).toHaveScreenshot("not-found.png");
 });
 

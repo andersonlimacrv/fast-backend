@@ -19,11 +19,24 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, initialsOf } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
+import { CircularProgress } from "@/components/ui/circular-progress";
 import { CopyButton } from "@/components/ui/copy-button";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { FloatingInput } from "@/components/ui/floating-input";
 import { RadioGroup, RadioItem } from "@/components/ui/radio";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ToggleGroup, ToggleItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { ThemeToggle } from "@/components/theme-toggle";
+import { EmptyState } from "@/components/error-state";
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -157,5 +170,83 @@ describe("copy-button", () => {
     expect(await screen.findByRole("button", { name: /copied/i })).toBeTruthy();
     expect(onCopied).toHaveBeenCalledWith(true, "org-123");
     await waitFor(() => expect(screen.getByRole("button", { name: /copy to clipboard/i })).toBeTruthy());
+  });
+});
+
+describe("dialog", () => {
+  it("opens and closes", async () => {
+    render(
+      <Dialog>
+        <DialogTrigger>new project</DialogTrigger>
+        <DialogContent>
+          <DialogTitle>Create project</DialogTitle>
+          <DialogDescription>Pick a name.</DialogDescription>
+          <DialogClose>Close</DialogClose>
+        </DialogContent>
+      </Dialog>,
+    );
+    fireEvent.click(screen.getByText("new project"));
+    expect(await screen.findByText("Create project")).toBeTruthy();
+    fireEvent.click(screen.getByText("Close"));
+    await waitFor(() => expect(screen.queryByText("Create project")).toBeNull());
+  });
+});
+
+describe("toggle-group", () => {
+  it("selects a single value", () => {
+    const onChange = vi.fn();
+    render(
+      <ToggleGroup defaultValue={["bold"]} onValueChange={onChange} aria-label="style">
+        <ToggleItem value="bold" aria-label="bold" />
+        <ToggleItem value="italic" aria-label="italic" />
+      </ToggleGroup>,
+    );
+    expect(screen.getByRole("button", { name: "bold" }).getAttribute("data-pressed")).not.toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "italic" }));
+    expect(onChange).toHaveBeenCalledWith(["italic"], expect.anything());
+  });
+});
+
+describe("floating-input", () => {
+  it("associates label and accepts text", () => {
+    render(<FloatingInput label="Email Address" type="email" />);
+    const input = screen.getByLabelText("Email Address");
+    fireEvent.change(input, { target: { value: "a@b.c" } });
+    expect((input as HTMLInputElement).value).toBe("a@b.c");
+  });
+});
+
+describe("circular-progress", () => {
+  it("exposes value and clamps", () => {
+    const { rerender } = render(<CircularProgress value={25} />);
+    const bar = screen.getByRole("progressbar");
+    expect(bar.getAttribute("aria-valuenow")).toBe("25");
+    expect(bar.getAttribute("aria-valuetext")).toBe("25 percent");
+    rerender(<CircularProgress value={150} />);
+    expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("100");
+  });
+});
+
+describe("theme-toggle", () => {
+  it("flips the dark class", async () => {
+    document.documentElement.classList.remove("dark");
+    render(<ThemeToggle />);
+    const toggle = await screen.findByRole("switch", { name: /dark mode/i });
+    fireEvent.click(toggle);
+    expect(document.documentElement.classList.contains("dark")).toBe(true);
+    expect(await screen.findByRole("switch", { name: /light mode/i })).toBeTruthy();
+    document.documentElement.classList.remove("dark");
+  });
+});
+
+describe("empty-state", () => {
+  it("renders title, description and action", () => {
+    const onAction = vi.fn();
+    render(
+      <EmptyState title="No projects yet" description="Create one to start." actionLabel="New project" onAction={onAction} />,
+    );
+    expect(screen.getByText("No projects yet")).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "New project" }));
+    expect(onAction).toHaveBeenCalledTimes(1);
   });
 });
