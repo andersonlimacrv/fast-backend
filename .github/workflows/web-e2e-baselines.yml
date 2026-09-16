@@ -16,6 +16,9 @@ on:
 jobs:
   seed:
     runs-on: ubuntu-latest
+    # Needed for the final push of seeded baselines back to the branch.
+    permissions:
+      contents: write
     services:
       postgres:
         image: postgres:17-alpine
