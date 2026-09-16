@@ -39,6 +39,10 @@ jobs:
       - name: Finalize Unreleased and tag
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
         run: |
           uv run python scripts/auto_release.py \
             --pr-title "$PR_TITLE" \
