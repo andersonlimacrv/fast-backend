@@ -28,7 +28,17 @@
 Ver `.lgpd/gaps.md` (3 críticos, 4 altos, 3 médios, 1 baixo).
 
 ## Próximo passo
-L8 `lgpd-incident-response` (runbook Res. 15/2024) — aguardando ordem.
+L9 `lgpd-privacy-policy` (política Art. 9) — aguardando ordem.
+
+## F — Incident response ✓ (L8, preparatório)
+
+## F — Incident response ✓ (L8, preparatório)
+- Runbook T+0→72h+ adaptado à stack (contenção via endpoints reais)
+- Templates ANPD (12 itens) + titular (7 itens) em `.lgpd/incidents/templates/`
+- `.lgpd/incidents/log.md` inicializado (vazio, retenção 5a) + tabletop anual com 4 cenários
+- Pipeline D saiu do papel como preparo (sem incidente em curso)
+- Docs do repo atualizadas (README EN+PT, CONTRIBUTING EN+PT, DEPLOYMENT EN+PT, registry)
+- Próximo: lgpd-privacy-policy (L9)
 
 ## F — DSAR workflow ✓ (L7)
 - Endpoints: 1/9 completos, 3 parciais, 3 inexistentes (export, email-change, erasure), 3 N/A

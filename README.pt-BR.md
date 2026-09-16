@@ -210,6 +210,11 @@ Skills de agente em `.opencode/skills/` (ver `docs/SKILLS-REGISTRY.md`):
 - `git-workflow-and-versioning`, `shipping-and-launch`, `ci-cd-and-automation` — releases, changelogs, pipelines.
 - `cmd-makefile`, `writing-makefiles` — referências base de Makefile.
 - `makefile-keeper` — mantém o Makefile deste repo no padrão.
+- `lgpd-*` — bundle de auditoria LGPD (maestro + 18 sub-skills); trilha em `.lgpd/`.
+
+## Privacidade e LGPD
+
+Sanitizado por desenho: só hashes Argon2id (nunca texto puro), tokens opacos só-hash, zero trackers/CDN/fontes na SPA, auditoria sem segredos (provado por `test_leak_audit.py`). Inventário completo, bases legais e retenção em [`docs/PRIVACY.pt-BR.md`](docs/PRIVACY.pt-BR.md); artefatos em `.lgpd/` (STATUS, mapa, ROPA-track, runbook). Este aviso não é aconselhamento jurídico — revisão do DPO/jurídico antes da produção.
 
 ## Arquitetura e escala
 
