@@ -58,3 +58,5 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 
 ## [Unreleased]
 
+- **`sidebar-demo`**: sidebar rica (org switcher dropdown, subgroups colapsáveis, orgs recentes + `...`, user dropdown, breadcrumb por rota), primitivos `dropdown-menu`/`breadcrumb`/`separator`/`collapsible` + `AvatarImage`; S8–S11: grupo Projects tenant-scoped (count, mini-avatares, actions menu, rail abre menu), Organizations com subpastas, página Settings (placeholder), página `/projects/new`, labels DEMO; change em `client/openspec/changes/sidebar-demo/`.
+

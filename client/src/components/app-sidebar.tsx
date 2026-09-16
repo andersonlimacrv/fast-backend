@@ -46,6 +46,7 @@ import {
 } from "@/lib/icons";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProjects } from "@/hooks/useProjects";
+import type { ProjectRead } from "@/lib/api";
 import { ROUTES } from "@/lib/constants";
 import { projectCode } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
@@ -189,6 +190,63 @@ function OrganizationsGroup() {
   );
 }
 
+/** Rail-mode Projects: the icon opens the same actions menu as the expanded
+ * "+" button (New project, All projects, divider, project list). */
+function ProjectsRailMenuItem({
+  projects,
+  loading,
+  projectsActive,
+}: {
+  projects: ProjectRead[];
+  loading: boolean;
+  projectsActive: boolean;
+}) {
+  const label = projects.length > 0 ? `Projects (${projects.length})` : "Projects";
+  return (
+    <SidebarMenuItem>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <SidebarMenuButton
+            tooltip={label}
+            isActive={projectsActive}
+            aria-label={`Projects, ${projects.length} total`}
+          >
+            <FolderOpen aria-hidden="true" />
+          </SidebarMenuButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="start" className="w-56 rounded-lg">
+          <DropdownMenuItem onSelect={() => undefined}>
+            <Link to={ROUTES.projectNew} className="flex w-full items-center gap-2">
+              <Plus className="size-4" aria-hidden="true" /> New project
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => undefined}>
+            <Link to={ROUTES.projects} className="flex w-full items-center gap-2">
+              <FolderOpen className="size-4" aria-hidden="true" /> All projects
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {projects.map((p) => (
+            <DropdownMenuItem key={p.id} onSelect={() => undefined}>
+              <Link to={ROUTES.projects} title={p.name} className="flex w-full items-center gap-2">
+                <span className="flex h-6 w-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary px-1 text-[10px] font-extrabold tracking-wider text-sidebar-primary-foreground" aria-hidden="true">
+                  {projectCode(p.name)}
+                </span>
+                <span className="truncate">{p.name}</span>
+              </Link>
+            </DropdownMenuItem>
+          ))}
+          {projects.length === 0 && (
+            <DropdownMenuItem disabled>
+              <span>{loading ? "Loading…" : "No projects yet"}</span>
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
+  );
+}
+
 /** Projects of the active org: collapsible flat list (the old Workspaces look)
  * with live count + actions menu (New project -> dedicated page, All
  * projects, future slot). Minimized by default; open state lives in memory
@@ -199,11 +257,21 @@ function OrganizationsGroup() {
  * switching orgs swaps the list. Flat rows hide in rail mode. */
 function ProjectsGroup() {
   const { activeOrgId } = useAuth();
-  const { isMobile } = useSidebar();
+  const { state, isMobile } = useSidebar();
   const { pathname } = useLocation();
-  const projectsActive = pathname === ROUTES.projects;
+  const projectsActive = pathname === ROUTES.projects || pathname.startsWith("/projects/");
   const [open, setOpen] = React.useState(projectsActive);
   const { items: projects, loading } = useProjects(activeOrgId);
+  const rail = state === "collapsed" && !isMobile;
+  if (rail) {
+    return (
+      <SidebarGroup aria-label="Projects">
+        <SidebarMenu>
+          <ProjectsRailMenuItem projects={projects} loading={loading} projectsActive={projectsActive} />
+        </SidebarMenu>
+      </SidebarGroup>
+    );
+  }
   return (
     <SidebarGroup aria-label="Projects">
       <SidebarGroupLabel>Projects</SidebarGroupLabel>
@@ -214,27 +282,19 @@ function ProjectsGroup() {
               <SidebarMenuButton
                 tooltip={projects.length > 0 ? `Projects (${projects.length})` : "Projects"}
                 isActive={projectsActive}
-                aria-label={`Projects, ${projects.length} total`}
-                  className="data-[state=open]:text-sidebar-accent-foreground"
-              >
+                  aria-label={`Projects, ${projects.length} total`}
+                  className="group data-[state=open]:text-sidebar-accent-foreground"
+                >
                   <FolderOpen aria-hidden="true" />
                   <span className="truncate">Projects</span>
-                  <span className="ml-auto text-xs tabular-nums text-muted-foreground group-data-[state=open]/collapsible:text-sidebar-accent-foreground" aria-hidden="true">
+                <span className="shrink-0 rounded-md bg-muted/30 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground group-data-[active=true]:bg-transparent group-data-[active=true]:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden" aria-hidden="true">
                   {loading ? "…" : projects.length}
                 </span>
-                <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-300 group-data-[state=open]/collapsible:rotate-90 group-data-[state=open]/collapsible:text-sidebar-accent-foreground" aria-hidden="true" />
+                <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground transition-transform duration-300 group-data-[state=open]/collapsible:rotate-90 group-data-[state=open]/collapsible:text-sidebar-accent-foreground" aria-hidden="true" />
               </SidebarMenuButton>
             </CollapsibleTrigger>
             <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
               <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton asChild isActive={projectsActive} tooltip="All projects">
-                    <NavLink to={ROUTES.projects} end aria-label="All projects">
-                      <FolderOpen aria-hidden="true" />
-                      <span>All projects</span>
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
                 {projects.map((p) => (
                   <SidebarMenuItem key={p.id}>
                     <SidebarMenuButton asChild tooltip={p.name}>
@@ -276,7 +336,11 @@ function ProjectsGroup() {
             </CollapsibleContent>
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
-              <SidebarMenuAction aria-label="Project actions" title="Project actions">
+              <SidebarMenuAction
+                aria-label={`Project actions, ${projects.length} projects`}
+                title="Project actions"
+                className="border border-sidebar-border bg-muted/50 shadow-xs hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              >
                 <Plus aria-hidden="true" />
               </SidebarMenuAction>
             </DropdownMenuTrigger>
@@ -391,7 +455,7 @@ function OrgSwitcher() {
               </span>
               <span className="grid min-w-0 flex-1 text-left leading-tight">
                 <span className="truncate text-sm font-bold tracking-tight">{activeOrg.name}</span>
-<span className="truncate text-xs text-muted-foreground group-hover:text-sidebar-accent-foreground group-data-[state=open]:text-sidebar-accent-foreground">{activeOrg.slug}</span>
+<span className="truncate text-xs text-muted-foreground group-data-[state=open]:text-sidebar-accent-foreground">{activeOrg.slug}</span>
               </span>
               <ChevronsUpDown className="ml-auto size-4 shrink-0" aria-hidden="true" />
             </SidebarMenuButton>
@@ -465,7 +529,7 @@ function UserMenu() {
               <Avatar name={user.email} />
               <span className="grid min-w-0 flex-1 text-left leading-tight">
                 <span className="truncate text-sm font-medium">{user.email}</span>
-                <span className="truncate text-xs text-muted-foreground group-hover:text-sidebar-accent-foreground group-data-[state=open]:text-sidebar-accent-foreground">
+                <span className="truncate text-xs text-muted-foreground group-data-[state=open]:text-sidebar-accent-foreground">
                   {user.is_superuser ? "root" : user.is_staff ? "staff" : "member"}
                 </span>
               </span>

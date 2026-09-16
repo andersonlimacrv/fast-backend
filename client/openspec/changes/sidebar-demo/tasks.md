@@ -106,6 +106,30 @@
   slot futuro); `...` por linha mantém View project
 - [x] 9.6 Testes 8/8 (sidebar 6 + NewProjectPage 2); `tsc+build` ok; e2e 4/4
 
+## S10 — Botão + com badge + fim da linha All projects (dono, print)
+
+- [x] 10.1 Ação `+` virou botão de verdade (`border/bg-muted/shadow-xs`) com
+  badge de count (pill `bg-sidebar-primary`); count saiu do trigger (tooltip
+  mantém `Projects (N)` no rail)
+- [x] 10.2 Linha `All projects` excluída (acesso via dropdown); `projectsActive`
+  cobre `/projects/*` (destaca também em `/projects/new`)
+- [x] 10.3 Testes e gates da S10
+
+## S11 — Badge no trigger + rail abre actions-menu (dono, prints)
+
+- [x] 11.1 Count voltou p/ o trigger como badge muted translúcido (`bg-muted/60`,
+  ao lado de Projects; rail esconde; tooltip mantém count). Botão `+` segue com
+  chrome clicável, sem pill (sem duplicar). Cores de texto do badge reagem a
+  hover/active via `group` (mesma lição do axe)
+- [x] 11.2 Rail: `ProjectsGroup` rende `ProjectsRailMenuItem` (dropdown
+  `side=right`: New project, All projects, divider, lista; `Loading…`/`No
+  projects yet` desabilitados) — mesmo menu da expandida
+- [x] 11.3 Testes: cookie `sidebar_state` determinístico por teste + teste rail;
+  e2e 768 abre o menu Projects (assert + shot); gates da S11
+- [x] 11.4 Refinamento hover do dono: badge `bg-muted/30` (era `/60`) e remoção
+  dos `group-hover:text-sidebar-accent-foreground` (badge, slug do switcher,
+  role do footer) — muted segue igual no hover; open-state intacto (axe)
+
 ## Implementation notes (2026-09-16, working tree pré-ok-visual)
 
 - S1–S6 implementados; `tsc`, `vitest` 92/92, `oxlint` 0, `vite build`, e2e 10/10

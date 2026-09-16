@@ -44,7 +44,10 @@ vi.mock("@/hooks/useProjects", () => ({
   }),
 }));
 
-function renderSidebar() {
+function renderSidebar({ expanded = true }: { expanded?: boolean } = {}) {
+  // Pin the sidebar open state via cookie (defaultOpen reads it first);
+  // jsdom matchMedia never matches, so without this every test runs railed.
+  document.cookie = `sidebar_state=${expanded ? "true" : "false"}; path=/`;
   render(
     <MemoryRouter>
       <AppSidebarProvider>
@@ -62,7 +65,10 @@ function openMenu(trigger: HTMLElement) {
 }
 
 describe("sidebar user menu", () => {
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    document.cookie = "sidebar_state=; path=/; max-age=0";
+  });
 
   it("opens the footer menu without unmounting the tree", async () => {
     renderSidebar();
@@ -81,23 +87,27 @@ describe("sidebar user menu", () => {
     expect(await screen.findByRole("menuitem", { name: /evil corp/i })).toBeTruthy();
   });
 
-  it("keeps the projects list minimized with a live count until opened", async () => {
+  it("keeps the projects list minimized with a count badge until opened", async () => {
     renderSidebar();
-    // Collapsed by default (in-memory useState): sub-links absent.
-    expect(screen.queryByRole("link", { name: "All projects" })).toBeNull();
+    // Collapsed by default (in-memory useState): project rows absent.
+    expect(screen.queryByRole("link", { name: "Apollo" })).toBeNull();
     expect(screen.getByRole("button", { name: "Projects, 2 total" })).toBeTruthy();
+    // Count lives on the actions button badge now, not in the trigger row.
+    expect(screen.getByRole("button", { name: "Project actions, 2 projects" })).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "Projects, 2 total" }));
-    expect(await screen.findByRole("link", { name: "All projects" })).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Apollo" })).toBeTruthy();
+    expect(await screen.findByRole("link", { name: "Apollo" })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Zephyr" })).toBeTruthy();
     // Mini avatars carry the derived 4-letter codes.
     expect(screen.getByText("APOL")).toBeTruthy();
     expect(screen.getByText("ZEPH")).toBeTruthy();
-    // Actions menu (replaces the old direct + link): New + All projects.
-    openMenu(screen.getByRole("button", { name: "Project actions" }));
+    // "All projects" row is gone (page reached via the actions menu instead).
+    expect(screen.queryByRole("link", { name: "All projects" })).toBeNull();
+    // Actions menu: New + All projects with the right targets.
+    openMenu(screen.getByRole("button", { name: "Project actions, 2 projects" }));
     const newItem = await screen.findByRole("menuitem", { name: /new project/i });
     expect(newItem.querySelector("a")?.getAttribute("href")).toBe("/projects/new");
-    expect(await screen.findByRole("menuitem", { name: /all projects/i })).toBeTruthy();
+    const allItem = await screen.findByRole("menuitem", { name: /all projects/i });
+    expect(allItem.querySelector("a")?.getAttribute("href")).toBe("/projects");
   });
 
   it("opens a per-project menu with View project (DEMO row pattern)", async () => {
@@ -106,6 +116,19 @@ describe("sidebar user menu", () => {
     expect(await screen.findByRole("link", { name: "Apollo" })).toBeTruthy();
     openMenu(screen.getByRole("button", { name: /more actions for apollo/i }));
     expect(await screen.findByRole("menuitem", { name: /view project/i })).toBeTruthy();
+  });
+
+  it("rail: clicking Projects opens the actions menu with New/All/list", async () => {
+    renderSidebar({ expanded: false });
+    // No collapsible panel in rail: rows never render as links.
+    expect(screen.queryByRole("link", { name: "Apollo" })).toBeNull();
+    openMenu(screen.getByRole("button", { name: "Projects, 2 total" }));
+    const newItem = await screen.findByRole("menuitem", { name: /new project/i });
+    expect(newItem.querySelector("a")?.getAttribute("href")).toBe("/projects/new");
+    const allItem = await screen.findByRole("menuitem", { name: /all projects/i });
+    expect(allItem.querySelector("a")?.getAttribute("href")).toBe("/projects");
+    expect(screen.getByRole("menuitem", { name: /apollo/i })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: /zephyr/i })).toBeTruthy();
   });
 
   it("lists the organization subpaths (All organizations + Members)", async () => {

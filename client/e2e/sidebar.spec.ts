@@ -76,6 +76,15 @@ describeWithApi("sidebar responsive", () => {
     await expect(page.getByRole("menuitem", { name: /account/i })).toBeVisible();
     const menuBox = await menu.boundingBox();
     expect(menuBox && trigBox ? menuBox.x >= trigBox.x + trigBox.width - 1 : false).toBe(true);
+    await page.keyboard.press("Escape");
+    // Rail Projects icon opens the actions menu (New/All/list) to the right.
+    const projTrigger = page.getByRole("button", { name: /projects, \d+ total/i });
+    const projTrigBox = await projTrigger.boundingBox();
+    await projTrigger.click();
+    await expect(page.getByRole("menuitem", { name: /new project/i })).toBeVisible();
+    const projMenuBox = await page.getByRole("menu").first().boundingBox();
+    expect(projMenuBox && projTrigBox ? projMenuBox.x >= projTrigBox.x + projTrigBox.width - 1 : false).toBe(true);
+    // Screenshot keeps the Projects menu open (layering proof, like before).
     await expectNoOverflow(page);
     await expectNoSeriousA11y(page);
     // Mask per-run e2e data (org/email); rail/menu placement asserted above.
