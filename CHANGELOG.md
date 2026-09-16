@@ -52,7 +52,9 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 
 - **`auto-release-bump-infer`**: `auto_release.py --bump auto` (default) infere semver do título (`feat`→minor, `fix`-class→patch, `BREAKING CHANGE`/`!`→major); explícito sempre vence; change em `openspec/changes/auto-release-bump-infer/`.
 
-## [Unreleased]
+## [v0.3.0] — 2026-09-16
 
 - **`animate-ui-adoption`**: reconcile dos 10 primitivos com os motion patterns upstream (`TabsPanels`+`AutoHeight`, scales, springs, variantes), `AvatarGroup` + `FileTree` novos, rota `/admin/gallery` (staff-only), ledger em `docs/review-design.md` §11; change em `client/openspec/changes/animate-ui-adoption/`.
+
+## [Unreleased]
 
