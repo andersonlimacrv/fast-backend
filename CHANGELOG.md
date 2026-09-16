@@ -50,3 +50,5 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 
 ## [Unreleased]
 
+- **`auto-release-bump-infer`**: `auto_release.py --bump auto` (default) infere semver do título (`feat`→minor, `fix`-class→patch, `BREAKING CHANGE`/`!`→major); explícito sempre vence; change em `openspec/changes/auto-release-bump-infer/`.
+
