@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { KpiCard } from "@/components/ui/kpi-card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { KpiGrid } from "@/components/kpi-grid";
 import { useAdminOverview } from "@/hooks/useAdmin";
 import { ROUTES } from "@/lib/constants";
 
@@ -14,15 +15,18 @@ export function AdminOverviewPage() {
 
   return (
     <RequireStaff title="Admin">
-      <PageHeader title="Admin overview" description="GET /admin/overview (staff+). Cross-project control plane." />
-      <div className="mb-4">
-        <Button variant="outline" onClick={() => void reload()} disabled={loading}>
-          {loading ? "Loading…" : "Reload"}
-        </Button>
-      </div>
+      <PageHeader
+        title="Admin overview"
+        description="GET /admin/overview (staff+). Cross-project control plane."
+        actions={
+          <Button variant="outline" onClick={() => void reload()} disabled={loading}>
+            {loading ? "Loading…" : "Reload"}
+          </Button>
+        }
+      />
       <ErrorBox error={error} className="mb-4" />
       {loading && !overview && (
-        <div className="grid gap-4 sm:grid-cols-3" aria-label="Loading overview">
+        <KpiGrid loading label="Loading overview">
           {[0, 1, 2].map((i) => (
             <Card key={i}>
               <CardHeader>
@@ -33,10 +37,10 @@ export function AdminOverviewPage() {
               </CardContent>
             </Card>
           ))}
-        </div>
+        </KpiGrid>
       )}
       {!loading && overview && (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <KpiGrid>
           <KpiCard
             label="Users"
             value={String(overview.users)}
@@ -64,7 +68,7 @@ export function AdminOverviewPage() {
               </Link>
             }
           />
-        </div>
+        </KpiGrid>
       )}
     </RequireStaff>
   );

@@ -1,8 +1,8 @@
 import { Navigate, Outlet, Route, Routes } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { Layout } from "@/components/layout";
 import { AppToaster } from "@/components/ui/toaster";
+import { DashboardLayout } from "@/layouts/dashboard-layout";
 import { AccountPage } from "@/pages/Account";
 import { AdminAuditPage } from "@/pages/AdminAudit";
 import { AdminOrgsPage } from "@/pages/AdminOrgs";
@@ -24,9 +24,9 @@ function Protected() {
   if (!ready) return <p className="p-8 text-sm text-muted-foreground">Loading session…</p>;
   if (!user) return <Navigate to="/" replace />;
   return (
-    <Layout>
+    <DashboardLayout>
       <Outlet />
-    </Layout>
+    </DashboardLayout>
   );
 }
 

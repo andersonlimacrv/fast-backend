@@ -1,6 +1,7 @@
 import { motion } from "motion/react";
 import * as React from "react";
-import { Check, Copy } from "lucide-react";
+
+import { Check, Copy } from "@/lib/icons";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
