@@ -79,8 +79,11 @@ describeWithApi("sidebar responsive", () => {
     await expectNoOverflow(page);
     await expectNoSeriousA11y(page);
     // Mask per-run e2e data (org/email); rail/menu placement asserted above.
+    // Threshold 0.03: per-run org-name lengths shift unmasked line flow and
+    // motion springs (highlight/menu) settle at slightly different phases.
     await expect(page).toHaveScreenshot("shell-768-rail.png", {
       mask: [page.locator("text=/e2e rsp /"), page.locator("text=/e2e-rsp-/"), page.locator("text=@example.com"), page.locator("text=/[0-9a-f]{32}/")],
+      maxDiffPixelRatio: 0.03,
     });
   });
 

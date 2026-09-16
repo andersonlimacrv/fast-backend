@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Link, NavLink, useMatch, useNavigate } from "react-router-dom";
+import { Link, NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 
 import {
   Sidebar,
@@ -10,17 +10,27 @@ import {
   SidebarHeader,
   SidebarInset,
   SidebarMenu,
+  SidebarMenuAction,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
   SidebarProvider,
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
 } from "@/components/animate-ui/components/radix/sidebar";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/animate-ui/primitives/radix/collapsible";
+import {
   Activity,
   Building2,
   Check,
+  ChevronRight,
   ChevronsUpDown,
   FileText,
   FolderOpen,
@@ -35,8 +45,9 @@ import {
   Users,
 } from "@/lib/icons";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProjects } from "@/hooks/useProjects";
 import { ROUTES } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { projectCode } from "@/lib/utils";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -100,7 +111,11 @@ function SideNavLink({ to, label, icon, end }: NavEntry) {
       <SidebarMenuButton asChild isActive={match !== null} tooltip={label}>
         <NavLink to={to} end={end} aria-label={label}>
           {icon}
-          <span>{label}</span>
+          {/* truncate keeps the rail collapse working: without it the span
+            keeps a min-content box and leaks out of the icon rail (the
+            upstream span:last-child selector no longer matches with a
+            trailing chevron). */}
+          <span className="truncate">{label}</span>
         </NavLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -110,12 +125,187 @@ function SideNavLink({ to, label, icon, end }: NavEntry) {
 const CONSOLE_NAV: NavEntry[] = [
   { to: ROUTES.app, label: "Overview", icon: <LayoutDashboard aria-hidden="true" />, end: true },
   { to: ROUTES.health, label: "Health", icon: <Activity aria-hidden="true" /> },
-  { to: ROUTES.orgs, label: "Organizations", icon: <Building2 aria-hidden="true" /> },
-  { to: ROUTES.projects, label: "Projects", icon: <FolderOpen aria-hidden="true" /> },
+];
+
+const MANAGE_NAV: NavEntry[] = [
   { to: ROUTES.grants, label: "Grants", icon: <KeyRound aria-hidden="true" /> },
   { to: ROUTES.audit, label: "Audit", icon: <FileText aria-hidden="true" /> },
-  { to: ROUTES.account, label: "Account", icon: <Settings aria-hidden="true" /> },
+  // Footer avatar already covers Account; the gear entry reserves Settings
+  // (placeholder page, future implementation).
+  { to: ROUTES.settings, label: "Settings", icon: <Settings aria-hidden="true" /> },
 ];
+
+function SideNavSubLink({ to, label, end, trackActive = true }: { to: string; label: string; end?: boolean; trackActive?: boolean }) {
+  const match = useMatch({ path: to, end: end ?? false });
+  return (
+    <SidebarMenuSubItem>
+      <SidebarMenuSubButton asChild isActive={trackActive && match !== null}>
+        <NavLink to={to} end={end} aria-label={label}>
+          <span>{label}</span>
+        </NavLink>
+      </SidebarMenuSubButton>
+    </SidebarMenuSubItem>
+  );
+}
+
+/** Organizations: collapsible with the two subpaths (list + active-org
+ * members), following the upstream animate-ui sidebar DEMO verbatim
+ * (references/components_to_use/AnimateUi/Sidebar.md). */
+function OrganizationsGroup() {
+  const { activeOrgId } = useAuth();
+  const { pathname } = useLocation();
+  const orgsActive = pathname === ROUTES.orgs || pathname.startsWith("/orgs/");
+  const [open, setOpen] = React.useState(orgsActive);
+  return (
+    <SidebarGroup aria-label="Organizations">
+      <SidebarGroupLabel>Organizations</SidebarGroupLabel>
+      <SidebarMenu>
+        <Collapsible asChild open={open} onOpenChange={setOpen} className="group/collapsible">
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton
+                tooltip="Organizations"
+                isActive={orgsActive}
+                aria-label="Organizations"
+                  className="data-[state=open]:text-sidebar-accent-foreground"
+              >
+                <Building2 aria-hidden="true" />
+                <span className="truncate">Organizations</span>
+                <ChevronRight className="ml-auto transition-transform duration-300 group-data-[state=open]/collapsible:rotate-90" aria-hidden="true" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                <SideNavSubLink to={ROUTES.orgs} label="All organizations" end />
+                {activeOrgId && (
+                  <SideNavSubLink to={ROUTES.members(activeOrgId)} label="Members" />
+                )}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
+      </SidebarMenu>
+    </SidebarGroup>
+  );
+}
+
+/** Projects of the active org: collapsible flat list (the old Workspaces look)
+ * with live count + actions menu (New project -> dedicated page, All
+ * projects, future slot). Minimized by default; open state lives in memory
+ * (useState) while the sidebar stays mounted. Each row shows a mini avatar
+ * with the derived 4-letter project code + a DEMO "..." menu (View project);
+ * rows link to the management page (per-project detail routes are future).
+ * Tenant-scoped: useProjects refetches whenever activeOrgId changes, so
+ * switching orgs swaps the list. Flat rows hide in rail mode. */
+function ProjectsGroup() {
+  const { activeOrgId } = useAuth();
+  const { isMobile } = useSidebar();
+  const { pathname } = useLocation();
+  const projectsActive = pathname === ROUTES.projects;
+  const [open, setOpen] = React.useState(projectsActive);
+  const { items: projects, loading } = useProjects(activeOrgId);
+  return (
+    <SidebarGroup aria-label="Projects">
+      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarMenu>
+        <Collapsible asChild open={open} onOpenChange={setOpen} className="group/collapsible">
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton
+                tooltip={projects.length > 0 ? `Projects (${projects.length})` : "Projects"}
+                isActive={projectsActive}
+                aria-label={`Projects, ${projects.length} total`}
+                  className="data-[state=open]:text-sidebar-accent-foreground"
+              >
+                  <FolderOpen aria-hidden="true" />
+                  <span className="truncate">Projects</span>
+                  <span className="ml-auto text-xs tabular-nums text-muted-foreground group-data-[state=open]/collapsible:text-sidebar-accent-foreground" aria-hidden="true">
+                  {loading ? "…" : projects.length}
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-transform duration-300 group-data-[state=open]/collapsible:rotate-90 group-data-[state=open]/collapsible:text-sidebar-accent-foreground" aria-hidden="true" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={projectsActive} tooltip="All projects">
+                    <NavLink to={ROUTES.projects} end aria-label="All projects">
+                      <FolderOpen aria-hidden="true" />
+                      <span>All projects</span>
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                {projects.map((p) => (
+                  <SidebarMenuItem key={p.id}>
+                    <SidebarMenuButton asChild tooltip={p.name}>
+                      <Link to={ROUTES.projects} title={p.name}>
+                        <span className="flex h-6 min-w-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary px-1 text-[10px] font-extrabold tracking-wider text-sidebar-primary-foreground" aria-hidden="true">
+                          {projectCode(p.name)}
+                        </span>
+                        <span className="truncate">{p.name}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    <DropdownMenu modal={false}>
+                      <DropdownMenuTrigger asChild>
+                        <SidebarMenuAction showOnHover aria-label={`More actions for ${p.name}`}>
+                          <MoreHorizontal aria-hidden="true" />
+                        </SidebarMenuAction>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        side={isMobile ? "bottom" : "right"}
+                        align={isMobile ? "end" : "start"}
+                        className="w-48 rounded-lg"
+                      >
+                        <DropdownMenuItem onSelect={() => undefined}>
+                          <Link to={ROUTES.projects} className="flex w-full items-center gap-2">
+                            <FolderOpen className="size-4" aria-hidden="true" /> View project
+                          </Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </SidebarMenuItem>
+                ))}
+                {projects.length === 0 && !loading && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton disabled>
+                      <span>No projects yet</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+              </SidebarMenu>
+            </CollapsibleContent>
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuAction aria-label="Project actions" title="Project actions">
+                <Plus aria-hidden="true" />
+              </SidebarMenuAction>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side={isMobile ? "bottom" : "right"}
+              align={isMobile ? "end" : "start"}
+              className="w-56 rounded-lg"
+            >
+              <DropdownMenuGroup>
+                <DropdownMenuItem onSelect={() => undefined}>
+                  <Link to={ROUTES.projectNew} className="flex w-full items-center gap-2">
+                    <Plus className="size-4" aria-hidden="true" /> New project
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => undefined}>
+                  <Link to={ROUTES.projects} className="flex w-full items-center gap-2">
+                    <FolderOpen className="size-4" aria-hidden="true" /> All projects
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              {/* Future project actions slot (rename/transfer/archive live here). */}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarMenuItem>
+        </Collapsible>
+      </SidebarMenu>
+    </SidebarGroup>
+  );
+}
 
 const ADMIN_NAV: NavEntry[] = [
   { to: ROUTES.admin, label: "Admin", icon: <ShieldCheck aria-hidden="true" />, end: true },
@@ -242,72 +432,9 @@ function OrgSwitcher() {
 }
 
 /** Flat nav: Console items + staff Administration after a separator.
- * Subgroup collapsibles were tried and removed: group labels ("Console")
- * added chrome without value for 7+5 items; icons-always + separator scans
- * better. (Collapsible primitive stays in the catalog for real disclosures.) */
-
-/** Workspaces: orgs as switchable tenant contexts (row click switches,
- * active gets a Check, "..." holds View/Members actions). */
-function RecentOrgs() {
-  const { orgs, activeOrgId, switchOrg } = useAuth();
-  const recents = orgs.slice(0, 3);
-  if (recents.length === 0) return null;
-  return (
-    <SidebarGroup aria-label="Workspaces">
-      <SidebarGroupLabel>Workspaces</SidebarGroupLabel>
-      <SidebarMenu>
-        {recents.map((o) => {
-          const active = o.id === activeOrgId;
-          return (
-            <SidebarMenuItem key={o.id}>
-              <SidebarMenuButton
-                tooltip={o.name}
-                isActive={active}
-                onClick={() => {
-                  if (!active) void switchOrg(o.id);
-                }}
-                aria-label={`Switch to workspace ${o.name}${active ? " (current)" : ""}`}
-              >
-                <Building2 aria-hidden="true" />
-                <span>{o.name}</span>
-                {active && <Check className="ml-auto size-4 shrink-0" aria-hidden="true" />}
-              </SidebarMenuButton>
-              <span
-                className={cn(
-                  "absolute top-1.5 right-1 z-[1] opacity-0 transition-opacity",
-                  "group-focus-within/menu-item:opacity-100 group-hover/menu-item:opacity-100",
-                  "pointer-events-none group-focus-within/menu-item:pointer-events-auto group-hover/menu-item:pointer-events-auto",
-                  "group-data-[collapsible=icon]:hidden",
-                )}
-              >
-                <DropdownMenu modal={false}>
-                  <DropdownMenuTrigger
-                    aria-label={`Actions for ${o.name}`}
-                    className={cn(
-                      "flex aspect-square w-5 items-center justify-center rounded-md p-0",
-                      "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                      "focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none",
-                    )}
-                  >
-                    <MoreHorizontal className="size-4" aria-hidden="true" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onSelect={() => undefined}>
-                      <Link to={ROUTES.orgs} className="w-full">View organization</Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => undefined}>
-                      <Link to={ROUTES.members(o.id)} className="w-full">View members</Link>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </span>
-            </SidebarMenuItem>
-          );
-        })}
-      </SidebarMenu>
-    </SidebarGroup>
-  );
-}
+ * The Organizations/Projects sections below are collapsibles (upstream
+ * animate-ui pattern); Workspaces was removed as duplicative of the header
+ * org switcher. (Collapsible primitive stays in the catalog for disclosures.) */
 
 /** User dropdown in the footer (Account / Logout / Logout everywhere). */
 function UserMenu() {
@@ -397,14 +524,26 @@ export function AppSidebar() {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup aria-label="Console">
+          <SidebarGroupLabel>Console</SidebarGroupLabel>
           <SidebarMenu>
             {CONSOLE_NAV.map((item) => (
               <SideNavLink key={item.to} {...item} />
             ))}
           </SidebarMenu>
         </SidebarGroup>
+        <OrganizationsGroup />
+        <ProjectsGroup />
+        <SidebarGroup aria-label="Manage">
+          <SidebarGroupLabel>Manage</SidebarGroupLabel>
+          <SidebarMenu>
+            {MANAGE_NAV.map((item) => (
+              <SideNavLink key={item.to} {...item} />
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
         {isStaff && (
           <SidebarGroup aria-label="Administration">
+            <SidebarGroupLabel>Administration</SidebarGroupLabel>
             <SidebarSeparator />
             <SidebarMenu>
               {ADMIN_NAV.map((item) => (
@@ -413,7 +552,6 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroup>
         )}
-        <RecentOrgs />
       </SidebarContent>
       <SidebarFooter>
         <UserMenu />
