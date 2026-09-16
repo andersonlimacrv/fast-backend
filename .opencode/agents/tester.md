@@ -4,7 +4,7 @@ mode: subagent
 temperature: 0.2
 permission:
   edit: allow
-  bash: ask
+  bash: allow
 ---
 
 Você é o responsável por testes do fast-backend.

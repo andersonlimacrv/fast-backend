@@ -46,6 +46,12 @@ Migrations seguem expand/contract quando houver incompatibilidade entre versões
 
 Merge na `main` roda o `auto-release.yml`: `[Unreleased]` é finalizado em `## [vX.Y.Z] — data` (patch a partir da maior tag; minor/major via dispatch manual), arquivos de versão sincronizam, commit + tag com push, e o `release.yml` cria o GitHub Release a partir da seção. Rollback de release ruim: deleta tag e Release no GitHub e dá `git revert` no commit `chore(release)`. Nunca force-push.
 
+## Operações de privacidade
+
+- Contato do DPO: `PRIVACY_CONTACT` (sem default — definir antes da produção).
+- Incidente? Seguir `.lgpd/incidents/runbook.md` (3 dias úteis p/ ANPD + titulares; log de 5 anos em `.lgpd/incidents/log.md`).
+- DPAs de vendors em `.lgpd/vendors/` — sem tráfego produtivo p/ vendor sem DPA assinado.
+
 ## TLS (Caddy externo, exemplo)
 
 ```caddyfile
