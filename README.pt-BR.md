@@ -6,11 +6,11 @@
 [![Release](https://img.shields.io/github/v/release/andersonlimacrv/fast-backend)](https://github.com/andersonlimacrv/fast-backend/releases)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.11-blue)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)](app/tests)
+[![Tests](https://img.shields.io/badge/tests-138%20passing-brightgreen)](app/tests)
 
-Modular Monolith Async FastAPI SaaS Kernel — auth própria (JWT + refresh opaco), tenancy row-level, RBAC + entitlements, email/storage/jobs, auditoria, backup e billing Stripe opcional.
+Modular Monolith Async FastAPI SaaS Kernel — auth própria (JWT + refresh opaco), tenancy row-level, RBAC + entitlements, email/storage/jobs, auditoria, backup, billing Stripe opcional, control plane admin e SPA React de visualização com landing pública.
 
-> **Status: v1.0.0 entregue** (tag `0.1.0`) — Fases 0–8 concluídas, 98 testes verdes, 20 capabilities em `openspec/specs/`.
+> **Status: v1.0.0 entregue** (tag `0.1.0`) — Fases 0–10 concluídas, 138 testes verdes de backend (73 unit + 65 integration, Postgres/Redis reais), 71 vitest + 10 testes Playwright em `client/`, 36 capabilities em `openspec/specs/`.
 
 ## Índice
 
@@ -30,8 +30,14 @@ Modular Monolith Async FastAPI SaaS Kernel — auth própria (JWT + refresh opac
 O `Makefile` é o ponto único de entrada — rode `make help` para listar tudo (manual em `docs/Makefile.pt-BR.md`).
 
 ```bash
-make setup   # .env + deps + migrations
-make api     # API com reload → http://127.0.0.1:8000/docs
+make setup   # .env + deps + checagem de drift + migrations
+make dev     # loop dev completo: stack backend (docker) + frontend (:5173)
+```
+
+> Rode o `make` a partir do **Git Bash** no Windows — as receitas são bash (`!`, `awk` falham sob cmd).
+
+```bash
+make api     # API com reload → http://127.0.0.1:8000/docs (precisa do db: make db-up)
 ```
 
 <details>
@@ -67,8 +73,10 @@ docker compose --profile tools up -d --build  # make tools
 
 ```bash
 make web-install   # uma vez: npm ci em client/
-make web           # Vite dev → http://localhost:5173
+make dev           # stack backend + Vite dev → http://localhost:5173 (ou `make web` só p/ o frontend)
 ```
+
+Landing pública em `/`, home logada em `/~`, login two-step, admin em `/admin*` (staff). Notas de privacidade em `docs/PRIVACY.pt-BR.md`.
 
 <details>
 <summary>Por baixo dos panos</summary>

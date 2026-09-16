@@ -1,7 +1,7 @@
 # ROADMAP — fast-backend (fonte da verdade, v3)
 
 > Alinhado à referência congelada `references/implementation_v2.md` + `docs/RULES.md` + `docs/adr/*`.
-> Nomenclatura congelada: `CORE_MODULES`. Dir da aplicação: `app/` flat (ADR 0004). Estado: **v1.0.0 entregue** (tag `0.1.0`, 95 testes, 20 capabilities). Novas fases exigem nova change OpenSpec.
+> Nomenclatura congelada: `CORE_MODULES`. Dir da aplicação: `app/` flat (ADR 0004). Estado: **v1.0.0 entregue** (tag `0.1.0`), Fases 0–11 concluídas, 138 testes backend (73 unit + 65 integration, Postgres/Redis reais) + 71 vitest e 10 Playwright em `client/`, 36 capabilities. Novas fases exigem nova change OpenSpec.
 
 ## Fase 0 — Baseline repo (concluída)
 
@@ -75,6 +75,10 @@ Pipeline `PR → ruff → mypy → unit → integration → security → build`;
 ## Fase 10 — Landing pública, two-step login e LGPD ✅
 
 `backend-release-meta` (`GET /meta` allowlist + `APP_VERSION`, ADR 0008) → `client-landing-home` (`/` pública com fallback offline, home logada em `/~`, capability `client-landing`) → `two-step-login` (`LoginForm` always-advance + modal, dummy Argon2, ADR 0009, capability `two-step-login`) → `lgpd-leak-audit` (`docs/PRIVACY.md` +pt-BR, seção anti-enumeração em `SECURITY.md` +pt-BR, `test_leak_audit.py`, skills Vercel pinadas; capabilities `privacy-docs`, `leak-audit-tests`).
+
+## Fase 11 — Dev loop, env-check e reformulação client ✅
+
+`make-dev-loop` (`make dev`/`dev-down`, spec `dev-loop`) → `make-env-check` (`scripts/env_check.py` + `setup` encadeado, spec `env-validation`) → `client-reformulation` em 6 PRs (PR1 fundação: DESIGN.md + trio de agentes + Playwright; PR2 tokens; PR3 catálogo + Motion; PR4 base + RHF/Zod; PR5 páginas; PR6 auditoria total; capabilities `design-system-link`, `browser-e2e`, `client-landing`, `two-step-login`) → `docs-release-audit` (sync de documentação). ADR 0010 (remoção de `references/Makefile` com override).
 
 ## Gates de verificação (comandos atuais)
 

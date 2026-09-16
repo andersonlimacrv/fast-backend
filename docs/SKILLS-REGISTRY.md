@@ -23,6 +23,8 @@
 
 Nada novo a instalar: `vercel-react-best-practices` + `web-design-guidelines` (ambas @`063bee9`, já instaladas acima) cobrem estrutura/a11y da reformulação. Catálogo §9 do `DESIGN.md` (Motion, GSAP, Lenis, R3F, Rive, Lottie, Anime, Spline, MCPs Figma/shadcn/21st/DevTools): **só leitura como referência** — `motion` entra como dependência npm pinada na PR3 (não como skill); resto proibido até caso de uso real com change própria.
 
+Nota: 3 links quebrados em `.opencode/skills/vercel-react-best-practices/AGENTS.md` (`./async-defer-await.md` etc. — paths do upstream, arquivos vivem em `rules/`) são problema do pacote original; conteúdo pinado não é tocado (ver auditoria `docs-release-audit`).
+
 ## Uso registrado (por que "não se vê" skill sendo usada)
 
 Nota de arquitetura: este ambiente **não expõe Skill como ferramenta invocável** — skills aqui funcionam como runbooks: o agente lê o `SKILL.md` e executa os Steps manualmente. Foi exatamente o que aconteceu nas 8 fases:

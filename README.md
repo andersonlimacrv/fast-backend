@@ -6,11 +6,11 @@
 [![Release](https://img.shields.io/github/v/release/andersonlimacrv/fast-backend)](https://github.com/andersonlimacrv/fast-backend/releases)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.11-blue)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)](app/tests)
+[![Tests](https://img.shields.io/badge/tests-138%20passing-brightgreen)](app/tests)
 
-Modular Monolith Async FastAPI SaaS Kernel — own auth (JWT + opaque refresh), row-level tenancy, RBAC + entitlements, email/storage/jobs, audit, backup, and optional Stripe billing.
+Modular Monolith Async FastAPI SaaS Kernel — own auth (JWT + opaque refresh), row-level tenancy, RBAC + entitlements, email/storage/jobs, audit, backup, optional Stripe billing, admin control plane, and a React visualization SPA with public landing.
 
-> **Status: v1.0.0 shipped** (tag `0.1.0`) — Phases 0–8 done, 98 green tests, 20 capabilities in `openspec/specs/`.
+> **Status: v1.0.0 shipped** (tag `0.1.0`) — Phases 0–10 done, 138 green backend tests (73 unit + 65 integration, real Postgres/Redis), 71 vitest + 10 Playwright browser tests in `client/`, 36 capabilities in `openspec/specs/`.
 
 ## Contents
 
@@ -30,8 +30,14 @@ Modular Monolith Async FastAPI SaaS Kernel — own auth (JWT + opaque refresh), 
 The `Makefile` is the single entry point — run `make help` to list everything (manual in `docs/Makefile.md`).
 
 ```bash
-make setup   # .env + deps + migrations
-make api     # API with reload → http://127.0.0.1:8000/docs
+make setup   # .env + deps + drift check + migrations
+make dev     # full dev loop: backend stack (docker) + frontend (:5173)
+```
+
+> Run `make` from **Git Bash** on Windows — the recipes are bash (`!`, `awk` fail under cmd).
+
+```bash
+make api     # API with reload → http://127.0.0.1:8000/docs (needs db: make db-up)
 ```
 
 <details>
@@ -67,8 +73,10 @@ docker compose --profile tools up -d --build  # make tools
 
 ```bash
 make web-install   # one time: npm ci in client/
-make web           # Vite dev → http://localhost:5173
+make dev           # backend stack + Vite dev → http://localhost:5173 (or `make web` for frontend only)
 ```
+
+Public landing at `/` (modules, flags, release — works offline), session home at `/~`, two-step login, staff admin at `/admin*`. Privacy notes in `docs/PRIVACY.md`.
 
 <details>
 <summary>Under the hood</summary>
