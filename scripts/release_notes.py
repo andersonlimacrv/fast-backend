@@ -17,7 +17,7 @@ from pathlib import Path
 
 def extract_notes(changelog: Path, version: str) -> str:
     """Return the markdown body of the `## [version]` section (without header)."""
-    text = changelog.read_text()
+    text = changelog.read_text(encoding="utf-8")
     header = re.compile(rf"^## \[{re.escape(version)}\].*$", re.MULTILINE)
     match = header.search(text)
     if not match:
