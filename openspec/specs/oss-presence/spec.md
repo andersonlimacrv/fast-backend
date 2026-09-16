@@ -5,7 +5,7 @@ TBD - created by archiving change oss-professional. Update Purpose after archive
 ## Requirements
 ### Requirement: Professional README and OSS files
 
-The repo SHALL present badges (CI, release, Python, license), TOC, quickstart, and link CONTRIBUTING, SECURITY, issue/PR templates; no stale placeholder docs may remain.
+The repo SHALL present grouped badges (status, stack with logos, test tiers without aging numbers), TOC, quickstart, a CHANGELOG pointer and a disk-synced Structure tree, and link CONTRIBUTING, SECURITY, issue/PR templates; no stale placeholder docs may remain.
 
 #### Scenario: Visitor onboarding
 - **WHEN** someone opens the repo root
@@ -22,4 +22,8 @@ The repo SHALL present badges (CI, release, Python, license), TOC, quickstart, a
 #### Scenario: No stale raw-first docs
 - **WHEN** the README is grepped for canonical raw commands (`uv sync --extra dev`, `uvicorn app.main:create_app`, `python scripts/new_project.py`) as the primary instruction
 - **THEN** they appear only as documented fallback/under-the-hood, never as the headline
+
+#### Scenario: Badges resolve and carry no aging numbers
+- **WHEN** every badge image URL is fetched
+- **THEN** all return 200 and none carries a hardcoded test count.
 
