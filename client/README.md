@@ -102,6 +102,8 @@ npm run e2e      # playwright (axe + snapshots, Chromium) vs preview build
 ```
 
 Browser E2E (`make web-e2e`): anonymous routes always run; member routes need the
-API up (`make db-up && make migrate && make api`) or they skip. `@axe-core/react`
+API up (`make db-up && make migrate && make api`) or they skip. The API must allow
+the SPA origin (`CORS_ORIGINS` including `http://localhost:5173`) or every fetch
+fails closed and backend-driven assertions fail. `@axe-core/react`
 also audits the console in `vite dev`. Snapshot baselines are per-platform:
 `linux/` is committed (seeded by `web-e2e-baselines.yml`), local `win32/` never is.
