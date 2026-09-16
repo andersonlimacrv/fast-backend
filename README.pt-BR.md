@@ -27,7 +27,7 @@
 
 Modular Monolith Async FastAPI SaaS Kernel — auth própria (JWT + refresh opaco), tenancy row-level, RBAC + entitlements, email/storage/jobs, auditoria, backup, billing Stripe opcional, control plane admin e SPA React de visualização com landing pública.
 
-> **Status: v1.0.0 entregue** (tag `0.1.0`) — Fases 0–11 concluídas, 138 testes verdes de backend (73 unit + 65 integration, Postgres/Redis reais), 71 vitest + 10 testes Playwright em `client/`, 36 capabilities em `openspec/specs/`.
+> **Status: v1.0.0 entregue** (tag `0.1.0`) — Fases 0–11 concluídas, 150 testes verdes de backend (85 unit + 65 integration, Postgres/Redis reais), 71 vitest + 10 testes Playwright em `client/`, 36 capabilities em `openspec/specs/`.
 > **Notas de release:** ver [`CHANGELOG.md`](./CHANGELOG.md).
 > Releases são geradas automaticamente a cada PR mergeado (ADR 0011).
 
