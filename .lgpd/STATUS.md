@@ -22,12 +22,19 @@
 - `.lgpd/vendors/` — smtp-provider, s3-storage, stripe, vps-host (todos bloqueados/ressalvados até DPA; sem deploy produtivo hoje)
 - `.lgpd/retention.md` — v1, 2026-09-16 (2 regras ativas, 4 propostas; nada destrutivo implementado aqui)
 - `.lgpd/anonymization.md` — N/A fundamentado, 2026-09-16 (zero pipelines/datasets; guardrails já atendidos)
+- `.lgpd/dsar/workflow.md` — v1 spec, 2026-09-16 (1/9 completos, 3 parciais, 3 inexistentes, 3 N/A; SLA ainda não operacional)
 
 ## Gaps abertos
 Ver `.lgpd/gaps.md` (3 críticos, 4 altos, 3 médios, 1 baixo).
 
 ## Próximo passo
-L7 `lgpd-dsar` (endpoint de eliminação + canal mínimo) — aguardando ordem.
+L8 `lgpd-incident-response` (runbook Res. 15/2024) — aguardando ordem.
+
+## F — DSAR workflow ✓ (L7)
+- Endpoints: 1/9 completos, 3 parciais, 3 inexistentes (export, email-change, erasure), 3 N/A
+- SLA 15d: não operacional (gap registrado)
+- Implementação proposta como change `dsar-endpoints` (fora da auditoria)
+- Próximo: lgpd-incident-response (L8)
 
 ## F — Anonymization ✓ (L6)
 - Pipelines de analytics revisados: 0 existentes
