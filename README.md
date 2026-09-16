@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/fast-backend.webp" alt="FastBACKEND — FastAPI + Backend Boilerplate" width="640" />
+  <img src="docs/assets/fast-backend.webp" alt="FastBACKEND — FastAPI + Vite Boilerplate" width="640" />
 </p>
 
 > 🇬🇧 **English** | [Português (BR)](README.pt-BR.md) — deep docs (`docs/`) are in PT-BR for now.
