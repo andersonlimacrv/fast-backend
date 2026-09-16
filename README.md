@@ -7,7 +7,7 @@
 [![Release](https://img.shields.io/github/v/release/andersonlimacrv/fast-backend)](https://github.com/andersonlimacrv/fast-backend/releases)
 [![Python](https://img.shields.io/badge/python-%3E%3D3.11-blue)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Tests](https://img.shields.io/github/actions/workflow/status/andersonlimacrv/fast-backend/ci.yml?label=tests&logo=github)](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml)
+[![Tests](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml/badge.svg)](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml)
 <!-- backend stack -->
 ![FastAPI](https://img.shields.io/badge/FastAPI-222?style=flat-square&logo=fastapi)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-222?style=flat-square&logo=postgresql)
@@ -19,41 +19,57 @@
 ![React](https://img.shields.io/badge/React-222?style=flat-square&logo=react)
 ![Vite](https://img.shields.io/badge/Vite-222?style=flat-square&logo=vite)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-222?style=flat-square&logo=tailwindcss)
-<!-- test tiers -->
-![backend-unit](https://img.shields.io/badge/backend--unit-0AC?style=flat-square)
-![backend-integration](https://img.shields.io/badge/backend--integration-0AC?style=flat-square)
-![client-vitest](https://img.shields.io/badge/client--vitest-0AC?style=flat-square)
-![browser-e2e](https://img.shields.io/badge/browser--e2e-0AC?style=flat-square)
+<!-- test tiers (measured 2026-09-16: pytest --collect-only 85 unit + 65 integration, vitest json 71, playwright --list 10) -->
+![backend-unit](https://img.shields.io/badge/backend_unit-85_tests-0AAAB8?style=flat-square&labelColor=222)
+![backend-integration](https://img.shields.io/badge/backend_integration-65_tests-0AAAB8?style=flat-square&labelColor=222)
+![client-vitest](https://img.shields.io/badge/client_vitest-71_tests-0AAAB8?style=flat-square&labelColor=222)
+![browser-e2e](https://img.shields.io/badge/browser_e2e-10_tests-0AAAB8?style=flat-square&labelColor=222)
 
-Modular Monolith Async FastAPI SaaS Kernel — own auth (JWT + opaque refresh), row-level tenancy, RBAC + entitlements, email/storage/jobs, audit, backup, optional Stripe billing, admin control plane, and a React visualization SPA with public landing.
+Stop rebuilding auth, tenancy, and billing for every SaaS — clone this Argon2id + JWT-rotation + row-tenancy kernel (150 backend tests green on real Postgres/Redis, staff admin + append-only audit + encrypted backups built in) and ship your product in days, not months.
 
-> **Status: v1.0.0 shipped** (tag `0.1.0`) — Phases 0–11 done, 150 green backend tests (85 unit + 65 integration, real Postgres/Redis), 71 vitest + 10 Playwright browser tests in `client/`, 36 capabilities in `openspec/specs/`.
-> **Release notes:** see [`CHANGELOG.md`](./CHANGELOG.md).
-> Releases are cut automatically on every merged PR (ADR 0011).
+| Release | Tests | Specs | Docs |
+|---|---|---|---|
+| [`v0.1.1`](https://github.com/andersonlimacrv/fast-backend/releases) (kernel `0.1.0`, Phases 0–11) | 150 backend (85 unit + 65 integration, real Postgres/Redis) + 71 vitest + 10 Playwright | 37 capabilities in [`openspec/specs/`](openspec/specs/) | 12 ADRs in [`docs/adr/`](docs/adr/) |
+
+- **Release notes:** [`CHANGELOG.md`](./CHANGELOG.md) — releases cut automatically on every merged PR ([ADR 0011](docs/adr/0011-auto-release.md)), behavior PRs gated by [`release-check.yml`](.github/workflows/release-check.yml) ([ADR 0012](docs/adr/0012-release-guard.md)).
+- **Start here:** [Getting started](#getting-started) (`make setup` → `make dev` → `make check`) · commands manual [`docs/Makefile.md`](docs/Makefile.md).
+- **Build on it:** [Generate future code from here](#generate-future-code-from-here) · new module in 5 steps [`docs/guides/add-module.md`](docs/guides/add-module.md) · architecture [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · scaling [`docs/SCALING.md`](docs/SCALING.md).
+- **Rules:** `AGENTS.md` → `docs/RULES.md` → `docs/ROADMAP.md` → `docs/adr/*` → `references/*` (frozen).
 
 ## Contents
 
-- [Getting started](#getting-started)
-- [Frontend (dev)](#frontend-dev)
-- [Test / verify](#test--verify)
-- [Build / deploy](#build--deploy)
-- [Backup](#backup)
-- [New project from here](#new-project-from-here)
-- [Structure](#structure)
-- [Architecture & scaling](#architecture--scaling)
-- [Contributing](#contributing)
-- [License](#license)
+1. [Getting started](#getting-started)
+2. [Frontend (dev)](#frontend-dev)
+3. [Test / verify](#test--verify)
+4. [Build / deploy](#build--deploy)
+5. [Backup](#backup)
+6. [Generate future code from here](#generate-future-code-from-here)
+7. [Structure](#structure)
+8. [Skills](#skills)
+9. [Privacy & LGPD](#privacy--lgpd)
+10. [Architecture & scaling](#architecture--scaling)
+11. [Contributing](#contributing)
+12. [License](#license)
 
 ## Getting started
 
 The `Makefile` is the single entry point — run `make help` to list everything (manual in `docs/Makefile.md`).
 
-```bash
-make setup   # .env + deps + drift check + migrations
-make dev     # full dev loop: backend stack (docker) + frontend (:5173)
-```
+### 0. Prerequisites
+
+Python ≥3.11, `uv`, Docker, Node 20+ (`npm`), Git.
 
 > Run `make` from **Git Bash** on Windows — the recipes are bash (`!`, `awk` fail under cmd).
+
+### 1. First run — zero to working
+
+```bash
+make setup   # .env + deps + drift check + migrations
+make dev     # backend stack (docker) + frontend (:5173)
+```
+
+- API → http://127.0.0.1:8000/docs · SPA → http://localhost:5173 (`/` public landing, `/~` logged home, `/admin*` staff).
+- Needs `client/.env` (`VITE_API_URL=http://localhost:8000`, see `client/.env.example`) and backend `CORS_ORIGINS=["http://localhost:5173"]`.
 
 ```bash
 make api     # API with reload → http://127.0.0.1:8000/docs (needs db: make db-up)
@@ -111,11 +127,15 @@ Needs `client/.env` (`VITE_API_URL=http://localhost:8000`, see `client/.env.exam
 
 ## Test / verify
 
+### 2. Verify your setup
+
 ```bash
+make check       # local PR gate: lint + types + arch + unit tests (run before every push)
 make test-unit   # fast, no services
-make check       # local PR gate: lint + types + arch + unit tests
 make test        # full suite (needs Docker)
 ```
+
+Troubleshooting: `.env` drift → `make env-check`; Docker bridge blocked → `FB_TEST_NETWORK=host uv run pytest` (`make test-host`); CORS/blank SPA → check `client/.env` + `CORS_ORIGINS`.
 
 <details>
 <summary>Under the hood</summary>
@@ -167,22 +187,18 @@ python scripts/backup.py --restore <artifact> --database-url ...
 
 </details>
 
-## New project from here
+## Generate future code from here
+
+Reuse this repo as a template, then generate code the spec-driven way:
 
 ```bash
-make new-project name=my-saas dest=/path/to/my-saas
+make new-project name=my-saas dest=/path/to/my-saas   # 1. fork: copies tree minus VCS/venvs/caches, renames package
+make change name=my-feature                            # 2. spec first: scaffolds openspec/changes/my-feature/ (proposal before code, per AGENTS.md)
+make migration msg="add my table" && make migrate      # 3. evolve schema (review autogenerate, then apply)
+make check                                             # 4. gate before push (lint + types + arch + unit)
 ```
 
-<details>
-<summary>Under the hood</summary>
-
-```bash
-python scripts/new_project.py --name my-saas --dest /path/to/my-saas
-```
-
-Copies the tree minus VCS/venvs/caches/archives, renames the package, and validates the output.
-
-</details>
+New module in 5 steps: `docs/guides/add-module.md`. Full command manual: `docs/Makefile.md`. Behavior PRs must carry a `CHANGELOG.md` entry under `[Unreleased]` (docs-only passes) — see `.github/workflows/release-check.yml`.
 
 ## Structure
 

@@ -2,6 +2,7 @@
 
 Format: delivered phases (Conventional Commits in git tell the fine-grained story).
 Releases are automatic: every PR merged to `main` finalizes `[Unreleased]` into a version (see ADR 0011); never leave entries parked here.
+An empty `[Unreleased]` below is the normal idle state — the bot (`auto_release.py --if-needed`) only cuts a release when a behavior change adds an entry; docs-only PRs pass the gate without one (see `release-check.yml`).
 
 > Version convention: tags and sections use the `v` prefix from here on (`v1.1.0`, …).
 > The `0.1.0` section below is historical (tag `0.1.0` without prefix) and stays as is.
@@ -39,4 +40,9 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 - **`docs-release-audit`**: sync de status/contagens (138 backend + 71 vitest + 10 Playwright, 36 specs, Fases 0–11), `make dev` no README, Fase 11 no ROADMAP. `CHANGELOG.md` mantido na raiz por decisão (convenção + `release_notes.py` + `release.yml`).
 
 ## [Unreleased]
+
+<!-- copy/paste template (delete this comment when adding an entry):
+- **`scope`**: what changed + affected spec/endpoint.
+  Behavior PRs must add one entry here; docs-only PRs pass without it.
+-->
 
