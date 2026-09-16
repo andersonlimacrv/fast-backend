@@ -18,7 +18,10 @@ def test_bootstrap_tree(tmp_path: Path) -> None:
 
     text = (dest / "pyproject.toml").read_text()
     assert 'name = "my-saas"' in text
-    assert (dest / "README.md").read_text().startswith("# my-saas")
+    readme = (dest / "README.md").read_text()
+    # Brand header is a banner (no H1): fork carries the new name in the alt.
+    assert readme.startswith("<p align=")
+    assert 'alt="my-saas' in readme
     assert (dest / "app" / "main.py").exists()
     assert (dest / "Dockerfile").exists()
 

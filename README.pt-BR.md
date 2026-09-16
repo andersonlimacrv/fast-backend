@@ -4,13 +4,14 @@
 
 > 🇧🇷 [English](README.md) | **Português (BR)** — A documentação profunda (`docs/`) está em PT-BR; este README também existe em [inglês](README.md).
 
+Pare de reconstruir auth, tenancy e billing a cada SaaS — clone este kernel com Argon2id + refresh rotativo + tenancy por linha (150 testes backend verdes em Postgres/Redis reais, admin + auditoria append-only + backup criptografado inclusos) e lance seu produto em dias, não meses.
+
 <!-- status -->
 <p align="center">
   <a href="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml"><img src="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/andersonlimacrv/fast-backend/releases"><img src="https://img.shields.io/github/v/release/andersonlimacrv/fast-backend" alt="Release" /></a>
   <a href="pyproject.toml"><img src="https://img.shields.io/badge/python-%3E%3D3.11-blue" alt="Python" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
-  <a href="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml"><img src="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml/badge.svg" alt="Tests" /></a>
 </p>
 <!-- backend stack -->
 <p align="center">
@@ -34,8 +35,6 @@
   <img src="https://img.shields.io/badge/client_vitest-71_tests-0AAAB8?style=flat-square&labelColor=222" alt="client-vitest" />
   <img src="https://img.shields.io/badge/browser_e2e-10_tests-0AAAB8?style=flat-square&labelColor=222" alt="browser-e2e" />
 </p>
-
-Pare de reconstruir auth, tenancy e billing a cada SaaS — clone este kernel com Argon2id + refresh rotativo + tenancy por linha (150 testes backend verdes em Postgres/Redis reais, admin + auditoria append-only + backup criptografado inclusos) e lance seu produto em dias, não meses.
 
 | Fato | Valor |
 |---|---|

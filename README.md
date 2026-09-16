@@ -4,13 +4,14 @@
 
 > 🇬🇧 **English** | [Português (BR)](README.pt-BR.md) — deep docs (`docs/`) are in PT-BR for now.
 
+Stop rebuilding auth, tenancy, and billing for every SaaS — clone this Argon2id + JWT-rotation + row-tenancy kernel (150 backend tests green on real Postgres/Redis, staff admin + append-only audit + encrypted backups built in) and ship your product in days, not months.
+
 <!-- status -->
 <p align="center">
   <a href="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml"><img src="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="https://github.com/andersonlimacrv/fast-backend/releases"><img src="https://img.shields.io/github/v/release/andersonlimacrv/fast-backend" alt="Release" /></a>
   <a href="pyproject.toml"><img src="https://img.shields.io/badge/python-%3E%3D3.11-blue" alt="Python" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License: MIT" /></a>
-  <a href="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml"><img src="https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml/badge.svg" alt="Tests" /></a>
 </p>
 <!-- backend stack -->
 <p align="center">
@@ -34,8 +35,6 @@
   <img src="https://img.shields.io/badge/client_vitest-71_tests-0AAAB8?style=flat-square&labelColor=222" alt="client-vitest" />
   <img src="https://img.shields.io/badge/browser_e2e-10_tests-0AAAB8?style=flat-square&labelColor=222" alt="browser-e2e" />
 </p>
-
-Stop rebuilding auth, tenancy, and billing for every SaaS — clone this Argon2id + JWT-rotation + row-tenancy kernel (150 backend tests green on real Postgres/Redis, staff admin + append-only audit + encrypted backups built in) and ship your product in days, not months.
 
 | Fact | Value |
 |---|---|
