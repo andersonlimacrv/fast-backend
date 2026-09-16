@@ -1,0 +1,49 @@
+# Auto-release: every merged PR becomes a release. No release bots.
+name: auto-release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: Semver part to bump
+        required: false
+        default: patch
+        type: choice
+        options: [patch, minor, major]
+      dry-run:
+        description: Print the plan without committing, tagging or pushing
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    # Same-repo merges only: never run for forks (no permission leak).
+    if: >
+      (github.event_name == 'workflow_dispatch') ||
+      (github.event.pull_request.merged == true &&
+       github.event.pull_request.head.repo.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev --frozen
+      - name: Finalize Unreleased and tag
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          uv run python scripts/auto_release.py \
+            --pr-title "$PR_TITLE" \
+            --bump "${{ inputs.bump || 'patch' }}" \
+            ${{ inputs.dry-run && '--dry-run' || '' }}
+      - name: Push commit and tag (one command, no force)
+        if: ${{ !inputs.dry-run }}
+        run: git push --follow-tags

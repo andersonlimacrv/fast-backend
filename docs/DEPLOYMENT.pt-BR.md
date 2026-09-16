@@ -42,6 +42,10 @@ Falha-fechada: key errada OU root existente → `bootstrap failed` genérico, ex
 
 Migrations seguem expand/contract quando houver incompatibilidade entre versões.
 
+## Releases (automático a cada PR merged)
+
+Merge na `main` roda o `auto-release.yml`: `[Unreleased]` é finalizado em `## [vX.Y.Z] — data` (patch a partir da maior tag; minor/major via dispatch manual), arquivos de versão sincronizam, commit + tag com push, e o `release.yml` cria o GitHub Release a partir da seção. Rollback de release ruim: deleta tag e Release no GitHub e dá `git revert` no commit `chore(release)`. Nunca force-push.
+
 ## TLS (Caddy externo, exemplo)
 
 ```caddyfile

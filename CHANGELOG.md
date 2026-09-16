@@ -1,6 +1,7 @@
 # CHANGELOG — fast-backend
 
 Format: delivered phases (Conventional Commits in git tell the fine-grained story).
+Releases are automatic: every PR merged to `main` finalizes `[Unreleased]` into a version (see ADR 0011); never leave entries parked here.
 
 > Version convention: tags and sections use the `v` prefix from here on (`v1.1.0`, …).
 > The `0.1.0` section below is historical (tag `0.1.0` without prefix) and stays as is.
