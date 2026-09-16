@@ -9,21 +9,21 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Tests](https://img.shields.io/github/actions/workflow/status/andersonlimacrv/fast-backend/ci.yml?label=tests&logo=github)](https://github.com/andersonlimacrv/fast-backend/actions/workflows/ci.yml)
 <!-- backend stack -->
-![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-336791?style=flat-square&logo=postgresql)
-![Redis](https://img.shields.io/badge/Redis-DC382D?style=flat-square&logo=redis)
-![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-D71F00?style=flat-square&logo=sqlalchemy)
-![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker)
+![FastAPI](https://img.shields.io/badge/FastAPI-222?style=flat-square&logo=fastapi)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-222?style=flat-square&logo=postgresql)
+![Redis](https://img.shields.io/badge/Redis-222?style=flat-square&logo=redis)
+![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-222?style=flat-square&logo=sqlalchemy)
+![Docker](https://img.shields.io/badge/Docker-222?style=flat-square&logo=docker)
 <!-- frontend stack -->
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript)
-![React](https://img.shields.io/badge/React-20232A?style=flat-square&logo=react)
-![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss)
+![TypeScript](https://img.shields.io/badge/TypeScript-222?style=flat-square&logo=typescript)
+![React](https://img.shields.io/badge/React-222?style=flat-square&logo=react)
+![Vite](https://img.shields.io/badge/Vite-222?style=flat-square&logo=vite)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-222?style=flat-square&logo=tailwindcss)
 <!-- test tiers -->
-![backend-unit](https://img.shields.io/badge/backend--unit-blue?style=flat-square)
-![backend-integration](https://img.shields.io/badge/backend--integration-blue?style=flat-square)
-![client-vitest](https://img.shields.io/badge/client--vitest-blue?style=flat-square)
-![browser-e2e](https://img.shields.io/badge/browser--e2e-blue?style=flat-square)
+![backend-unit](https://img.shields.io/badge/backend--unit-0AC?style=flat-square)
+![backend-integration](https://img.shields.io/badge/backend--integration-0AC?style=flat-square)
+![client-vitest](https://img.shields.io/badge/client--vitest-0AC?style=flat-square)
+![browser-e2e](https://img.shields.io/badge/browser--e2e-0AC?style=flat-square)
 
 Modular Monolith Async FastAPI SaaS Kernel — auth própria (JWT + refresh opaco), tenancy row-level, RBAC + entitlements, email/storage/jobs, auditoria, backup, billing Stripe opcional, control plane admin e SPA React de visualização com landing pública.
 
