@@ -29,6 +29,7 @@
 3. **Evidência:** ler locais antes de afirmar; citar `path:linha`; upstream só via `copy/`.
 4. **Verificação:** `git status --short` após cada mudança. Sem commit sem pedido. Conventional Commits. Sem segredos.
 5. **Estilo:** `ruff` line-length 128, type hints, async-first, `asyncio_mode=auto`, `import-linter` p/ DAG.
+6. **Delegação a subagentes:** classificar pela tabela §5 → chamar via `Task` (`subagent_type` + prompt autossuficiente com paths, aceite, formato do retorno e comando de verificação; contexto zera a cada chamada) → paralelizar o independente na mesma mensagem → não duplicar o trabalho delegado → verificar o retorno com gates reais → resumir ao usuário (saída do subagente não é visível a ele). Change aprovada antes de delegar implementação; tester com Postgres real também quando delegado; retorno é rascunho até passar nos gates.
 
 ## Design system
 
@@ -36,17 +37,17 @@ Antes de gerar ou alterar qualquer componente de UI, leia `docs/DESIGN.md` por c
 
 ## 5. Subagentes (`.opencode/agents/`)
 
-| Agente | Arquivo | Quando usar |
-|---|---|---|
-| `planner` | `planner.md` | Análise read-only. Lê v2 + `copy/` antes de opinar. |
-| `backend-implementer` | `backend-implementer.md` | Implementa pós-change. Conhece auth/tenancy/DAG. **Exige change aprovada.** |
-| `code-reviewer` | `code-reviewer.md` | 3 eixos: Standards + Spec + Security. Read-only. |
-| `security-auditor` | `security-auditor.md` | Auditoria SAST + auth/tenancy. Read-only. **Novo.** |
-| `tester` | `tester.md` | TDD; exige Postgres real p/ auth/tenancy; mock não prova isolamento. |
-| `docs-writer` | `docs-writer.md` | Dono de README/docs/registry/ADRs. |
-| `ui-designer` | `ui-designer.md` | Propõe tokens/componentes a partir de `docs/DESIGN.md`. Read-only, nunca implementa. |
-| `frontend-implementer` | `frontend-implementer.md` | Implementa UI pós-change no `client/`. Conhece camadas e gates `npm`. **Exige change aprovada.** |
-| `design-auditor` | `design-auditor.md` | Audita UI vs `DESIGN.md` (tokens, a11y, anti-clichês) + `make web-e2e`. Read-only. |
+| Agente | Arquivo | Via | Quando usar |
+|---|---|---|---|
+| `planner` | `planner.md` | `Task` | Análise read-only. Lê v2 + `copy/` antes de opinar. |
+| `backend-implementer` | `backend-implementer.md` | `Task` | Implementa pós-change. Conhece auth/tenancy/DAG. **Exige change aprovada.** |
+| `code-reviewer` | `code-reviewer.md` | `Task` | 3 eixos: Standards + Spec + Security. Read-only. |
+| `security-auditor` | `security-auditor.md` | `Task` | Auditoria SAST + auth/tenancy. Read-only. **Novo.** |
+| `tester` | `tester.md` | `Task` | TDD; exige Postgres real p/ auth/tenancy; mock não prova isolamento. |
+| `docs-writer` | `docs-writer.md` | `Task` | Dono de README/docs/registry/ADRs. |
+| `ui-designer` | `ui-designer.md` | runbook (sem tipo `Task`) | Propõe tokens/componentes a partir de `docs/DESIGN.md`. Read-only, nunca implementa. |
+| `frontend-implementer` | `frontend-implementer.md` | runbook (sem tipo `Task`) | Implementa UI pós-change no `client/`. Conhece camadas e gates `npm`. **Exige change aprovada.** |
+| `design-auditor` | `design-auditor.md` | runbook (sem tipo `Task`) | Audita UI vs `DESIGN.md` (tokens, a11y, anti-clichês) + `make web-e2e`. Read-only. |
 
 Primários: `build` (executa), `plan` (Tab, analisa sem alterar).
 
