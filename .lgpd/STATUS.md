@@ -21,12 +21,19 @@
 - `.lgpd/lia/a005.md`, `.lgpd/lia/a006.md` — v1 draft (decisão pendente de Encarregado)
 - `.lgpd/vendors/` — smtp-provider, s3-storage, stripe, vps-host (todos bloqueados/ressalvados até DPA; sem deploy produtivo hoje)
 - `.lgpd/retention.md` — v1, 2026-09-16 (2 regras ativas, 4 propostas; nada destrutivo implementado aqui)
+- `.lgpd/anonymization.md` — N/A fundamentado, 2026-09-16 (zero pipelines/datasets; guardrails já atendidos)
 
 ## Gaps abertos
 Ver `.lgpd/gaps.md` (3 críticos, 4 altos, 3 médios, 1 baixo).
 
 ## Próximo passo
-L6 `lgpd-anonymization` (avaliar necessidade — sem analytics hoje, provável N/A) ou L7 `lgpd-dsar` (endpoint de eliminação) — aguardando ordem.
+L7 `lgpd-dsar` (endpoint de eliminação + canal mínimo) — aguardando ordem.
+
+## F — Anonymization ✓ (L6)
+- Pipelines de analytics revisados: 0 existentes
+- Datasets pseudonimizados/anonimizados: 0 (nada a tratar)
+- Guardrails já atendidos (hashes só de alta entropia; IDs nunca tratados como pseudônimos)
+- Próximo: lgpd-dsar (L7)
 
 ## F — Vendor audit ✓ (L4)
 - 4 operadores inventariados (1 Crítico, 3 Alto)
