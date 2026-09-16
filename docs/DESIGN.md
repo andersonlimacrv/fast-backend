@@ -645,4 +645,5 @@ Cada ficha segue o formato: nome · descrição · auditoria/segurança · adoç
 - **2026-09 (PR2):** `--radius: 0rem` mantido do tema tweakcn (identidade sharp); mapeamento `@theme inline` é superconjunto do esqueleto §4.2 (popover/sidebar extras vindos do export).
 - **2026-09 (PR2):** sem `tw-animate-css` — animação via `motion` (PR3) + keyframes de toast existentes; nada duplicado.
 - **2026-09 (PR2):** densidade via `--row-gap` (confortável default, `[data-density="compact"]` opt-in); alvos touch `h-9` (36px) dentro da faixa §4.4.
+- **2026-09 (PR6):** links de texto usam `text-foreground` + `decoration-primary` (lima `text-primary` sobre fundo claro reprova AA — pego pelo axe); avatar usa `text-foreground` sobre `bg-muted` pelo mesmo motivo. Baselines visuais por plataforma (`{platform}`) por divergência de fontes.
 

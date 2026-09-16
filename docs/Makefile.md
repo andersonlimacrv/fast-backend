@@ -109,7 +109,7 @@ environment, never from Makefile variables or files.
 - **`make web [WEB_PORT=]`** — Vite dev server (`http://localhost:5173`). Needs `client/.env` (`VITE_API_URL`) and backend CORS allowing the origin.
 - **`make web-lint` / `web-test` / `web-build`** — `oxlint`, `vitest run`, `tsc -b && vite build` inside `$(CLIENT_DIR)`.
 - **`make web-e2e-install`** — Playwright Chromium (version follows `client/package.json` pin).
-- **`make web-e2e`** — browser E2E (axe + snapshots, Chromium) vs `vite preview` — run `web-build` first. Baselines update **only** on ubuntu CI via `web-e2e-update` (never from local Windows: font rendering diverges).
+- **`make web-e2e`** — browser E2E (axe + snapshots, Chromium) vs `vite preview` — run `web-build` first; authed suites need the API up (`make db-up && make migrate && make api`), otherwise they skip and anonymous coverage still runs. Baselines are per-platform: `linux/` committed (seeded only by `web-e2e-baselines.yml`), local `win32/` gitignored.
 
 ## Ops — backups, scaffolding, releases
 

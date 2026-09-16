@@ -57,8 +57,32 @@ jobs:
 
   web:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fastbackend
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+      redis:
+        image: valkey/valkey:9-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "valkey-cli ping"
+          --health-interval 5s --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/fastbackend
+      REDIS_URL: redis://localhost:6379/0
     steps:
       - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --extra dev --frozen
+      - run: uv run alembic upgrade head
+      - run: nohup uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 >/tmp/api.log 2>&1 &
       - uses: actions/setup-node@v4
         with:
           node-version: 24

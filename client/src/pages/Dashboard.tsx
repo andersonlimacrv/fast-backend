@@ -48,12 +48,12 @@ export function DashboardPage() {
                   <span className="text-muted-foreground">active_org_id:</span> <code>{active.id}</code>
                 </p>
                 <p>
-                  Memberships: <Link to="/orgs" className="text-primary underline">{orgs.length}</Link>
+                  Memberships: <Link to="/orgs" className="text-foreground underline decoration-primary/70 underline-offset-4">{orgs.length}</Link>
                 </p>
               </>
             ) : (
               <p className="text-muted-foreground">
-                No organization yet — <Link to="/orgs" className="text-primary underline">create one</Link>.
+                No organization yet — <Link to="/orgs" className="text-foreground underline decoration-primary/70 underline-offset-4">create one</Link>.
               </p>
             )}
           </CardContent>
