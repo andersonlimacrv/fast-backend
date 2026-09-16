@@ -5,11 +5,12 @@ const WEB_PORT = Number(process.env.WEB_PORT ?? "5173");
 /* Browser harness for design-auditor: axe + snapshots, Chromium-first.
  * - baseURL follows WEB_PORT (same knob as `make web`).
  * - webServer serves the production build (already validated by `tsc -b`).
- * - Snapshots: animations disabled + reduced motion + fixed viewport, so the
- *   Motion adoption (PR3) can't flake baselines. Baselines update ONLY on
- *   ubuntu CI (`make web-e2e-update`), never from a local Windows run.
+ * - Snapshots: animations disabled + reduced motion + fixed viewport, so
+ *   Motion micro-interactions can't flake baselines. Baselines are
+ *   per-platform (`{platform}` template): linux/ is committed (seeded by
+ *   web-e2e-baselines.yml), local win32/ regenerates and never commits.
  * - Authed routes need a running API (`make db-up && make migrate && make api`);
- *   anonymous routes (landing, login) run backend-less via offline fallback.
+ *   without it they skip and anonymous coverage still runs.
  */
 export default defineConfig({
   testDir: "./e2e",
@@ -21,7 +22,7 @@ export default defineConfig({
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
   },
-  snapshotPathTemplate: "{testDir}/__snapshots__/{testFileName}/{arg}{ext}",
+  snapshotPathTemplate: "{testDir}/__snapshots__/{platform}/{testFileName}/{arg}{ext}",
   expect: {
     toHaveScreenshot: {
       animations: "disabled",

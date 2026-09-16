@@ -92,7 +92,7 @@ export function LoginForm({ onDone }: { onDone?: () => void }) {
             Logging in as <span className="font-medium text-foreground">{email}</span>{" "}
             <button
               type="button"
-              className="text-primary underline"
+              className="text-foreground underline decoration-primary/70 underline-offset-4"
               onClick={() => {
                 setStep("email");
                 setServerError(null);

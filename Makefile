@@ -206,10 +206,10 @@ web-build: ## Frontend production build (`tsc` + `vite build` in client/)
 web-e2e-install: ## Install Playwright Chromium (version follows client/package.json)
 	cd $(CLIENT_DIR) && $(NPM) exec playwright install chromium
 
-web-e2e: ## Browser E2E: axe + snapshots vs preview build (run `web-build` first)
+web-e2e: ## Browser E2E: axe + snapshots vs preview build (run `web-build` first; authed tests need API up)
 	cd $(CLIENT_DIR) && $(NPM) run e2e
 
-web-e2e-update: ## Refresh screenshot baselines (ubuntu CI only — never from local Windows)
+web-e2e-update: ## Refresh linux baselines ONLY via web-e2e-baselines.yml (never commit local win32/)
 	cd $(CLIENT_DIR) && $(NPM) run e2e -- --update-snapshots
 
 ##@ 🛫 Ops

@@ -41,7 +41,7 @@ export function AdminOverviewPage() {
             label="Users"
             value={String(overview.users)}
             footer={
-              <Link to={ROUTES.adminUsers} className="text-primary underline">
+              <Link to={ROUTES.adminUsers} className="text-foreground underline decoration-primary/70 underline-offset-4">
                 Manage users
               </Link>
             }
@@ -50,7 +50,7 @@ export function AdminOverviewPage() {
             label="Organizations"
             value={String(overview.organizations)}
             footer={
-              <Link to={ROUTES.adminOrgs} className="text-primary underline">
+              <Link to={ROUTES.adminOrgs} className="text-foreground underline decoration-primary/70 underline-offset-4">
                 Manage orgs
               </Link>
             }
@@ -59,7 +59,7 @@ export function AdminOverviewPage() {
             label="Projects"
             value={String(overview.projects)}
             footer={
-              <Link to={ROUTES.adminAudit} className="text-primary underline">
+              <Link to={ROUTES.adminAudit} className="text-foreground underline decoration-primary/70 underline-offset-4">
                 Global audit (root)
               </Link>
             }

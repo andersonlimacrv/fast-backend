@@ -15,6 +15,9 @@ dist-ssr
 # Playwright (report + traces/screenshots on failure only, never committed)
 playwright-report/
 test-results/
+# Snapshot baselines: linux/ is CI-owned (seeded by web-e2e-baselines.yml);
+# win32/ regenerates locally and never commits (font rendering diverges).
+e2e/__snapshots__/win32/
 
 # Editor directories and files
 .vscode/*

@@ -20,7 +20,7 @@ export function LoginPage() {
         <CardContent className="space-y-4 pt-6">
           <LoginForm />
           <p className="text-sm text-muted-foreground">
-            No account? <Link to="/register" className="text-primary underline">Register</Link>
+            No account? <Link to="/register" className="text-foreground underline decoration-primary/70 underline-offset-4">Register</Link>
           </p>
         </CardContent>
       </Card>
@@ -81,7 +81,7 @@ export function RegisterPage() {
             </Button>
           </form>
           <p className="text-sm text-muted-foreground">
-            Have an account? <Link to="/login" className="text-primary underline">Login</Link>
+            Have an account? <Link to="/login" className="text-foreground underline decoration-primary/70 underline-offset-4">Login</Link>
           </p>
         </CardContent>
       </Card>
