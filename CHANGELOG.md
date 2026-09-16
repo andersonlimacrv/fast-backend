@@ -54,3 +54,5 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 
 ## [Unreleased]
 
+- **`animate-ui-adoption`**: reconcile dos 10 primitivos com os motion patterns upstream (`TabsPanels`+`AutoHeight`, scales, springs, variantes), `AvatarGroup` + `FileTree` novos, rota `/admin/gallery` (staff-only), ledger em `docs/review-design.md` §11; change em `client/openspec/changes/animate-ui-adoption/`.
+

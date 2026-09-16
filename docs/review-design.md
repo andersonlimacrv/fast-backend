@@ -86,3 +86,36 @@
   seria letra morta para os portes vindos do `react-icons`.
 - **`CrudPage`/`SettingsTabs` como padrões documentados**, não componentes —
   página admin real (ex.: `AdminOverview`, `Health`) é a prova de composição.
+
+## 11. Adoption ledger — Animate UI (change `animate-ui-adoption`, 2026-09-16)
+
+Fonte: `references/components_to_use/AnimateUi/` (11 docs, CLI+Link+DEMO cada).
+Regra: porte manual (sem `npx shadcn add`, sem MCP); `motion@13.3.0` único;
+tokens do tema; ícones via `lib/icons.tsx`. Status: ⬜ pendente · 🔄 lane ·
+✅ aplicado · ❌ descartado.
+
+| # | Doc (CLI) | Link | Estado | Delta aplicado | Decisão |
+|---|---|---|---|---|---|
+| 1 | Accordion (`@animate-ui/components-base-accordion`) | /docs/components/base/accordion | ✅ | spring 150/22 + reduced-motion, ring-2 | Lane C |
+| 2 | AlertDialog (`…-base-alert-dialog`) | /docs/components/base/alert-dialog | ✅ | spring enter 350/30 + reduced-motion guard | Lane A |
+| 3 | Checkbox (`…-base-checkbox`) | /docs/components/base/checkbox | ✅ | variants default/accent + sm/lg, motion `transition` override, ring-2 | Lane B |
+| 4 | CopyButton (`…-buttons-copy`) | /docs/components/buttons/copy | ✅ | hoverScale 1.05/tapScale 0.95 + controlled `copied` | Lane B |
+| 5 | Dialog (`…-base-dialog`) | /docs/components/base/dialog | ✅ | spring enter 350/30 + reduced-motion guard | Lane A |
+| 6 | Radio (`…-base-radio`) | /docs/components/base/radio | ✅ | `transition` override, reduced-motion dot, ring-2 | Lane B |
+| 7 | Tabs (`…-base-tabs`) | /docs/components/base/tabs | ✅ | `TabsPanels` + AutoHeight (ResizeObserver, spring 300/30) | Lane A |
+| 8 | ToggleGroup (`…-base-toggle-group`) | /docs/components/base/toggle-group | ✅ | group variant/size → context (DEMO Bold/Italic/Underline verbatim) | Lane B |
+| 9 | UserAvatar (`…-community-user-presence-avatar`) | /docs/components/community/user-presence-avatar | ✅ | `avatar-group.tsx` novo (overlap, +N, "N online") | Lane C |
+| 10 | FileTree→`Files` (`…-base-files`) | /docs/components/base/files | ✅ | `ui/file-tree.tsx` novo (Base-UI accordion, FileIcon, git dots) | Lane C |
+| 11 | Sidebar (`…-radix-sidebar`) | /docs/components/radix/sidebar | ✅ | drawer x-slide spring; sem radix (decisão mantida) | Lane C |
+
+F1 (2026-09-16): nenhum pacote motion além de `motion/react` nos 11 docs → nada a
+instalar; `use-mobile` só no Sidebar (não adotado) → sem hook novo. Ícones
+`Bold/Italic/Underline` adicionados a `lib/icons.tsx` (`FileJson` não existe no
+lucide instalado → `FileCode` no lugar).
+
+Notas do code-review (2026-09-16, working tree): `RequireStaff` lê flags da sessão
+(emitidas pelo backend) e os fetches das páginas seguem com 403 real — autoridade
+inalterada; seção "Bonus · KpiGrid" da gallery demonstra a live-region do shell
+(registrada como extra intencional, não DEMO upstream); `line-length 128` vale p/
+Python (`ruff`) — no client o gate é `oxlint` (linhas longas herdadas quebradas
+oportunisticamente: `file-tree` ROW_CLASS, `toggle-group` cva).

@@ -27,6 +27,7 @@ export const ROUTES = {
   adminUsers: "/admin/users",
   adminOrgs: "/admin/orgs",
   adminAudit: "/admin/audit",
+  gallery: "/admin/gallery",
 } as const;
 
 export const ROLES = ["owner", "admin", "member"] as const;

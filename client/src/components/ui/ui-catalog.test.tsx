@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -37,8 +37,12 @@ import { ToggleGroup, ToggleItem } from "@/components/ui/toggle-group";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { EmptyState } from "@/components/error-state";
+import { AvatarGroup } from "@/components/avatar-group";
+import { FileTree } from "@/components/ui/file-tree";
+import { TabsPanels } from "@/components/ui/tabs";
 
 afterEach(() => {
+  cleanup();
   vi.unstubAllGlobals();
   vi.useRealTimers();
 });
@@ -248,5 +252,93 @@ describe("empty-state", () => {
     expect(screen.getByText("No projects yet")).toBeTruthy();
     fireEvent.click(screen.getByRole("button", { name: "New project" }));
     expect(onAction).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("avatar-group", () => {
+  it("overflows with +N and announces online count", () => {
+    render(
+      <AvatarGroup
+        users={[
+          { name: "Ada Lovelace", presence: "online" },
+          { name: "Alan Turing", presence: "online" },
+          { name: "Grace Hopper", presence: "offline" },
+        ]}
+        max={2}
+      />,
+    );
+    expect(screen.getByText("+1")).toBeTruthy();
+    expect(screen.getByRole("group", { name: "2 online" })).toBeTruthy();
+  });
+});
+
+describe("file-tree", () => {
+  const nodes = [
+    {
+      id: "src",
+      name: "src",
+      type: "folder" as const,
+      children: [{ id: "main", name: "main.tsx", type: "file" as const }],
+    },
+  ];
+  it("expands folders and selects files", async () => {
+    const onSelect = vi.fn();
+    render(<FileTree nodes={nodes} onSelect={onSelect} />);
+    fireEvent.click(screen.getByText("src"));
+    expect(await screen.findByText("main.tsx")).toBeTruthy();
+    fireEvent.click(screen.getByText("main.tsx"));
+    expect(onSelect).toHaveBeenCalledWith(expect.objectContaining({ id: "main" }));
+  });
+});
+
+describe("tabs-panels", () => {
+  it("switches auto-height panels", () => {
+    render(
+      <Tabs defaultValue="a">
+        <TabsList>
+          <TabsTrigger value="a">Alpha</TabsTrigger>
+          <TabsTrigger value="b">Beta</TabsTrigger>
+        </TabsList>
+        <TabsPanels>
+          <TabsContent value="a">panel-a</TabsContent>
+          <TabsContent value="b">panel-b</TabsContent>
+        </TabsPanels>
+      </Tabs>,
+    );
+    expect(screen.getByText("panel-a")).toBeTruthy();
+    fireEvent.click(screen.getByRole("tab", { name: "Beta" }));
+    expect(screen.getByText("panel-b")).toBeTruthy();
+  });
+});
+
+describe("checkbox variants", () => {
+  it("applies accent + lg classes", () => {
+    render(<Checkbox variant="accent" size="lg" aria-label="big accent" />);
+    const box = screen.getByRole("checkbox");
+    expect(box.className).toContain("h-5");
+    expect(box.className).toContain("data-[checked]:bg-accent");
+  });
+});
+
+describe("copy-button controlled", () => {
+  it("honours controlled copied + custom scales", async () => {
+    const writeText = vi.fn(async () => {});
+    vi.stubGlobal("navigator", { clipboard: { writeText } });
+    render(<CopyButton content="x" copied hoverScale={1.1} tapScale={0.9} delay={20} />);
+    expect(await screen.findByRole("button", { name: /copied/i })).toBeTruthy();
+  });
+});
+
+describe("toggle-group icons", () => {
+  it("renders icon toggles sharing state", () => {
+    const onChange = vi.fn();
+    render(
+      <ToggleGroup defaultValue={["bold"]} onValueChange={onChange} aria-label="fmt">
+        <ToggleItem value="bold" aria-label="fmt-bold" />
+        <ToggleItem value="italic" aria-label="fmt-italic" />
+      </ToggleGroup>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "fmt-italic" }));
+    expect(onChange).toHaveBeenCalledWith(["italic"], expect.anything());
   });
 });

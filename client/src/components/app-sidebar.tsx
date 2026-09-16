@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion, type Transition } from "motion/react";
 import * as React from "react";
 import { NavLink } from "react-router-dom";
 
@@ -10,6 +10,7 @@ import {
   FileText,
   FolderOpen,
   KeyRound,
+  Layers,
   LayoutDashboard,
   PanelLeft,
   Settings,
@@ -25,6 +26,13 @@ import { cn } from "@/lib/utils";
  * React + motion instead of radix/animate-ui — see design-unification
  * design.md decision 1). Collapsed mode IS the icon rail
  * (DESIGN.md §6: drawer <lg, rail lg–xl, expanded ≥xl). */
+
+/* Upstream animate-ui motion patterns only (Sidebar track is radix-based,
+ * not vendored): drawer x-slide spring. Desktop width stays a CSS
+ * transition — a motion width spring is incompatible with the w-16/w-64
+ * class switch without restructuring the layout. */
+const DRAWER_TRANSITION: Transition = { type: "spring", stiffness: 150, damping: 22 };
+const OVERLAY_TRANSITION: Transition = { duration: 0.15 };
 
 interface SidebarContextValue {
   collapsed: boolean;
@@ -198,6 +206,7 @@ const ADMIN_NAV: SidebarMenuItemProps[] = [
   { to: ROUTES.adminUsers, label: "Users", icon: <Users aria-hidden="true" /> },
   { to: ROUTES.adminOrgs, label: "Organizations", icon: <Building2 aria-hidden="true" /> },
   { to: ROUTES.adminAudit, label: "Global audit", icon: <FileText aria-hidden="true" /> },
+  { to: ROUTES.gallery, label: "Gallery", icon: <Layers aria-hidden="true" /> },
 ];
 
 function SidebarBody() {
@@ -259,6 +268,7 @@ function SidebarBody() {
 
 export function Sidebar() {
   const { collapsed, mobileOpen, setMobileOpen } = useSidebar();
+  const reduceMotion = useReducedMotion();
   return (
     <>
       {/* Desktop: static rail/full sidebar */}
@@ -280,7 +290,7 @@ export function Sidebar() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
+              transition={reduceMotion ? { duration: 0 } : OVERLAY_TRANSITION}
               className="absolute inset-0 bg-black/50"
               onClick={() => setMobileOpen(false)}
               aria-hidden="true"
@@ -289,10 +299,10 @@ export function Sidebar() {
               role="dialog"
               aria-modal="true"
               aria-label="Primary"
-              initial={{ x: "-100%" }}
+              initial={reduceMotion ? false : { x: "-100%" }}
               animate={{ x: 0 }}
-              exit={{ x: "-100%" }}
-              transition={{ duration: 0.2, ease: "easeOut" }}
+              exit={reduceMotion ? { x: 0 } : { x: "-100%" }}
+              transition={reduceMotion ? { duration: 0 } : DRAWER_TRANSITION}
               className="absolute inset-y-0 left-0 w-72 border-r border-sidebar-border"
             >
               <SidebarBody />

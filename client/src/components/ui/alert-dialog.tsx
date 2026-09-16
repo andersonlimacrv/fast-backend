@@ -1,5 +1,5 @@
 import { AlertDialog } from "@base-ui/react/alert-dialog";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import * as React from "react";
 
 import { buttonVariants } from "@/components/ui/button";
@@ -25,28 +25,32 @@ AlertDialogOverlay.displayName = "AlertDialogOverlay";
 const AlertDialogContent = React.forwardRef<
   React.ElementRef<typeof AlertDialog.Popup>,
   React.ComponentPropsWithoutRef<typeof AlertDialog.Popup>
->(({ className, children, ...props }, ref) => (
-  <AlertDialogPortal>
-    <AlertDialogOverlay />
-    <AlertDialog.Popup
-      ref={ref}
-      className={cn(
-        "fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2",
-        "rounded-lg border bg-card p-6 text-card-foreground shadow-lg outline-none",
-        className,
-      )}
-      {...props}
-    >
-      <motion.div
-        initial={{ opacity: 0, scale: 0.96, y: 8 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.15, ease: "easeOut" }}
+>(({ className, children, ...props }, ref) => {
+  const reduceMotion = useReducedMotion();
+  return (
+    <AlertDialogPortal>
+      <AlertDialogOverlay />
+      <AlertDialog.Popup
+        ref={ref}
+        className={cn(
+          "fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2",
+          "rounded-lg border bg-card p-6 text-card-foreground shadow-lg outline-none",
+          className,
+        )}
+        {...props}
       >
-        {children}
-      </motion.div>
-    </AlertDialog.Popup>
-  </AlertDialogPortal>
-));
+        <motion.div
+          /* Upstream spring enter (stiffness ~350, damping ~30 settles <250ms). */
+          initial={reduceMotion ? false : { opacity: 0, scale: 0.96, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 350, damping: 30 }}
+        >
+          {children}
+        </motion.div>
+      </AlertDialog.Popup>
+    </AlertDialogPortal>
+  );
+});
 AlertDialogContent.displayName = "AlertDialogContent";
 
 const AlertDialogHeader = ({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
