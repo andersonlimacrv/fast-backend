@@ -43,6 +43,11 @@ environment, never from Makefile variables or files.
   *Why:* `.env` holds real secrets and is gitignored; the template tracks the
   schema. *How to fill:* nothing — but it **never overwrites** an existing
   `.env` (safe to re-run).
+- **`make env-check`** — *What:* reports `.env` drift vs `.env.example`
+  (missing/extra keys) + value-shape sanity mirroring `Settings` validators.
+  *Why:* stale envs fail obscurely at runtime; this fails early and legibly.
+  Prints key names only, exit `0` clean / `1` drift-or-invalid / `2` file
+  missing. Never prints values, never writes. Runs inside `setup`.
 
 ## Database — schema and inspection
 

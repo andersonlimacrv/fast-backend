@@ -43,6 +43,11 @@ ambiente, nunca de variáveis do Makefile ou arquivos.
   *Por quê:* `.env` tem segredos reais e é gitignored; o template versiona o
   schema. *Como preencher:* nada — mas **nunca sobrescreve** um `.env`
   existente (seguro repetir).
+- **`make env-check`** — *O quê:* reporta drift do `.env` vs `.env.example`
+  (chaves faltantes/extras) + sanidade de valores espelhando os validators de
+  `Settings`. *Por quê:* env parado falha obscuro em runtime; aqui falha cedo e
+  legível. Imprime só nomes de chaves, exit `0` limpo / `1` drift-ou-inválido /
+  `2` arquivo ausente. Nunca imprime valores, nunca escreve. Roda dentro do `setup`.
 
 ## Database — schema e inspeção
 

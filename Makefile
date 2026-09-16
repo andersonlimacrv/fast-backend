@@ -38,7 +38,7 @@ COMPOSE_ENV = POSTGRES_IMAGE=$(POSTGRES_IMAGE) REDIS_IMAGE=$(REDIS_IMAGE)
 
 ##@ 🚀 Setup
 
-setup: env-template sync migrate ## First run: .env + deps + migrations
+setup: env-template sync env-check migrate ## First run: .env + deps + drift check + migrations
 
 sync: ## Install deps from lockfile (`uv sync --extra dev`)
 	$(UV) sync --extra dev
@@ -52,6 +52,9 @@ env-template: ## Create .env from .env.example (never overwrites)
 		cp .env.example $(ENV_FILE); \
 		echo "Created $(ENV_FILE) — fill in real values"; \
 	fi
+
+env-check: ## Validate .env vs .env.example (keys + shapes, never prints values)
+	$(UV) run python scripts/env_check.py
 
 _check-env:
 	@if [ ! -f $(ENV_FILE) ]; then \
@@ -251,7 +254,7 @@ help: ## Show this help
 help-unclassified: ## Targets with ## but no ##@ section above (audit, must be empty)
 	@awk 'FNR == 1 { section = "" } /^##@ / { section = substr($$0, 5); next } /^[a-zA-Z0-9_-]+:.*## / && section == "" { print "  " $$0 }' $(MAKEFILE_LIST)
 
-.PHONY: setup sync env-template migrate migration downgrade db-current db-history db-shell db-reset
+.PHONY: setup sync env-template env-check migrate migration downgrade db-current db-history db-shell db-reset
 .PHONY: test test-unit test-integration test-host test-file e2e clean
 .PHONY: lint format-fix types arch security verify check
 .PHONY: up db-up dev dev-down down logs logs-app logs-db restart tools build
