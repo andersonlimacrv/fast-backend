@@ -24,19 +24,24 @@
 - `.lgpd/anonymization.md` — N/A fundamentado, 2026-09-16 (zero pipelines/datasets; guardrails já atendidos)
 - `.lgpd/dsar/workflow.md` — v1 spec, 2026-09-16 (1/9 completos, 3 parciais, 3 inexistentes, 3 N/A; SLA ainda não operacional)
 - `.lgpd/policies/privacy-policy-v1-draft.md` — DRAFT, 2026-09-16 (13 elementos; **não publicar sem revisão jurídica**)
+- `.lgpd/encarregado.md` — PENDENTE (ato formal vazio; gap crítico nº 1 segue aberto)
 
 ## Gaps abertos
 Ver `.lgpd/gaps.md` (3 críticos, 4 altos, 3 médios, 1 baixo).
 
 ## Próximo passo
-L10 `lgpd-dpo-encarregado` (designação + publicação) — aguardando ordem.
+L11 `lgpd-ripd` (RIPD para A001 credenciais e A006 admin — alto risco) — aguardando ordem.
 
-## F — Privacy policy ✓ (L9, DRAFT)
+## F — Encarregado ✓/pendente (L10)
+- Ato formal estruturado em `.lgpd/encarregado.md` (campos vazios honestos + nota ATPP)
+- Designação real exige operador humano (pessoa/empresa) — fora do alcance desta auditoria
+- Gap crítico nº 1 segue aberto até preenchimento + divulgação
+- Próximo: lgpd-ripd (L11)
+
+## F — Incident response ✓ (L8, preparatório)
 - v1 draft em `.lgpd/policies/privacy-policy-v1-draft.md` (13 elementos, PT-BR claro, TL;DR)
 - **Aguardando revisão jurídica** — não publicar, não mover para final
 - Próximo: lgpd-dpo-encarregado (L10)
-
-## F — Incident response ✓ (L8, preparatório)
 
 ## F — Incident response ✓ (L8, preparatório)
 - Runbook T+0→72h+ adaptado à stack (contenção via endpoints reais)
