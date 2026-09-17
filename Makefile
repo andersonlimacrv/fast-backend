@@ -29,12 +29,19 @@ TAG ?= dev
 BACKUP_DIR ?= ./var/backups
 POSTGRES_IMAGE ?= postgres:17-alpine
 REDIS_IMAGE ?= valkey/valkey:9-alpine
+E2E_PG_PORT ?= 5434
+E2E_REDIS_PORT ?= 6380
+E2E_API_PORT ?= 8001
+E2E_WEB_PORT ?= 5174
+E2E_DATABASE_URL ?= postgresql+asyncpg://postgres:postgres@127.0.0.1:$(E2E_PG_PORT)/fastbackend
+E2E_REDIS_URL ?= redis://127.0.0.1:$(E2E_REDIS_PORT)/0
+E2E_TASK_BROKER_URL ?= redis://127.0.0.1:$(E2E_REDIS_PORT)/1
 NPM ?= npm
 CLIENT_DIR ?= client
 WEB_PORT ?= 5173
 # Single source of truth for data-service images: `make up IMAGE=x` flows to
 # compose files (`${VAR:-default}`) and test fixtures alike.
-COMPOSE_ENV = POSTGRES_IMAGE=$(POSTGRES_IMAGE) REDIS_IMAGE=$(REDIS_IMAGE)
+COMPOSE_ENV = POSTGRES_IMAGE=$(POSTGRES_IMAGE) REDIS_IMAGE=$(REDIS_IMAGE) E2E_PG_PORT=$(E2E_PG_PORT) E2E_REDIS_PORT=$(E2E_REDIS_PORT)
 
 ##@ 🚀 Setup
 
@@ -209,8 +216,45 @@ web-build: ## Frontend production build (`tsc` + `vite build` in client/)
 web-e2e-install: ## Install Playwright Chromium (version follows client/package.json)
 	cd $(CLIENT_DIR) && $(NPM) exec playwright install chromium
 
-web-e2e: ## Browser E2E: axe + snapshots vs preview build (run `web-build` first; authed tests need API up)
+web-e2e: ## Browser E2E vs DEV api (legacy: pollutes the dev DB — prefer `make e2e-full`)
 	cd $(CLIENT_DIR) && $(NPM) run e2e
+
+e2e-db-up: ## Start isolated e2e data services (postgres + redis, own ports/volumes)
+	$(COMPOSE_ENV) $(COMPOSE) --profile e2e up -d db-e2e redis-e2e
+
+e2e-db-down: ## Stop e2e data services (keeps volumes for fast reruns)
+	$(COMPOSE) stop db-e2e redis-e2e
+
+e2e-clean: ## Remove e2e containers (volumes persist; purge data via docker volume rm)
+	$(COMPOSE) rm -sf db-e2e redis-e2e
+
+e2e-migrate: ## Migrate the isolated e2e database
+	DATABASE_URL="$(E2E_DATABASE_URL)" $(UV) run alembic upgrade head
+
+e2e-api: ## API for e2e in background (E2E_API_PORT; kill with `make e2e-stop`)
+	mkdir -p var
+	DATABASE_URL="$(E2E_DATABASE_URL)" REDIS_URL="$(E2E_REDIS_URL)" TASK_BROKER_URL="$(E2E_TASK_BROKER_URL)" CORS_ORIGINS='["http://localhost:$(E2E_WEB_PORT)"]' nohup $(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(E2E_API_PORT) > var/e2e-api.log 2>&1 & echo $$! > var/e2e-api.pid
+
+e2e-stop: ## Stop the e2e API + data services (keeps volumes)
+	@if [ -f var/e2e-api.pid ]; then pid=$$(cat var/e2e-api.pid); kill "$$pid" 2>/dev/null || true; taskkill //F //T //PID "$$pid" 2>/dev/null || true; rm -f var/e2e-api.pid; fi
+	$(COMPOSE) stop db-e2e redis-e2e
+
+e2e-build: ## Frontend production build pointed at the e2e API
+	cd $(CLIENT_DIR) && VITE_API_URL="http://127.0.0.1:$(E2E_API_PORT)" $(NPM) run build
+
+e2e-full: ## Isolated browser E2E end-to-end (own DB/API/preview; teardown after; dev DB untouched)
+	@set -e; trap '$(MAKE) e2e-stop >/dev/null 2>&1' EXIT INT TERM; \
+	$(COMPOSE_ENV) $(COMPOSE) --profile e2e up -d db-e2e redis-e2e; \
+	for i in $$(seq 1 60); do \
+		$(COMPOSE) --profile e2e exec -T db-e2e pg_isready -U postgres >/dev/null 2>&1 && break; \
+		sleep 1; \
+	done; \
+	DATABASE_URL="$(E2E_DATABASE_URL)" $(UV) run alembic upgrade head; \
+	VITE_API_URL="http://127.0.0.1:$(E2E_API_PORT)" $(NPM) --prefix $(CLIENT_DIR) run build; \
+	mkdir -p var; \
+	DATABASE_URL="$(E2E_DATABASE_URL)" REDIS_URL="$(E2E_REDIS_URL)" TASK_BROKER_URL="$(E2E_TASK_BROKER_URL)" CORS_ORIGINS='["http://localhost:$(E2E_WEB_PORT)"]' nohup $(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(E2E_API_PORT) > var/e2e-api.log 2>&1 & echo $$! > var/e2e-api.pid; \
+	E2E_API_URL="http://127.0.0.1:$(E2E_API_PORT)" WEB_PORT=$(E2E_WEB_PORT) $(NPM) --prefix $(CLIENT_DIR) run e2e; \
+	status=$$?; $(MAKE) e2e-stop >/dev/null 2>&1; exit $$status
 
 web-e2e-update: ## Refresh linux baselines ONLY via web-e2e-baselines.yml (never commit local win32/)
 	cd $(CLIENT_DIR) && $(NPM) run e2e -- --update-snapshots

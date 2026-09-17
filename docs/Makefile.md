@@ -43,11 +43,12 @@ environment, never from Makefile variables or files.
   *Why:* `.env` holds real secrets and is gitignored; the template tracks the
   schema. *How to fill:* nothing — but it **never overwrites** an existing
   `.env` (safe to re-run).
-- **`make env-check`** — *What:* reports `.env` drift vs `.env.example`
-  (missing/extra keys) + value-shape sanity mirroring `Settings` validators.
-  *Why:* stale envs fail obscurely at runtime; this fails early and legibly.
-  Prints key names only, exit `0` clean / `1` drift-or-invalid / `2` file
-  missing. Never prints values, never writes. Runs inside `setup`.
+- **`make env-check`** — *What:* table of `.env` drift vs `.env.example`
+  (KEY | code DEFAULT | .ENV | APPLIED source | STATUS) + value-shape sanity
+  mirroring `Settings` validators. *Why:* stale envs fail obscurely at runtime;
+  this fails early and legibly. Secrets always masked (length only), URLs
+  redacted, exit `0` clean / `1` drift-or-invalid / `2` file missing. Never
+  writes. Runs inside `setup`.
 
 ## Database — schema and inspection
 
@@ -114,7 +115,10 @@ environment, never from Makefile variables or files.
 - **`make web [WEB_PORT=]`** — Vite dev server (`http://localhost:5173`). Needs `client/.env` (`VITE_API_URL`) and backend CORS allowing the origin.
 - **`make web-lint` / `web-test` / `web-build`** — `oxlint`, `vitest run`, `tsc -b && vite build` inside `$(CLIENT_DIR)`.
 - **`make web-e2e-install`** — Playwright Chromium (version follows `client/package.json` pin).
-- **`make web-e2e`** — browser E2E (axe + snapshots, Chromium) vs `vite preview` — run `web-build` first; authed suites need the API up (`make db-up && make migrate && make api`), otherwise they skip and anonymous coverage still runs. Baselines are per-platform: `linux/` committed (seeded only by `web-e2e-baselines.yml`), local `win32/` gitignored.
+- **`make web-e2e`** — browser E2E (axe + snapshots, Chromium) vs `vite preview` — run `web-build` first; authed suites need the API up, otherwise they skip and anonymous coverage still runs. Baselines are per-platform: `linux/` committed (seeded only by `web-e2e-baselines.yml`), local `win32/` gitignored. **Legacy: runs against the DEV api and pollutes the dev DB — prefer `make e2e-full`.**
+- **`make e2e-db-up` / `e2e-db-down` / `e2e-clean`** — isolated e2e postgres+redis (`E2E_PG_PORT`/`E2E_REDIS_PORT`, own volumes; `clean` removes containers, volumes persist).
+- **`make e2e-migrate` / `e2e-api` / `e2e-build` / `e2e-stop`** — migrate, background API (`E2E_API_PORT`, CORS for `E2E_WEB_PORT`), preview build pointed at it, teardown.
+- **`make e2e-full`** — isolated browser E2E end-to-end (own DB/API/preview on `E2E_*` ports, teardown after; dev DB untouched). Baselines per-platform as above.
 
 ## Ops — backups, scaffolding, releases
 

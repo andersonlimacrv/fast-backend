@@ -43,11 +43,12 @@ ambiente, nunca de variáveis do Makefile ou arquivos.
   *Por quê:* `.env` tem segredos reais e é gitignored; o template versiona o
   schema. *Como preencher:* nada — mas **nunca sobrescreve** um `.env`
   existente (seguro repetir).
-- **`make env-check`** — *O quê:* reporta drift do `.env` vs `.env.example`
-  (chaves faltantes/extras) + sanidade de valores espelhando os validators de
-  `Settings`. *Por quê:* env parado falha obscuro em runtime; aqui falha cedo e
-  legível. Imprime só nomes de chaves, exit `0` limpo / `1` drift-ou-inválido /
-  `2` arquivo ausente. Nunca imprime valores, nunca escreve. Roda dentro do `setup`.
+- **`make env-check`** — *O quê:* tabela de drift `.env` vs `.env.example`
+  (KEY | DEFAULT do código | .ENV | APLICADO fonte | STATUS) + sanidade de
+  valores espelhando os validators de `Settings`. *Por quê:* env parado falha
+  obscuro em runtime; aqui falha cedo e legível. Segredos sempre mascarados
+  (só tamanho), URLs redactadas, exit `0` limpo / `1` drift-ou-inválido /
+  `2` arquivo ausente. Nunca escreve. Roda dentro do `setup`.
 
 ## Database — schema e inspeção
 
@@ -114,7 +115,10 @@ ambiente, nunca de variáveis do Makefile ou arquivos.
 - **`make web [WEB_PORT=]`** — servidor dev Vite (`http://localhost:5173`). Precisa de `client/.env` (`VITE_API_URL`) e CORS do backend liberando a origem.
 - **`make web-lint` / `web-test` / `web-build`** — `oxlint`, `vitest run`, `tsc -b && vite build` dentro de `$(CLIENT_DIR)`.
 - **`make web-e2e-install`** — Chromium do Playwright (versão segue o pin de `client/package.json`).
-- **`make web-e2e`** — E2E de browser (axe + snapshots, Chromium) contra `vite preview` — rode `web-build` antes; suítes logadas precisam da API no ar (`make db-up && make migrate && make api`), senão pulam e a cobertura anônima roda. Baselines por plataforma: `linux/` commitado (seed só via `web-e2e-baselines.yml`), `win32/` local gitignored.
+- **`make web-e2e`** — E2E de browser (axe + snapshots, Chromium) contra `vite preview` — rode `web-build` antes; suítes logadas precisam da API no ar, senão pulam e a cobertura anônima roda. Baselines por plataforma: `linux/` commitado (seed só via `web-e2e-baselines.yml`), `win32/` local gitignored. **Legado: roda contra a API de DEV e polui o banco dev — prefira `make e2e-full`.**
+- **`make e2e-db-up` / `e2e-db-down` / `e2e-clean`** — postgres+redis isolados p/ e2e (`E2E_PG_PORT`/`E2E_REDIS_PORT`, volumes próprios; `clean` remove containers, volumes ficam).
+- **`make e2e-migrate` / `e2e-api` / `e2e-build` / `e2e-stop`** — migra o banco e2e, API de fundo (`E2E_API_PORT`, CORS p/ `E2E_WEB_PORT`), build do preview apontado p/ ela, teardown.
+- **`make e2e-full`** — E2E de browser isolado de ponta a ponta (DB/API/preview próprios, teardown no fim; banco dev intocado).
 
 ## Ops — backups, scaffolding, releases
 
