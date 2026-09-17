@@ -8,8 +8,8 @@
 
 - [x] 1.1 `ROUTES.playground*` + rotas + breadcrumb + item Admin (`FlaskConical` via `lib/icons`)
 - [x] 1.2 `pages/playground/` (índice com fila+status, components, blocks placeholder), tudo `RequireStaff`
-- [ ] 1.3 **APRESENTAR ao dono ANTES dos gates** (ordem permanente)
-- [ ] 1.4 Gates: `tsc+build`, vitest, e2e full, `oxlint`
+- [ ] 1.3 **APRESENTAR ao dono ANTES dos gates** (ordem permanente — apresentação entregue no relato de 2026-09-17, aguardando aceite)
+- [x] 1.4 Gates: `tsc+build`, vitest, e2e full, `oxlint` (verificado 2026-09-17: tsc 0, build ok, vitest 102/102, e2e 14/14 em stack isolado, oxlint só warnings pré-existentes)
 - [ ] 1.5 Sem commit sem pedido
 
 ## S2+ — Backlog fatiado (decisão do dono 2026-09-17: uma change por componente, não uma change longa)
