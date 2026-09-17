@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, initialsOf } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircularProgress } from "@/components/ui/circular-progress";
-import { CopyButton } from "@/components/ui/copy-button";
+import { CircularProgress } from "@/components/custom-ui/components/circular-progress";
+import { CopyButton } from "@/components/custom-ui/components/copy-button";
 import {
   Dialog,
   DialogClose,
@@ -29,26 +29,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FloatingInput } from "@/components/ui/floating-input";
+import { FloatingInput } from "@/components/custom-ui/components/floating-input";
 import { RadioGroup, RadioItem } from "@/components/ui/radio";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleItem } from "@/components/ui/toggle-group";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/custom-ui/components/tooltip/tooltip";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { EmptyState } from "@/components/error-state";
 import { AvatarGroup } from "@/components/avatar-group";
-import { FileTree } from "@/components/ui/file-tree";
+import { FileTree } from "@/components/custom-ui/components/file-tree";
 import { TabsPanels } from "@/components/ui/tabs";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/custom-ui/components/collapsible";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/animate-ui/components/radix/dropdown-menu";
+} from "@/components/custom-ui/components/dropdown-menu/dropdown-menu";
 import { MemoryRouter } from "react-router-dom";
 
 afterEach(() => {
@@ -76,14 +76,16 @@ describe("tabs", () => {
 });
 
 describe("tooltip", () => {
-  it("reveals content on focus", async () => {
+  it("reveals content on hover", async () => {
     render(
-      <Tooltip>
-        <TooltipTrigger>hover me</TooltipTrigger>
-        <TooltipContent>tip text</TooltipContent>
-      </Tooltip>,
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>hover me</TooltipTrigger>
+          <TooltipContent>tip text</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>,
     );
-    fireEvent.focus(screen.getByText("hover me"));
+    fireEvent.mouseEnter(screen.getByText("hover me"));
     expect(await screen.findByText("tip text")).toBeTruthy();
   });
 });
@@ -399,7 +401,7 @@ describe("collapsible", () => {
     render(
       <Collapsible>
         <CollapsibleTrigger>Section</CollapsibleTrigger>
-        <CollapsiblePanel>panel body</CollapsiblePanel>
+        <CollapsibleContent>panel body</CollapsibleContent>
       </Collapsible>,
     );
     expect(screen.queryByText("panel body")).toBeNull();

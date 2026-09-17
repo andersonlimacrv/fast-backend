@@ -8,7 +8,7 @@ import { RequireStaff } from "@/components/require-staff";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { CopyButton } from "@/components/ui/copy-button";
+import { CopyButton } from "@/components/custom-ui/components/copy-button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { ChevronRight } from "@/lib/icons";

@@ -20,12 +20,12 @@ import {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
-} from "@/components/animate-ui/components/radix/sidebar";
+} from "@/components/custom-ui/components/sidebar/sidebar";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/animate-ui/primitives/radix/collapsible";
+} from "@/components/custom-ui/components/collapsible";
 import {
   Activity,
   Building2,
@@ -33,6 +33,7 @@ import {
   ChevronRight,
   ChevronsUpDown,
   FileText,
+  FlaskConical,
   FolderOpen,
   KeyRound,
   Layers,
@@ -60,7 +61,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
-} from "@/components/animate-ui/components/radix/dropdown-menu";
+} from "@/components/custom-ui/components/dropdown-menu/dropdown-menu";
 
 export {
   SidebarInset,
@@ -149,14 +150,61 @@ function SideNavSubLink({ to, label, end, trackActive = true }: { to: string; la
   );
 }
 
+/** Rail-mode Organizations: the icon opens a dropdown with the child pages
+ * (same layout as the Projects rail menu). */
+function OrganizationsRailMenuItem({
+  activeOrgId,
+  orgsActive,
+}: {
+  activeOrgId: string | null;
+  orgsActive: boolean;
+}) {
+  return (
+    <SidebarMenuItem>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <SidebarMenuButton tooltip="Organizations" isActive={orgsActive} aria-label="Organizations">
+            <Building2 aria-hidden="true" />
+          </SidebarMenuButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="start" className="w-56 rounded-lg">
+          <DropdownMenuItem onSelect={() => undefined}>
+            <Link to={ROUTES.orgs} className="flex w-full items-center gap-2">
+              <Building2 className="size-4" aria-hidden="true" /> All organizations
+            </Link>
+          </DropdownMenuItem>
+          {activeOrgId && (
+            <DropdownMenuItem onSelect={() => undefined}>
+              <Link to={ROUTES.members(activeOrgId)} className="flex w-full items-center gap-2">
+                <Users className="size-4" aria-hidden="true" /> Members
+              </Link>
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
+  );
+}
+
 /** Organizations: collapsible with the two subpaths (list + active-org
  * members), following the upstream animate-ui sidebar DEMO verbatim
  * (references/components_to_use/AnimateUi/Sidebar.md). */
 function OrganizationsGroup() {
   const { activeOrgId } = useAuth();
+  const { state, isMobile } = useSidebar();
   const { pathname } = useLocation();
   const orgsActive = pathname === ROUTES.orgs || pathname.startsWith("/orgs/");
   const [open, setOpen] = React.useState(orgsActive);
+  const rail = state === "collapsed" && !isMobile;
+  if (rail) {
+    return (
+      <SidebarGroup aria-label="Organizations">
+        <SidebarMenu>
+          <OrganizationsRailMenuItem activeOrgId={activeOrgId} orgsActive={orgsActive} />
+        </SidebarMenu>
+      </SidebarGroup>
+    );
+  }
   return (
     <SidebarGroup aria-label="Organizations">
       <SidebarGroupLabel>Organizations</SidebarGroupLabel>
@@ -377,6 +425,7 @@ const ADMIN_NAV: NavEntry[] = [
   { to: ROUTES.adminOrgs, label: "Organizations", icon: <Building2 aria-hidden="true" /> },
   { to: ROUTES.adminAudit, label: "Global audit", icon: <FileText aria-hidden="true" /> },
   { to: ROUTES.gallery, label: "Gallery", icon: <Layers aria-hidden="true" /> },
+  { to: ROUTES.playground, label: "Playground", icon: <FlaskConical aria-hidden="true" /> },
 ];
 
 /** Radix dropdowns are modal by default (background aria-hidden + focus trap),

@@ -30,6 +30,9 @@ export const ROUTES = {
   adminOrgs: "/admin/orgs",
   adminAudit: "/admin/audit",
   gallery: "/admin/gallery",
+  playground: "/playground",
+  playgroundComponents: "/playground/components",
+  playgroundBlocks: "/playground/blocks",
 } as const;
 
 export const ROLES = ["owner", "admin", "member"] as const;

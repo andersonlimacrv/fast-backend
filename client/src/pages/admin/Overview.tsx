@@ -4,7 +4,7 @@ import { ErrorBox, PageHeader } from "@/components/feedback";
 import { RequireStaff } from "@/components/require-staff";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { KpiCard } from "@/components/ui/kpi-card";
+import { KpiCard } from "@/components/custom-ui/components/kpi-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { KpiGrid } from "@/components/kpi-grid";
 import { useAdminOverview } from "@/hooks/useAdmin";

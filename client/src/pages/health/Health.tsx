@@ -2,7 +2,7 @@ import { ErrorBox, PageHeader } from "@/components/feedback";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GooeyMenu, type GooeyMenuData } from "@/components/ui/gooey-menu";
+import { GooeyMenu, type GooeyMenuData } from "@/components/custom-ui/components/gooey-menu";
 import { useHealth } from "@/hooks/useHealth";
 import { API_BASE } from "@/lib/constants";
 

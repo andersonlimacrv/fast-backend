@@ -21,8 +21,8 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircularProgress } from "@/components/ui/circular-progress";
-import { CopyButton } from "@/components/ui/copy-button";
+import { CircularProgress } from "@/components/custom-ui/components/circular-progress";
+import { CopyButton } from "@/components/custom-ui/components/copy-button";
 import {
   Dialog,
   DialogClose,
@@ -33,9 +33,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FileTree, type FileTreeNode } from "@/components/ui/file-tree";
-import { FloatingInput } from "@/components/ui/floating-input";
-import { KpiCard } from "@/components/ui/kpi-card";
+import { FileTree, type FileTreeNode } from "@/components/custom-ui/components/file-tree";
+import { FloatingInput } from "@/components/custom-ui/components/floating-input";
+import { KpiCard } from "@/components/custom-ui/components/kpi-card";
 import { RadioGroup, RadioItem } from "@/components/ui/radio";
 import { Tabs, TabsContent, TabsList, TabsPanels, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleItem } from "@/components/ui/toggle-group";

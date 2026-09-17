@@ -118,6 +118,17 @@ describe("sidebar user menu", () => {
     expect(await screen.findByRole("menuitem", { name: /view project/i })).toBeTruthy();
   });
 
+  it("rail: clicking Organizations opens the child pages menu", async () => {
+    renderSidebar({ expanded: false });
+    // No collapsible panel in rail: sub-links never render as links.
+    expect(screen.queryByRole("link", { name: "All organizations" })).toBeNull();
+    openMenu(screen.getByRole("button", { name: "Organizations" }));
+    const allItem = await screen.findByRole("menuitem", { name: /all organizations/i });
+    expect(allItem.querySelector("a")?.getAttribute("href")).toBe("/orgs");
+    const membersItem = await screen.findByRole("menuitem", { name: /^members$/i });
+    expect(membersItem.querySelector("a")?.getAttribute("href")).toBe("/orgs/o1/members");
+  });
+
   it("rail: clicking Projects opens the actions menu with New/All/list", async () => {
     renderSidebar({ expanded: false });
     // No collapsible panel in rail: rows never render as links.

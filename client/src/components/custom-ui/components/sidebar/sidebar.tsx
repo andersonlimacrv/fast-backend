@@ -22,17 +22,17 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-} from '@/components/animate-ui/components/radix/sheet';
+} from '@/components/custom-ui/components/sheet/sheet';
 import {
   TooltipProvider,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from '@/components/animate-ui/components/animate/tooltip';
+} from '@/components/custom-ui/components/tooltip/tooltip';
 import {
   Highlight,
   HighlightItem,
-} from '@/components/animate-ui/primitives/effects/highlight';
+} from '@/components/custom-ui/effects/highlight';
 import { getStrictContext } from '@/lib/get-strict-context';
 
 const SIDEBAR_COOKIE_NAME = 'sidebar_state';

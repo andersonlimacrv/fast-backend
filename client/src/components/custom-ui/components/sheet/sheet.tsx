@@ -22,7 +22,7 @@ import {
   type SheetFooterProps as SheetFooterPrimitiveProps,
   type SheetTitleProps as SheetTitlePrimitiveProps,
   type SheetDescriptionProps as SheetDescriptionPrimitiveProps,
-} from '@/components/animate-ui/primitives/radix/sheet';
+} from '@/components/custom-ui/components/sheet/primitive';
 import { cn } from '@/lib/utils';
 import { X } from '@/lib/icons';
 

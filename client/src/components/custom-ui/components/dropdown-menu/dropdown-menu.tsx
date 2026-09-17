@@ -35,7 +35,7 @@ import {
   type DropdownMenuSubContentProps as DropdownMenuSubContentPrimitiveProps,
   type DropdownMenuSubTriggerProps as DropdownMenuSubTriggerPrimitiveProps,
   type DropdownMenuTriggerProps as DropdownMenuTriggerPrimitiveProps,
-} from '@/components/animate-ui/primitives/radix/dropdown-menu';
+} from '@/components/custom-ui/components/dropdown-menu/primitive';
 import { cn } from '@/lib/utils';
 import { Check, ChevronRight, CircleDot } from '@/lib/icons';
 

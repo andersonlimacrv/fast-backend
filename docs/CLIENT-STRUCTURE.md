@@ -26,3 +26,14 @@
 | Protegido | `protected-layout` → `dashboard-layout` | todo o resto |
 
 Páginas staff usam ainda `RequireStaff` por dentro.
+
+## Componentes (`components/`)
+
+1. Base shadcn em `/ui`; tudo custom em `/custom-ui` (nunca o inverso).
+2. Um componente = uma entrada em `custom-ui/components/`: pasta quando há
+   2+ arquivos (`<nome>.tsx` estilizado + `primitive.tsx` comportamento —
+   ex. `dropdown-menu/`, `sheet/`, `tooltip/`; `sidebar/` em pasta por
+   exemplo); arquivo avulso quando camada única (`collapsible.tsx`, `slot.tsx`).
+3. Efeito compartilhado vai em `custom-ui/effects/` (hoje: `highlight`).
+4. Proibido recriar níveis `primitives/`, `radix/`, `animate/`; imports sempre
+   `@/components/custom-ui/...`. Change: `custom-ui-restructure`.

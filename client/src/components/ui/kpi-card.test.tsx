@@ -2,7 +2,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it } from "vitest";
 
-import { KpiCard } from "@/components/ui/kpi-card";
+import { KpiCard } from "@/components/custom-ui/components/kpi-card";
 
 afterEach(() => {
   cleanup();

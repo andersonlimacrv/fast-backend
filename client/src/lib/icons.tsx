@@ -39,6 +39,7 @@ export {
   Download,
   FileCode,
   FileText,
+  FlaskConical,
   FolderOpen,
   Globe,
   House,

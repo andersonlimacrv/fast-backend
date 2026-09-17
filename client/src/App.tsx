@@ -1,6 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 
-import { AppToaster } from "@/components/ui/toaster";
+import { AppToaster } from "@/components/custom-ui/components/toaster";
 import { Protected } from "@/layouts/protected-layout";
 import { AccountPage } from "@/pages/account/Account";
 import { AdminAuditPage } from "@/pages/admin/Audit";
@@ -19,6 +19,9 @@ import { MembersPage } from "@/pages/orgs/[orgId]/Members";
 import { NotFoundPage } from "@/pages/not-found/NotFound";
 import { OrgsPage } from "@/pages/orgs/Orgs";
 import { NewProjectPage, ProjectsPage } from "@/pages/projects/Projects";
+import { PlaygroundBlocksPage } from "@/pages/playground/Blocks";
+import { PlaygroundComponentsPage } from "@/pages/playground/Components";
+import { PlaygroundPage } from "@/pages/playground/Playground";
 import { SettingsPage } from "@/pages/settings/Settings";
 
 export default function App() {
@@ -44,6 +47,9 @@ export default function App() {
         <Route path="admin/orgs" element={<AdminOrgsPage />} />
         <Route path="admin/audit" element={<AdminAuditPage />} />
         <Route path="admin/gallery" element={<GalleryPage />} />
+        <Route path="playground" element={<PlaygroundPage />} />
+        <Route path="playground/components" element={<PlaygroundComponentsPage />} />
+        <Route path="playground/blocks" element={<PlaygroundBlocksPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
       </Routes>
