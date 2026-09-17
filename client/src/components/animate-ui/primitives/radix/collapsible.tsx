@@ -1,10 +1,11 @@
 /* Vendored from @animate-ui/primitives-radix-collapsible (registry, 2026-09-16).
- * Local adaptations: 'use client' removed (Vite).
+ * Local adaptations: 'use client' removed (Vite); reduced-motion guard
+ * (useReducedMotion → instant open/close), matching the other portes.
  * Re-fetch from https://animate-ui.com/r/primitives-radix-collapsible.json to update. */
 
 import * as React from 'react';
 import { Collapsible as CollapsiblePrimitive } from 'radix-ui';
-import { AnimatePresence, motion, type HTMLMotionProps } from 'motion/react';
+import { AnimatePresence, motion, useReducedMotion, type HTMLMotionProps } from 'motion/react';
 
 import { getStrictContext } from '@/lib/get-strict-context';
 import { useControlledState } from '@/hooks/use-controlled-state';
@@ -63,6 +64,11 @@ function CollapsibleContent({
   ...props
 }: CollapsibleContentProps) {
   const { isOpen } = useCollapsible();
+  // DESIGN.md §7 + repo policy: honor reduced motion (e2e forces it, which
+  // also keeps axe snapshots deterministic instead of sampling mid-fade).
+  const reduceMotion = useReducedMotion();
+  const effectiveTransition = reduceMotion ? { duration: 0 } : transition;
+  const initial = reduceMotion ? false : { opacity: 0, height: 0, overflow: 'hidden', y: 20 };
 
   return (
     <AnimatePresence>
@@ -72,13 +78,13 @@ function CollapsibleContent({
             key="collapsible-content"
             data-slot="collapsible-content"
             layout
-            initial={{ opacity: 0, height: 0, overflow: 'hidden', y: 20 }}
+            initial={initial}
             animate={
               isOpen
                 ? { opacity: 1, height: 'auto', overflow: 'hidden', y: 0 }
                 : { opacity: 0, height: 0, overflow: 'hidden', y: 20 }
             }
-            transition={transition}
+            transition={effectiveTransition}
             {...props}
           />
         </CollapsiblePrimitive.Content>
@@ -89,10 +95,10 @@ function CollapsibleContent({
               key="collapsible-content"
               data-slot="collapsible-content"
               layout
-              initial={{ opacity: 0, height: 0, overflow: 'hidden', y: 20 }}
+              initial={initial}
               animate={{ opacity: 1, height: 'auto', overflow: 'hidden', y: 0 }}
               exit={{ opacity: 0, height: 0, overflow: 'hidden', y: 20 }}
-              transition={transition}
+              transition={effectiveTransition}
               {...props}
             />
           </CollapsiblePrimitive.Content>

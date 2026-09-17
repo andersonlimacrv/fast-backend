@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CopyButton } from "@/components/ui/copy-button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ChevronRight } from "@/lib/icons";
 import { useAdminUsers } from "@/hooks/useAdmin";
 import {
   createUser,
@@ -31,6 +32,7 @@ export function AdminUsersPage() {
   const { user: me } = useAuth();
   const { items: users, error, loading, busy, mutate, setError } = useAdminUsers();
   const [reason, setReason] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
   const {
     register: field,
     handleSubmit,
@@ -67,6 +69,87 @@ export function AdminUsersPage() {
     if (!ok) return;
     notify.confirm(title, description, { label: "Confirm", onClick: () => void run(label, userId, fn) });
   };
+
+  /* Row actions shared by the desktop Actions cell and the mobile detail
+   * row (moved, not duplicated in the DOM per breakpoint). */
+  const renderUserActions = (u: (typeof users)[number]) => (
+    <div className="flex flex-wrap gap-1">
+      {u.is_active ? (
+        <Button
+          size="sm"
+          variant="destructive"
+          disabled={busy}
+          onClick={() =>
+            confirmRun("Disable user", `${u.email} will not be able to log in.`, "User disabled", u.id, (r) =>
+              disableUser(u.id, r),
+            )
+          }
+        >
+          Disable
+        </Button>
+      ) : (
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => void run("User enabled", u.id, (r) => enableUser(u.id, r))}>
+          Enable
+        </Button>
+      )}
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={busy}
+        onClick={() =>
+          confirmRun("Revoke sessions", `All refresh families of ${u.email} die now.`, "Sessions revoked", u.id, (r) =>
+            revokeUserSessions(u.id, r),
+          )
+        }
+      >
+        Revoke sessions
+      </Button>
+      <Button
+        size="sm"
+        variant="outline"
+        disabled={busy}
+        onClick={() =>
+          confirmRun(
+            "Force password reset",
+            `A reset email is queued for ${u.email}. No secret is shown here.`,
+            "Reset queued",
+            u.id,
+            (r) => forceUserPasswordReset(u.id, r),
+          )
+        }
+      >
+        Force reset
+      </Button>
+      {isRoot(me) &&
+        (u.is_staff ? (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            onClick={() =>
+              confirmRun("Revoke staff", `${u.email} loses global admin.`, "Staff revoked", u.id, (r) =>
+                revokeUserStaff(u.id, r),
+              )
+            }
+          >
+            Revoke staff
+          </Button>
+        ) : (
+          <Button
+            size="sm"
+            variant="outline"
+            disabled={busy}
+            onClick={() =>
+              confirmRun("Grant staff", `${u.email} gains global admin.`, "Staff granted", u.id, (r) =>
+                grantUserStaff(u.id, r),
+              )
+            }
+          >
+            Grant staff
+          </Button>
+        ))}
+    </div>
+  );
 
   return (
     <RequireStaff title="Admin users">
@@ -136,104 +219,60 @@ export function AdminUsersPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Email</TableHead>
-              <TableHead>Flags</TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead className="hidden sm:table-cell">Flags</TableHead>
+              <TableHead className="hidden sm:table-cell">Actions</TableHead>
+              <TableHead className="w-10 sm:hidden">
+                <span className="sr-only">Details</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {users.map((u) => (
-              <TableRow key={u.id}>
+              <Fragment key={u.id}>
+              <TableRow>
                 <TableCell>
                   <span className="text-sm">{u.email}</span>{" "}
                   <span className="font-mono text-xs text-muted-foreground">{u.id.slice(0, 8)}</span>{" "}
                   <CopyButton content={u.id} />
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <div className="flex flex-wrap gap-1">
                     <Badge variant={u.is_active ? "default" : "destructive"}>{u.is_active ? "active" : "disabled"}</Badge>
                     {u.is_superuser && <Badge variant="secondary">root</Badge>}
                     {u.is_staff && !u.is_superuser && <Badge variant="secondary">staff</Badge>}
                   </div>
                 </TableCell>
-                <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {u.is_active ? (
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        disabled={busy}
-                        onClick={() =>
-                          confirmRun("Disable user", `${u.email} will not be able to log in.`, "User disabled", u.id, (r) =>
-                            disableUser(u.id, r),
-                          )
-                        }
-                      >
-                        Disable
-                      </Button>
-                    ) : (
-                      <Button size="sm" variant="outline" disabled={busy} onClick={() => void run("User enabled", u.id, (r) => enableUser(u.id, r))}>
-                        Enable
-                      </Button>
-                    )}
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() =>
-                        confirmRun("Revoke sessions", `All refresh families of ${u.email} die now.`, "Sessions revoked", u.id, (r) =>
-                          revokeUserSessions(u.id, r),
-                        )
-                      }
-                    >
-                      Revoke sessions
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={busy}
-                      onClick={() =>
-                        confirmRun(
-                          "Force password reset",
-                          `A reset email is queued for ${u.email}. No secret is shown here.`,
-                          "Reset queued",
-                          u.id,
-                          (r) => forceUserPasswordReset(u.id, r),
-                        )
-                      }
-                    >
-                      Force reset
-                    </Button>
-                    {isRoot(me) &&
-                      (u.is_staff ? (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={busy}
-                          onClick={() =>
-                            confirmRun("Revoke staff", `${u.email} loses global admin.`, "Staff revoked", u.id, (r) =>
-                              revokeUserStaff(u.id, r),
-                            )
-                          }
-                        >
-                          Revoke staff
-                        </Button>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={busy}
-                          onClick={() =>
-                            confirmRun("Grant staff", `${u.email} gains global admin.`, "Staff granted", u.id, (r) =>
-                              grantUserStaff(u.id, r),
-                            )
-                          }
-                        >
-                          Grant staff
-                        </Button>
-                      ))}
-                  </div>
+                <TableCell className="hidden sm:table-cell">{renderUserActions(u)}</TableCell>
+                <TableCell className="sm:hidden">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-expanded={openId === u.id}
+                    aria-label={`Details for ${u.email}`}
+                    onClick={() => setOpenId(openId === u.id ? null : u.id)}
+                  >
+                    <ChevronRight className={`size-4 transition-transform ${openId === u.id ? "rotate-90" : ""}`} aria-hidden="true" />
+                  </Button>
                 </TableCell>
               </TableRow>
+              {openId === u.id && (
+                <TableRow key={`${u.id}-detail`} className="sm:hidden">
+                  <TableCell colSpan={2}>
+                    <dl className="grid gap-1 text-xs">
+                      <div className="flex items-center gap-2">
+                        <dt className="shrink-0 text-muted-foreground">Flags</dt>
+                        <dd className="flex flex-wrap gap-1">
+                          <Badge variant={u.is_active ? "default" : "destructive"}>{u.is_active ? "active" : "disabled"}</Badge>
+                          {u.is_superuser && <Badge variant="secondary">root</Badge>}
+                          {u.is_staff && !u.is_superuser && <Badge variant="secondary">staff</Badge>}
+                        </dd>
+                      </div>
+                    </dl>
+                    <div className="mt-2">{renderUserActions(u)}</div>
+                  </TableCell>
+                </TableRow>
+              )}
+              </Fragment>
             ))}
           </TableBody>
         </Table>

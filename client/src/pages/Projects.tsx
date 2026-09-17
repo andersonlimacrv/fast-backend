@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useProjects } from "@/hooks/useProjects";
+import { ChevronRight } from "@/lib/icons";
 import { createNewProject, removeProject, renameExistingProject } from "@/services/projects";
 import { notify } from "@/services/notify";
 import { ROUTES } from "@/lib/constants";
@@ -67,6 +68,7 @@ export function ProjectsPage() {
   const { items: projects, error, loading, busy, mutate } = useProjects(activeOrgId);
   const [name, setName] = useState("");
   const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
 
   const create = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,14 +123,18 @@ export function ProjectsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Id</TableHead>
-              <TableHead>Org</TableHead>
+              <TableHead className="hidden sm:table-cell">Id</TableHead>
+              <TableHead className="hidden sm:table-cell">Org</TableHead>
               <TableHead>Actions</TableHead>
+              <TableHead className="w-10 sm:hidden">
+                <span className="sr-only">Details</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {projects.map((p) => (
-              <TableRow key={p.id}>
+              <Fragment key={p.id}>
+              <TableRow>
                 <TableCell className="font-medium">
                   {editing?.id === p.id ? (
                     <Input value={editing.name} onChange={(e) => setEditing({ id: p.id, name: e.target.value })} />
@@ -136,8 +142,8 @@ export function ProjectsPage() {
                     p.name
                   )}
                 </TableCell>
-                <TableCell className="max-w-40 truncate font-mono text-xs">{p.id}</TableCell>
-                <TableCell className="max-w-40 truncate font-mono text-xs">{p.org_id}</TableCell>
+                <TableCell className="hidden max-w-40 truncate font-mono text-xs sm:table-cell">{p.id}</TableCell>
+                <TableCell className="hidden max-w-40 truncate font-mono text-xs sm:table-cell">{p.org_id}</TableCell>
                 <TableCell>
                   <div className="flex flex-wrap gap-1">
                     {editing?.id === p.id ? (
@@ -159,7 +165,35 @@ export function ProjectsPage() {
                     </Button>
                   </div>
                 </TableCell>
+                <TableCell className="sm:hidden">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-expanded={openId === p.id}
+                    aria-label={`Details for ${p.name}`}
+                    onClick={() => setOpenId(openId === p.id ? null : p.id)}
+                  >
+                    <ChevronRight className={`size-4 transition-transform ${openId === p.id ? "rotate-90" : ""}`} aria-hidden="true" />
+                  </Button>
+                </TableCell>
               </TableRow>
+              {openId === p.id && (
+                <TableRow key={`${p.id}-detail`} className="sm:hidden">
+                  <TableCell colSpan={3}>
+                    <dl className="grid gap-1 text-xs">
+                      <div className="flex gap-2">
+                        <dt className="shrink-0 text-muted-foreground">Id</dt>
+                        <dd className="break-all font-mono">{p.id}</dd>
+                      </div>
+                      <div className="flex gap-2">
+                        <dt className="shrink-0 text-muted-foreground">Org</dt>
+                        <dd className="break-all font-mono">{p.org_id}</dd>
+                      </div>
+                    </dl>
+                  </TableCell>
+                </TableRow>
+              )}
+              </Fragment>
             ))}
           </TableBody>
         </Table>

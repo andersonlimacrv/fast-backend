@@ -130,6 +130,31 @@
   dos `group-hover:text-sidebar-accent-foreground` (badge, slug do switcher,
   role do footer) — muted segue igual no hover; open-state intacto (axe)
 
+## S12 — Shell do dashboard (header full, breadcrumb, largura, scrollbar)
+
+- [x] 12.1 Header full-bleed travado (fora do `max-w`); badge slug removida
+  (redundante com o switcher); `Separator` + `PageTrail flex-1 min-w-0`
+  no header (padrão DEMO); faixa do trail excluída das páginas
+- [x] 12.2 `ContentWidth` (`max-w-6xl px-3 sm:px-4`) fonte única da largura útil;
+  páginas sem largura própria (exceções intencionais: forms `Account`/admin)
+- [x] 12.3 Tabelas fase 1: nada a fazer — `Table` já tem wrapper `overflow-auto`
+  (`ui/table.tsx:7`); `expectNoOverflow` do e2e segue verde
+- [x] 12.4 Scrollbar global em `index.css`: fina, tokens (`border`/thumb,
+  hover `muted-foreground`, trilha transparente) + fallback Firefox
+  (`scrollbar-width/color`); `.dark` acompanha sozinho; sem `scrollbar-gutter`
+  (não mexe no layout) — pill ignora `--radius: 0` de propósito
+- [x] 12.5 Gates da S12 (staged, sem commit — ok visual do dono pendente)
+- [x] 12.6 Tabelas com colunas prioritárias no mobile (DESIGN.md §6): toggle
+  `sm:hidden` + linha de detalhe (`colSpan`) em Projects/Orgs/Members/Audit/
+  AdminUsers/AdminOrgs/AdminAudit (Grants já conforme, 3 cols curtas);
+  AdminUsers extraiu `renderUserActions` p/ célula desktop + detalhe
+- [x] 12.7 Causa-raiz do axe flake `axe-clean-on-orgs`: motion do collapsible
+  amostrado no meio do fade (cores variavam por run: 3.1, 3.77) — guard
+  `useReducedMotion` no primitivo (política do repo; e2e força reduced-motion)
+- [x] 12.8 Divider full-width: removido o wrapper `div.flex` extra entre provider
+  e inset (sem `grow`, encolhia ao conteúdo e matava o `w-full` em telas
+  largas) — estrutura verbatim DEMO agora; shots 1280/1536/auth regen
+
 ## Implementation notes (2026-09-16, working tree pré-ok-visual)
 
 - S1–S6 implementados; `tsc`, `vitest` 92/92, `oxlint` 0, `vite build`, e2e 10/10

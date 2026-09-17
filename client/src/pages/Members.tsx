@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Fragment, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useMembers } from "@/hooks/useMembers";
+import { ChevronRight } from "@/lib/icons";
 import { ROLES } from "@/lib/constants";
 import { inviteMember, kickMember, updateMemberRole } from "@/services/members";
 import { inviteMemberSchema, type InviteMemberInput } from "@/services/members";
@@ -17,6 +19,7 @@ import { notify } from "@/services/notify";
 export function MembersPage() {
   const { activeOrgId } = useAuth();
   const { items: members, error, loading, busy, mutate } = useMembers(activeOrgId);
+  const [openId, setOpenId] = useState<string | null>(null);
   const {
     register: field,
     handleSubmit,
@@ -97,15 +100,19 @@ export function MembersPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User id</TableHead>
+              <TableHead className="hidden sm:table-cell">User id</TableHead>
               <TableHead>Role</TableHead>
               <TableHead>Actions</TableHead>
+              <TableHead className="w-10 sm:hidden">
+                <span className="sr-only">Details</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {members.map((m) => (
-              <TableRow key={m.user_id}>
-                <TableCell className="font-mono text-xs">{m.user_id}</TableCell>
+              <Fragment key={m.user_id}>
+              <TableRow>
+                <TableCell className="hidden font-mono text-xs sm:table-cell">{m.user_id}</TableCell>
                 <TableCell>
                   <Badge variant="secondary">{m.role}</Badge>
                 </TableCell>
@@ -116,12 +123,36 @@ export function MembersPage() {
                         → {r}
                       </Button>
                     ))}
-                    <Button size="sm" variant="destructive" onClick={() => void remove(m.user_id)}>
-                      Remove
+                      <Button size="sm" variant="destructive" onClick={() => void remove(m.user_id)}>
+                        Remove
+                      </Button>
+                    </div>
+                  </TableCell>
+                  <TableCell className="sm:hidden">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      aria-expanded={openId === m.user_id}
+                      aria-label={`Details for ${m.user_id.slice(0, 8)}`}
+                      onClick={() => setOpenId(openId === m.user_id ? null : m.user_id)}
+                    >
+                      <ChevronRight className={`size-4 transition-transform ${openId === m.user_id ? "rotate-90" : ""}`} aria-hidden="true" />
                     </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
+                  </TableCell>
+                </TableRow>
+                {openId === m.user_id && (
+                  <TableRow key={`${m.user_id}-detail`} className="sm:hidden">
+                    <TableCell colSpan={3}>
+                      <dl className="grid gap-1 text-xs">
+                        <div className="flex gap-2">
+                          <dt className="shrink-0 text-muted-foreground">User id</dt>
+                          <dd className="break-all font-mono">{m.user_id}</dd>
+                        </div>
+                      </dl>
+                    </TableCell>
+                  </TableRow>
+                )}
+              </Fragment>
             ))}
           </TableBody>
         </Table>

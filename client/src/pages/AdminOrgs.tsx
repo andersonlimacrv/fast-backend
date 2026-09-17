@@ -1,4 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Fragment, useState } from "react";
 import { useForm } from "react-hook-form";
 
 import { ErrorBox, Field, PageHeader } from "@/components/feedback";
@@ -9,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CopyButton } from "@/components/ui/copy-button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { ChevronRight } from "@/lib/icons";
 import { useAdminOrgs } from "@/hooks/useAdmin";
 import { ROLES } from "@/lib/constants";
 import {
@@ -22,6 +24,7 @@ import { notify } from "@/services/notify";
 
 export function AdminOrgsPage() {
   const { items: orgs, error, loading, busy, mutate, setError } = useAdminOrgs();
+  const [openId, setOpenId] = useState<string | null>(null);
   const {
     register: field,
     handleSubmit,
@@ -136,21 +139,57 @@ export function AdminOrgsPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Slug</TableHead>
-              <TableHead>Id</TableHead>
+              <TableHead className="hidden sm:table-cell">Slug</TableHead>
+              <TableHead className="hidden sm:table-cell">Id</TableHead>
+              <TableHead className="w-10 sm:hidden">
+                <span className="sr-only">Details</span>
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {orgs.map((o) => (
-              <TableRow key={o.id}>
+              <Fragment key={o.id}>
+              <TableRow>
                 <TableCell>{o.name}</TableCell>
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <Badge variant="secondary">{o.slug}</Badge>
                 </TableCell>
-                <TableCell className="font-mono text-xs">
+                <TableCell className="hidden font-mono text-xs sm:table-cell">
                   {o.id} <CopyButton content={o.id} />
                 </TableCell>
+                <TableCell className="sm:hidden">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    aria-expanded={openId === o.id}
+                    aria-label={`Details for ${o.name}`}
+                    onClick={() => setOpenId(openId === o.id ? null : o.id)}
+                  >
+                    <ChevronRight className={`size-4 transition-transform ${openId === o.id ? "rotate-90" : ""}`} aria-hidden="true" />
+                  </Button>
+                </TableCell>
               </TableRow>
+              {openId === o.id && (
+                <TableRow key={`${o.id}-detail`} className="sm:hidden">
+                  <TableCell colSpan={2}>
+                    <dl className="grid gap-1 text-xs">
+                      <div className="flex items-center gap-2">
+                        <dt className="shrink-0 text-muted-foreground">Slug</dt>
+                        <dd>
+                          <Badge variant="secondary">{o.slug}</Badge>
+                        </dd>
+                      </div>
+                      <div className="flex gap-2">
+                        <dt className="shrink-0 text-muted-foreground">Id</dt>
+                        <dd className="break-all font-mono">
+                          {o.id} <CopyButton content={o.id} />
+                        </dd>
+                      </div>
+                    </dl>
+                  </TableCell>
+                </TableRow>
+              )}
+              </Fragment>
             ))}
           </TableBody>
         </Table>
