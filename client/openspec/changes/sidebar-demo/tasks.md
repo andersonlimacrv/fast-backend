@@ -130,6 +130,12 @@
   dos `group-hover:text-sidebar-accent-foreground` (badge, slug do switcher,
   role do footer) — muted segue igual no hover; open-state intacto (axe)
 
+## S13 — Organizations abre menu no rail (mesmo layout de Projects)
+
+- [x] 13.1 `OrganizationsRailMenuItem`: dropdown `side=right` (All organizations,
+  Members da org ativa); trigger sem link direto agora navega às filhas
+- [x] 13.2 Teste rail dedicado; gates da S13
+
 ## S12 — Shell do dashboard (header full, breadcrumb, largura, scrollbar)
 
 - [x] 12.1 Header full-bleed travado (fora do `max-w`); badge slug removida

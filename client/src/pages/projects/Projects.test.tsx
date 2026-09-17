@@ -3,7 +3,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 
-import { NewProjectPage } from "@/pages/Projects";
+import { NewProjectPage } from "@/pages/projects/Projects";
 
 vi.mock("@/services/projects", () => ({
   createNewProject: vi.fn(async (name: string) => ({ id: "p9", org_id: "o1", name })),
