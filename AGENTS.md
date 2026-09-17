@@ -7,7 +7,7 @@
 - Repo: `fast-backend` — Modular Monolith Async FastAPI SaaS Kernel (v2 congelada).
 - Referência congelada (somente leitura, **nunca editar**): `references/implementation_v2.md`.
 - Evidência upstream (somente leitura): `/home/anderson/dev/copy/benavlabs_FastAPI-boilerplate@0.19.0`, `/home/anderson/dev/copy/benavlabs_crudauth@0.6.0`.
-- Estado: **v1.0.0 entregue** (tag `0.1.0`) — `app/` implementado (Fases 1–8), Fases 9–11 concluídas (admin/recovery, landing/login/LGPD, dev-loop/env-check/reformulação client), 150 testes backend + 71 vitest e 10 Playwright em `client/`, 36 capabilities. Decisões congeladas: Auth própria (sem crudauth), Argon2id (pwdlib), JWT HS256 10-15min, refresh opaco Postgres com rotation+reuse+atomicidade, `tokens_valid_after`, `TENANCY_MODE=single|row` sem RLS no v1, `active_org_id` contexto (autoridade = membership Postgres), idempotência lógica.
+- Estado: **v1.0.0 entregue** (tag `0.1.0`) — `app/` implementado (Fases 1–8), Fases 9–11 concluídas (admin/recovery, landing/login/LGPD, dev-loop/env-check/reformulação client), 150 testes backend + 71 vitest e 10 Playwright em `client/`, 37 capabilities. Decisões congeladas: Auth própria (sem crudauth), Argon2id (pwdlib), JWT HS256 10-15min, refresh opaco Postgres com rotation+reuse+atomicidade, `tokens_valid_after`, `TENANCY_MODE=single|row` sem RLS no v1, `active_org_id` contexto (autoridade = membership Postgres), idempotência lógica.
 - Nomenclatura congelada: `CORE_MODULES` (nunca `PLATFORM_MODULES`); opcionais por flag (ex.: `BILLING_ENABLED`).
 - Stack: FastAPI async + SQLAlchemy 2.0 + Pydantic v2 + Postgres + Redis + Alembic + Taskiq + Docker + `uv`.
 
