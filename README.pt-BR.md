@@ -2,7 +2,7 @@
   <img src="docs/assets/fast-backend.webp" alt="FastBACKEND — FastAPI + Vite Boilerplate" width="640" />
 </p>
 
-# Pare de reconstruir auth, tenancy e billing a cada SaaS — clone este kernel com Argon2id + refresh rotativo + tenancy por linha (150 testes backend verdes em Postgres/Redis reais, admin + auditoria append-only + backup criptografado inclusos) e lance seu produto em dias, não meses.
+# Pare de reconstruir auth, tenancy e billing a cada SaaS — clone este kernel com Argon2id + refresh rotativo + tenancy por linha (179 testes backend coletados em Postgres/Redis reais, admin + auditoria append-only + backup criptografado inclusos) e lance seu produto em dias, não meses.
 
 > 🇧🇷 [English](README.md) | **Português (BR)** — A documentação profunda (`docs/`) está em PT-BR; este README também existe em [inglês](README.md).
 
@@ -28,21 +28,21 @@
   <img src="https://img.shields.io/badge/Vite-222?style=flat-square&logo=vite" alt="Vite" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-222?style=flat-square&logo=tailwindcss" alt="Tailwind CSS" />
 </p>
-<!-- test tiers (medido 2026-09-16: pytest --collect-only 85 unit + 65 integration, vitest json 71, playwright --list 10) -->
+<!-- test tiers (medido 2026-09-17: `uv run pytest --collect-only -m unit` → 90, `-m integration` → 89; `npm run test:run -- --reporter=json` → 102 passed; `playwright test --list` → 14. Unit verdes são 89 + 1 falha pré-existente só-neste-worktree em test_new_project, ver CHANGELOG.) -->
 <p align="center">
-  <img src="https://img.shields.io/badge/backend_unit-85_tests-0AAAB8?style=flat-square&labelColor=222" alt="backend-unit" />
-  <img src="https://img.shields.io/badge/backend_integration-65_tests-0AAAB8?style=flat-square&labelColor=222" alt="backend-integration" />
-  <img src="https://img.shields.io/badge/client_vitest-71_tests-0AAAB8?style=flat-square&labelColor=222" alt="client-vitest" />
-  <img src="https://img.shields.io/badge/browser_e2e-10_tests-0AAAB8?style=flat-square&labelColor=222" alt="browser-e2e" />
+  <img src="https://img.shields.io/badge/backend_unit-90_tests-0AAAB8?style=flat-square&labelColor=222" alt="backend-unit" />
+  <img src="https://img.shields.io/badge/backend_integration-89_tests-0AAAB8?style=flat-square&labelColor=222" alt="backend-integration" />
+  <img src="https://img.shields.io/badge/client_vitest-102_tests-0AAAB8?style=flat-square&labelColor=222" alt="client-vitest" />
+  <img src="https://img.shields.io/badge/browser_e2e-14_tests-0AAAB8?style=flat-square&labelColor=222" alt="browser-e2e" />
 </p>
 
 | Fato | Valor |
 |---|---|
-| Release | [`v0.1.1`](https://github.com/andersonlimacrv/fast-backend/releases) (kernel `0.1.0`, Fases 0–11) |
-| Backend | 150 testes — 85 unit + 65 integration (Postgres/Redis reais) |
-| Frontend | 71 vitest + 10 Playwright (`client/`) |
+| Release | [releases](https://github.com/andersonlimacrv/fast-backend/releases) (kernel `0.1.0`, Fases 0–12; medido 2026-09-17) |
+| Backend | 179 coletados — 90 unit + 89 integration (Postgres/Redis reais; medido 2026-09-17) |
+| Frontend | 102 vitest + 14 Playwright (`client/`; medido 2026-09-17) |
 | Specs | 37 capabilities em [`openspec/specs/`](openspec/specs/) |
-| Decisões | 12 ADRs em [`docs/adr/`](docs/adr/) · auto-release ([ADR 0011](docs/adr/0011-auto-release.md)) + guard ([ADR 0012](docs/adr/0012-release-guard.md)) |
+| Decisões | 13 ADRs em [`docs/adr/`](docs/adr/) · auto-release ([ADR 0011](docs/adr/0011-auto-release.md)) + guard ([ADR 0012](docs/adr/0012-release-guard.md)) |
 
 - **Notas de release:** [`CHANGELOG.md`](./CHANGELOG.md) — releases automáticas a cada PR mergeado ([ADR 0011](docs/adr/0011-auto-release.md)), PRs de comportamento com gate [`release-check.yml`](.github/workflows/release-check.yml) ([ADR 0012](docs/adr/0012-release-guard.md)).
 - **Comece aqui:** [Começando](#começando) (`make setup` → `make dev` → `make check`) · manual [`docs/Makefile.pt-BR.md`](docs/Makefile.pt-BR.md).
@@ -224,7 +224,7 @@ app/                  # pacote (imports from app.*)
 ├── migrations/       # Alembic 0001–0008
 └── tests/            # unit, integration, e2e, fixtures
 scripts/              # auto_release.py, backup.py, bootstrap_root.py, deploy.py, e2e_spa_flow.py, env_check.py, new_project.py, release_notes.py
-openspec/             # specs (36 capabilities) + changes arquivadas
+openspec/             # specs (37 capabilities, medido 2026-09-17) + changes arquivadas
 docs/                 # RULES, ROADMAP, ARCHITECTURE, SCALING, DEPLOYMENT, guides/, ADRs
 ```
 
