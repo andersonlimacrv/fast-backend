@@ -12,7 +12,8 @@
 - [ ] 1.4 Gates: `tsc+build`, vitest, e2e full, `oxlint`
 - [ ] 1.5 Sem commit sem pedido
 
-## S2+ — Fila 1-a-1 (uma decisão do dono por item, ordem alfabética)
+## S2+ — Backlog fatiado (decisão do dono 2026-09-17: uma change por componente, não uma change longa)
 
 - [ ] `404PageNotFound` → `Accordion` → `AlertDialog` → `AnimatedCircularProgressBar` → `Checkbox` → `CopyButton` → `CreditUsageCard` → `DeplymentCard` → `Dialog` → `DropdownMenu` → `ExpandDetails` → `FileTree` → `FileUpload` → `Inputs` → `Radio` → `RunActionButton` → `Sidebar` → `SubsriptionCalendar` → `SwitchModeToggle` → `Tabs` → `ToggleGroup` → `Tooltip` → `UserAvatar`
 - [ ] Carimbados sem porte novo: `Sidebar`, `DropdownMenu`, `CopyButton`, `FileTree` (+ parte de `Tooltip`)
+- [ ] Regra: cada item vira `client/openspec/changes/playground-<slug>/` própria (proposal+tasks+design) por ordem de prioridade do dono; S1 (scaffold) arquiva independente da fila.
