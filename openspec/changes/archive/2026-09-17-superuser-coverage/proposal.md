@@ -6,7 +6,7 @@ O control plane admin (`A-admin-control-plane`, ADR 0005) está implementado e c
 
 Só `app/tests/**` (test-only, sem comportamento novo, sem migração):
 
-1. Complemento grant/revoke: `POST /admin/staff/{id}/revoke` (staff→403, root→200, revoke-de-root→409), self-grant/self-revoke HTTP→403, auditoria `admin.staff_revoked` com `reason+success`.
+1. Complemento grant/revoke: `POST /admin/staff/{id}/revoke` (staff→403, root→200 sobre não-root, self→403), self-grant HTTP→403, auditoria `admin.staff_revoked` com `reason+success`. Revoke-de-root→409 pinado onde a guarda vive (service-level `auth.set_staff`, `identity/service.py:258-259`): via HTTP é inalcançável (single-root + self-precedence→403 + staff→403 por policy).
 2. Matriz RBAC parametrizada por rota `/admin/*` (root 200, staff 200/403 conforme a rota, member 403, sem token 401) — incluindo `force-password-reset`, hoje sem teste RBAC dedicado.
 3. `SuperuserContext` vs tenant comum com Postgres real + decisão explícita sobre o default de `reason` (ver design.md).
 4. Bootstrap: stdout genérico (não revela key vs exists), senha curta → exit 1, segunda tentativa não cria 2º audit, metadata `{"success": True}`.
@@ -34,6 +34,6 @@ UI admin, RLS, `PLATFORM_MODULES`, mudança em `is_staff`/índice `0006_admin_st
 ## Acceptance criteria
 
 1. Cada rota `/admin/*` tem matriz pinada (root/staff/member/401); `revoke` coberto nos 3 casos + auditoria.
-2. `POST /admin/users/{root}/disable` e `POST /admin/staff/{root}/revoke` → 409 estrito.
+2. `POST /admin/users/{root}/disable` por staff (não-root) → 409 estrito; self-disable → 403 estrito (`assert_not_self` precede o guard last-root em `admin/service.py:86`). Sem `in (403,409)` frouxo.
 3. Decisão sobre o default de `reason` registrada (obrigatório ou explícito-por-convenção + teste que a garante).
 4. Gates: `pytest -m unit`, `pytest -m integration` (Postgres real), `ruff`, `mypy` verdes.

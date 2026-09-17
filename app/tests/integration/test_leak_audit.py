@@ -54,7 +54,7 @@ async def test_secrets_never_reach_audit_or_outbox(application, client: AsyncCli
     outbox = application.state.outbox
     sender = application.state.email_sender
     task = register_tasks(
-        build_broker(Settings(secret_key="x" * 32), in_memory=True),
+        build_broker(Settings(secret_key="x" * 32, frontend_url="https://app.example.com"), in_memory=True),
         outbox,
         sender,
         renderer=EmailRenderer(),

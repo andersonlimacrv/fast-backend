@@ -86,8 +86,8 @@ Sidebar DEMO (client changes `client/openspec/changes/{sidebar-demo,client-routi
 
 ## Futuro registrado (implementação futura, por prioridade do dono)
 
-1. **`superuser-coverage`**: cobertura dedicada da implementação `is_superuser` — escalação grant/revoke staff (só root), `RequireStaff` nas rotas admin, `SuperuserContext` vs tenant comum, bootstrap one-shot, auditoria `root.bootstrap`.
-2. **Suite hermética**: isolar `.env` real no `conftest` (testes hoje leem o `.env` do dev; chaves customizadas balançam testes que assumem ausência).
+1. **`superuser-coverage`** ✅ entregue 2026-09-17 (test-only; `reason` com default — Opção B): matriz RBAC 14 rotas, grant/revoke + auditoria, `SuperuserContext` vs comum, bootstrap genérico, 409 estrito.
+2. **Suite hermética** ✅ entregue 2026-09-17 (test-only): fixture session-autouse + allowlist + `env_file=None`; verde com e sem `.env` customizado.
 3. **Docs**: consolidação aprovada pendente (datas/contagens com carimbo, errata `review-design`, dobrar `CLIENT-STRUCTURE` no `ARCHITECTURE`, regra anti-drift em `RULES`).
 
 ## Gates de verificação (comandos atuais)

@@ -65,3 +65,6 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 
 ## [Unreleased]
 
+- **`superuser-coverage`** (test-only, sem runtime): matriz RBAC pinada nas 14 rotas `/admin/*`, lifecycle grant/revoke + auditoria `admin.staff_revoked`, `SuperuserContext` explícito vs tenant comum (Postgres real; `reason` mantém default — Opção B), bootstrap com stdout genérico, 409 estrito (`LastRootProtectedError`); changes em `openspec/changes/superuser-coverage/`.
+- **`suite-hermetica`** (test-only, sem runtime): fixture session-autouse isola o `.env` do dev (allowlist + `env_file=None`, teardown restaura); `base_settings` com `frontend_url` explícito; suite verde com e sem `.env` customizado; change em `openspec/changes/suite-hermetica/`.
+

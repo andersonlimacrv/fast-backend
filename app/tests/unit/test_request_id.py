@@ -13,7 +13,7 @@ from app.main import create_app
 
 @pytest_asyncio.fixture(loop_scope="function")
 async def bare_client():
-    app = create_app(Settings(secret_key="x" * 32))
+    app = create_app(Settings(secret_key="x" * 32, frontend_url="https://app.example.com"))
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
     await app.state.throttler.aclose()

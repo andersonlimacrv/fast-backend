@@ -9,7 +9,7 @@ Goals: matriz RBAC pinada por rota, revoke coberto, 409 estrito, bootstrap gené
 ## Decisions
 
 1. **Só testes, sem comportamento novo** — nenhum endpoint, policy ou migração muda; exceção única possível é o `reason` (item 2). Rejeitado: aproveitar para endurecer policies (vira outra change).
-2. **`SuperuserContext.reason`: decisão do dono antes de implementar** — hoje `reason: str = "support"` (`tenancy/repository.py:10-13`). Opção A: tornar obrigatório (contrato mais forte; quebra `admin/service.py:54` `reason="admin overview"` e `test_tenant_repository.py:18`). Opção B: manter default + teste "todo uso admin passa reason explícito" (varredura). Recomendação: B (sem quebra), salvo se o dono preferir o aperto.
+2. **`SuperuserContext.reason`: DECIDIDO (dono, tasks 1.1) — Opção B** — manter `reason: str = "support"` (`tenancy/repository.py:10-13`), SEM quebrar contrato; nenhum runtime muda. Garantia por convenção + teste "todo uso admin passa `reason` explícito" (varredura estática em `app/tests/unit/test_tenant_repository.py`: todo `SuperuserContext(` no runtime contém `reason=`, e `SuperuserContext().reason == "support"` documenta o default preservado). Opção A (obrigatório) rejeitada: quebraria `admin/service.py:54` e teste unit sem ganho de segurança (bypass continua explícito no call site).
 3. **Matriz parametrizada, não cópia por rota** — um teste parametrizado percorre as rotas (`router.py:31-203`) com os 4 papéis; falha localizada por id do parâmetro. Rejeitado: repetir bloco por rota (churn).
 4. **Postgres real, sem mock de isolamento** — `RULES.md §5`: mock de repository não prova isolamento de tenant; Testcontainers obrigatório nos testes de bypass.
 

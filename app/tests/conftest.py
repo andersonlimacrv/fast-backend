@@ -27,10 +27,87 @@ from app.core.settings import Settings
 from app.infrastructure.db.base import Base
 from app.main import create_app
 
-# Test sessions must not depend on a developer `.env`: FRONTEND_URL is
-# required at real boot, so the suite pins its own test value here (os.environ
-# beats dotenv/defaults; production/dev strictness is untouched).
-os.environ.setdefault("FRONTEND_URL", "https://app.example.com")
+# Suite hermética (change suite-hermetica): nenhum teste lê o `.env` do dev.
+# - `Settings` lê o `.env` do cwd por padrão (`app/core/settings.py:13`); a fixture
+#   `_hermetic_suite_env` abaixo desliga o dotenv (`model_config["env_file"] = None`,
+#   restaurado no teardown) e limpa `os.environ` salvo a allowlist.
+# - Allowlist: imagens via env continuam fluindo (fonte única `RULES.md §10`) +
+#   `PATH` and co. do SO. `HOST_NET`/`POSTGRES_IMAGE`/`REDIS_IMAGE`/`DOCKER_BIN` são
+#   lidos no import acima, então a fixture não retroage o import: continua valendo
+#   `POSTGRES_IMAGE=x pytest` (e `TESTCONTAINERS_*` é lido no start do container).
+# - `FRONTEND_URL` (fail-fast em `settings.py:119-120`) nunca é global: cada `Settings`
+#   de teste recebe `frontend_url` explícito (ex. `base_settings` abaixo).
+_HERMETIC_KEEP_EXACT = frozenset(
+    {
+        "POSTGRES_IMAGE",
+        "REDIS_IMAGE",
+        "DOCKER_BIN",
+        "FB_TEST_NETWORK",
+        "CI",
+        "PATH",
+        "PATHEXT",
+        "SYSTEMROOT",
+        "WINDIR",
+        "PROGRAMFILES",
+        "PROGRAMFILES(X86)",
+        "PROGRAMDATA",
+        "USERPROFILE",
+        "HOME",
+        "TEMP",
+        "TMP",
+        "TMPDIR",
+        "LANG",
+        "LC_ALL",
+        "LC_CTYPE",
+        "LANGUAGE",
+        "TZ",
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
+        "CURL_CA_BUNDLE",
+        "REQUESTS_CA_BUNDLE",
+        "PYTHONPATH",
+        "PYTHONHOME",
+        "PYTHONUTF8",
+        "VIRTUAL_ENV",
+        "CONDA_PREFIX",
+        "NUMBER_OF_PROCESSORS",
+        "OS",
+        "COMSPEC",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "ALL_PROXY",
+        "NO_PROXY",
+        "http_proxy",
+        "https_proxy",
+        "all_proxy",
+        "no_proxy",
+    }
+)
+_HERMETIC_KEEP_PREFIXES = ("TESTCONTAINERS_", "DOCKER_", "CI_", "UV_")
+
+
+def _hermetic_keep(key: str) -> bool:
+    return key in _HERMETIC_KEEP_EXACT or key.startswith(_HERMETIC_KEEP_PREFIXES)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _hermetic_suite_env() -> Iterator[None]:
+    """Isolate the suite from the developer shell: allowlisted env + no repo dotenv."""
+    saved = dict(os.environ)
+    os.environ.clear()
+    os.environ.update({k: v for k, v in saved.items() if _hermetic_keep(k)})
+    original_env_file = Settings.model_config.get("env_file")
+    Settings.model_config["env_file"] = None
+    try:
+        yield
+    finally:
+        if original_env_file is None:
+            Settings.model_config.pop("env_file", None)
+        else:
+            Settings.model_config["env_file"] = original_env_file
+        os.environ.clear()
+        os.environ.update(saved)
+
 
 # Sandboxes without veth networking cannot use bridge mode:
 # run pytest with FB_TEST_NETWORK=host (fixed localhost ports, Ryuk disabled).
@@ -184,7 +261,7 @@ class ServiceContainer:
 
 
 @pytest.fixture(scope="session")
-def containers() -> Iterator[dict[str, str]]:
+def containers(_hermetic_suite_env: None) -> Iterator[dict[str, str]]:
     if HOST_NET:
         import asyncio
         import subprocess
@@ -255,12 +332,13 @@ def containers() -> Iterator[dict[str, str]]:
 
 
 @pytest.fixture(scope="session")
-def base_settings(containers: dict[str, str]) -> Settings:
+def base_settings(containers: dict[str, str], _hermetic_suite_env: None) -> Settings:
     return Settings(
         secret_key="test-secret-key-min-32-chars-long-enough",
         database_url=containers["database_url"],
         redis_url=containers["redis_url"],
         login_max_attempts=1000,  # throttling tested separately with low limits
+        frontend_url="https://app.example.com",  # fail-fast is explicit, never global
     )
 
 

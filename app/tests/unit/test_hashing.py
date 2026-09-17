@@ -12,7 +12,7 @@ from app.infrastructure.auth.hashing import PwdlibHasher
 
 @pytest.fixture()
 def hasher() -> PwdlibHasher:
-    return PwdlibHasher(Settings(secret_key="x" * 32))
+    return PwdlibHasher(Settings(secret_key="x" * 32, frontend_url="https://app.example.com"))
 
 
 @pytest.mark.unit
@@ -29,7 +29,9 @@ def test_verify_roundtrip_and_wrong_password(hasher: PwdlibHasher) -> None:
 
 @pytest.mark.unit
 def test_hashing_cost_is_configurable() -> None:
-    fast = PwdlibHasher(Settings(secret_key="x" * 32, argon2_time_cost=1, argon2_memory_cost=1024))
+    fast = PwdlibHasher(
+        Settings(secret_key="x" * 32, argon2_time_cost=1, argon2_memory_cost=1024, frontend_url="https://app.example.com")
+    )
     digest = fast.hash("Str0ng!Pass")
     assert digest.startswith("$argon2id$")
     assert "m=1024" in digest

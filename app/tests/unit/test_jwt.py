@@ -11,7 +11,7 @@ from app.infrastructure.auth.jwt import decode_access_token, mint_access_token
 
 @pytest.fixture()
 def settings() -> Settings:
-    return Settings(secret_key="test-secret-key-min-32-chars-long-enough")
+    return Settings(secret_key="test-secret-key-min-32-chars-long-enough", frontend_url="https://app.example.com")
 
 
 @pytest.mark.unit
@@ -37,7 +37,7 @@ def test_tampered_token_rejected(settings: Settings) -> None:
 @pytest.mark.unit
 def test_wrong_secret_rejected(settings: Settings) -> None:
     token = mint_access_token(settings=settings, user_id="u1")
-    other = Settings(secret_key="another-secret-key-min-32-chars-ok")
+    other = Settings(secret_key="another-secret-key-min-32-chars-ok", frontend_url="https://app.example.com")
     with pytest.raises(pyjwt.PyJWTError):
         decode_access_token(settings=other, token=token)
 
@@ -52,7 +52,12 @@ def test_expired_token_rejected(settings: Settings) -> None:
 @pytest.mark.unit
 def test_wrong_issuer_audience_rejected(settings: Settings) -> None:
     token = mint_access_token(settings=settings, user_id="u1")
-    other = Settings(secret_key=settings.secret_key, jwt_issuer="other", jwt_audience="other-api")
+    other = Settings(
+        secret_key=settings.secret_key,
+        jwt_issuer="other",
+        jwt_audience="other-api",
+        frontend_url="https://app.example.com",
+    )
     with pytest.raises(pyjwt.PyJWTError):
         decode_access_token(settings=other, token=token)
 

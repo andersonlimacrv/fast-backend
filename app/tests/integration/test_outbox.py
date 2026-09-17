@@ -62,7 +62,9 @@ async def test_dispatch_retries_then_succeeds(outbox: OutboxService) -> None:
             if len(calls) == 1:
                 raise ConnectionError("smtp down")
 
-    task = register_tasks(build_broker(Settings(secret_key="x" * 32), in_memory=True), outbox, Flaky())
+    task = register_tasks(
+        build_broker(Settings(secret_key="x" * 32, frontend_url="https://app.example.com"), in_memory=True), outbox, Flaky()
+    )
     await outbox.enqueue(
         type="email.send",
         idempotency_key="k-3",
@@ -82,6 +84,7 @@ async def test_dispatch_parks_dead_after_limit(application, base_settings: Setti
         database_url=base_settings.database_url,
         redis_url=base_settings.redis_url,
         outbox_max_attempts=2,
+        frontend_url="https://app.example.com",
     )
     svc = OutboxService(settings=settings, session_factory=application.state.session_factory)
 

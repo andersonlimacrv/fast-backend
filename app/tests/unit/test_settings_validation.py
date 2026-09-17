@@ -83,23 +83,27 @@ def test_production_rejects_http_frontend_url() -> None:
 @pytest.mark.unit
 def test_short_bootstrap_key_rejected() -> None:
     with pytest.raises(ValidationError):
-        Settings(secret_key="x" * 32, bootstrap_key="short")
+        Settings(secret_key="x" * 32, bootstrap_key="short", frontend_url="https://app.example.com")
 
 
 @pytest.mark.unit
 def test_reset_ttl_bounds() -> None:
     with pytest.raises(ValidationError):
-        Settings(secret_key="x" * 32, password_reset_ttl_minutes=2)
-    assert Settings(secret_key="x" * 32).password_reset_ttl_minutes == 60
+        Settings(secret_key="x" * 32, password_reset_ttl_minutes=2, frontend_url="https://app.example.com")
+    assert Settings(secret_key="x" * 32, frontend_url="https://app.example.com").password_reset_ttl_minutes == 60
 
 
 @pytest.mark.unit
 def test_unknown_tenancy_rejected() -> None:
     with pytest.raises(ValidationError):
-        Settings(secret_key="x" * 32, tenancy_mode="schema")
+        Settings(secret_key="x" * 32, tenancy_mode="schema", frontend_url="https://app.example.com")
 
 
 @pytest.mark.unit
 def test_csv_lists_accepted() -> None:
-    s = Settings(secret_key="x" * 32, cors_origins="https://a.example,https://b.example")  # type: ignore[arg-type]
+    s = Settings(
+        secret_key="x" * 32,
+        cors_origins="https://a.example,https://b.example",  # type: ignore[arg-type]
+        frontend_url="https://app.example.com",
+    )
     assert s.cors_origins == ["https://a.example", "https://b.example"]
