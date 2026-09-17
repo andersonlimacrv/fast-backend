@@ -16,7 +16,7 @@ mkdir -p ~/fast-backend && cd ~/fast-backend
 
 `ENVIRONMENT=production`, real `SECRET_KEY` (≥32), `TRUSTED_HOSTS=[domain]`, `DATABASE_URL`/`POSTGRES_*`, `REDIS_URL`, `TASK_BROKER_URL`, `CORS_ORIGINS`, `BILLING_ENABLED` + `STRIPE_*` if applicable. Boot fails fast on insecure config (validated in `Settings`).
 
-**Phase 9 additions (admin control plane + recovery):** `BOOTSTRAP_KEY` (≥32, required in production — one-shot root audit), `ADMIN_ENABLED=true` (leaf module flag), `PASSWORD_RESET_TTL_MINUTES` (default 60), `FRONTEND_URL=https://...` (https-only in prod — reset links), `SOCIAL_LOGIN_ENABLED=false` (contract only). Production SMTP to a remote host requires `SMTP_USE_TLS=true` (dev Mailpit on `localhost:1025` exempt).
+**Phase 9 additions (admin control plane + recovery):** `BOOTSTRAP_KEY` (≥32, required in production — one-shot root audit; empty disables bootstrap), `ADMIN_ENABLED=true` (leaf module flag), `PASSWORD_RESET_TTL_MINUTES` (default 60), `FRONTEND_URL=https://...` (required in every environment — boot fails without it; https-only in prod — reset links), `SOCIAL_LOGIN_ENABLED=false` (contract only). Production SMTP to a remote host requires `SMTP_USE_TLS=true` (dev Mailpit on `localhost:1025` exempt).
 
 ## Root bootstrap (one-shot, change A)
 

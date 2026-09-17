@@ -17,7 +17,7 @@
 - [x] 2.1 Linhas na `docs/Makefile.md` + pt-BR
 - [x] 2.2 **APRESENTAR ao dono ANTES de fechar** (ordem permanente)
 - [x] 2.3 Gates: `make e2e-full` 16/16 (2 runs); dev `users` 661→661; `e2e-clean` ok; backend 159 + vitest + `ruff`/`mypy`/`oxlint` verdes
-- [ ] 2.4 Sem commit sem pedido
+- [x] 2.4 Commitado (lote env/auth)
 
 ## Notas de implementação (divergências do plano, com motivo)
 

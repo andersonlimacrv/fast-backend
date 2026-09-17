@@ -16,4 +16,4 @@
 
 - [x] 3.1 **APRESENTAR ao dono ANTES de fechar** (ordem permanente)
 - [x] 3.2 Gates: markers unit/integration verdes, `ruff`+`mypy` (+`format`)
-- [ ] 3.3 Sem commit sem pedido
+- [x] 3.3 Commitado (lote env/auth)

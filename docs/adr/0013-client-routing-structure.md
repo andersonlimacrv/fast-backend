@@ -2,7 +2,7 @@
 
 ## Status
 
-Proposto.
+Accepted (implementado na branch `feat/sidebar-demo`, verificado: tsc, vitest 102, e2e 16/16).
 
 ## Contexto
 

@@ -80,6 +80,16 @@ Pipeline `PR → ruff → mypy → unit → integration → security → build`;
 
 `make-dev-loop` (`make dev`/`dev-down`, spec `dev-loop`) → `make-env-check` (`scripts/env_check.py` + `setup` encadeado, spec `env-validation`) → `client-reformulation` em 6 PRs (PR1 fundação: DESIGN.md + trio de agentes + Playwright; PR2 tokens; PR3 catálogo + Motion; PR4 base + RHF/Zod; PR5 páginas; PR6 auditoria total; capabilities `design-system-link`, `browser-e2e`, `client-landing`, `two-step-login`) → `docs-release-audit` (sync de documentação). ADR 0010 (remoção de `references/Makefile` com override).
 
+## Fase 12 — Sidebar rica, shell e isolamento e2e (em curso, branch `feat/sidebar-demo`)
+
+Sidebar DEMO (changes `sidebar-demo`, `client-routing-structure`, `custom-ui-restructure`, `playground` scaffold): triggers/avaliação por rota, grupo Projects tenant-scoped (count, mini-avatares, actions, rail abre menu), Organizations com subpastas, Settings placeholder, `/projects/new`, shell full-width com breadcrumb no header, tabelas com colunas prioritárias, scrollbar por tokens. Infra: `e2e-isolated-db` (`make e2e-full`, banco/API/preview dedicados — e2e não polui mais o dev), `root-bootstrap-tests` (unit sem DB + integração), `FRONTEND_URL` obrigatório (fail-fast), `env-check` em tabela com segredos mascarados. Suite atual verificada: 155 testes backend + 102 vitest + 16 Playwright (contagens vivas no CHANGELOG; prosa não hardcodifica — ver regra anti-drift proposta na consolidação de docs).
+
+## Futuro registrado (implementação futura, por prioridade do dono)
+
+1. **`superuser-coverage`**: cobertura dedicada da implementação `is_superuser` — escalação grant/revoke staff (só root), `RequireStaff` nas rotas admin, `SuperuserContext` vs tenant comum, bootstrap one-shot, auditoria `root.bootstrap`.
+2. **Suite hermética**: isolar `.env` real no `conftest` (testes hoje leem o `.env` do dev; chaves customizadas balançam testes que assumem ausência).
+3. **Docs**: consolidação aprovada pendente (datas/contagens com carimbo, errata `review-design`, dobrar `CLIENT-STRUCTURE` no `ARCHITECTURE`, regra anti-drift em `RULES`).
+
 ## Gates de verificação (comandos atuais)
 
 ```bash

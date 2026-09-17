@@ -16,7 +16,7 @@ mkdir -p ~/fast-backend && cd ~/fast-backend
 
 `ENVIRONMENT=production`, `SECRET_KEY` real (≥32), `TRUSTED_HOSTS=[dominio]`, `DATABASE_URL`/`POSTGRES_*`, `REDIS_URL`, `TASK_BROKER_URL`, `CORS_ORIGINS`, `BILLING_ENABLED` + `STRIPE_*` se aplicável. O boot falha alto com config insegura (validado em `Settings`).
 
-**Adições da Fase 9 (admin + recovery):** `BOOTSTRAP_KEY` (≥32, obrigatória em prod — auditoria do root), `ADMIN_ENABLED=true` (flag do módulo folha), `PASSWORD_RESET_TTL_MINUTES` (padrão 60), `FRONTEND_URL=https://...` (https obrigatório em prod — links de reset), `SOCIAL_LOGIN_ENABLED=false` (só contrato). SMTP prod p/ host remoto exige `SMTP_USE_TLS=true` (Mailpit dev em `localhost:1025` isento).
+**Adições da Fase 9 (admin + recovery):** `BOOTSTRAP_KEY` (≥32, obrigatória em prod — auditoria do root; vazia desliga o bootstrap), `ADMIN_ENABLED=true` (flag do módulo folha), `PASSWORD_RESET_TTL_MINUTES` (padrão 60), `FRONTEND_URL=https://...` (obrigatória em todo ambiente — boot falha sem ela; https obrigatório em prod — links de reset), `SOCIAL_LOGIN_ENABLED=false` (só contrato). SMTP prod p/ host remoto exige `SMTP_USE_TLS=true` (Mailpit dev em `localhost:1025` isento).
 
 ## Bootstrap do root (one-shot, change A)
 

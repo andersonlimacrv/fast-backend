@@ -59,4 +59,7 @@ Docs: ADRs 0005–0007, `DEPLOYMENT` (+pt-BR) root/recovery runbook, `SKILLS-REG
 ## [Unreleased]
 
 - **`sidebar-demo`**: sidebar rica (org switcher dropdown, subgroups colapsáveis, orgs recentes + `...`, user dropdown, breadcrumb por rota), primitivos `dropdown-menu`/`breadcrumb`/`separator`/`collapsible` + `AvatarImage`; S8–S11: grupo Projects tenant-scoped (count, mini-avatares, actions menu, rail abre menu), Organizations com subpastas, página Settings (placeholder), página `/projects/new`, labels DEMO; change em `client/openspec/changes/sidebar-demo/`.
+- **`e2e-isolated-db`**: `make e2e-full` (postgres/redis/API/preview dedicados em portas `E2E_*`, teardown no fim) — e2e não escreve mais no banco dev; `web-e2e` documentado como legado.
+- **`root-bootstrap-tests`**: cobertura do bootstrap one-shot (5 unit sem DB + 4 integração: sucesso com audit `root.bootstrap`, recusas).
+- **env**: `FRONTEND_URL` obrigatório (fail-fast em todo boot; CI recebe via `env:`), `env-check` em tabela com segredos mascarados e defaults do código, `auto_release` tolera `APP_VERSION` ausente no example.
 
