@@ -41,6 +41,7 @@ jobs:
       REDIS_URL: redis://localhost:6379/0
       # Browser origin must be allowed or every SPA fetch fails closed (status 0).
       CORS_ORIGINS: '["http://localhost:5173"]'
+      FRONTEND_URL: http://localhost:5173
     steps:
       - uses: actions/checkout@v4
         with:
