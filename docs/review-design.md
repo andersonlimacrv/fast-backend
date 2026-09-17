@@ -106,12 +106,20 @@ tokens do tema; ícones via `lib/icons.tsx`. Status: ⬜ pendente · 🔄 lane �
 | 8 | ToggleGroup (`…-base-toggle-group`) | /docs/components/base/toggle-group | ✅ | group variant/size → context (DEMO Bold/Italic/Underline verbatim) | Lane B |
 | 9 | UserAvatar (`…-community-user-presence-avatar`) | /docs/components/community/user-presence-avatar | ✅ | `avatar-group.tsx` novo (overlap, +N, "N online") | Lane C |
 | 10 | FileTree→`Files` (`…-base-files`) | /docs/components/base/files | ✅ | `ui/file-tree.tsx` novo (Base-UI accordion, FileIcon, git dots) | Lane C |
-| 11 | Sidebar (`…-radix-sidebar`) | /docs/components/radix/sidebar | ✅ | drawer x-slide spring; sem radix (decisão mantida) | Lane C |
+| 11 | Sidebar (`…-radix-sidebar`) | /docs/components/radix/sidebar | ✅ | DEMO aplicado sobre Base-UI: org switcher (⌘1-9), subgroups, recentes+`...`, user dropdown, breadcrumb; ChevronsUpDown/MoreHorizontal em `lib/icons` | sidebar-demo S2–S6 |
 
 F1 (2026-09-16): nenhum pacote motion além de `motion/react` nos 11 docs → nada a
 instalar; `use-mobile` só no Sidebar (não adotado) → sem hook novo. Ícones
 `Bold/Italic/Underline` adicionados a `lib/icons.tsx` (`FileJson` não existe no
 lucide instalado → `FileCode` no lugar).
+
+Dropdown radix (dono colou o doc + pediu adoção, 2026-09-16): vendored
+`primitives/radix/dropdown-menu` + `components/radix/dropdown-menu` (+`use-data-state`;
+`primitives-radix-checkbox` sem referência → skip). `ui/dropdown-menu.tsx` (Base-UI)
+**deletado** — um sistema só. Footer `side="top"`, grupos, ícones+shortcuts,
+`variant="destructive"` no logout, hover via `Highlight`. Correções no caminho:
+crash `Menu.GroupLabel` fora de `Group`, `aria-selected` inválido do `HighlightItem`,
+hooks incondicionais no `Slot`, radix abre com sequência pointer (só jsdom).
 
 Notas do code-review (2026-09-16, working tree): `RequireStaff` lê flags da sessão
 (emitidas pelo backend) e os fetches das páginas seguem com 403 real — autoridade

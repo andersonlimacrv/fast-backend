@@ -40,6 +40,16 @@ import { EmptyState } from "@/components/error-state";
 import { AvatarGroup } from "@/components/avatar-group";
 import { FileTree } from "@/components/ui/file-tree";
 import { TabsPanels } from "@/components/ui/tabs";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsiblePanel, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/animate-ui/components/radix/dropdown-menu";
+import { MemoryRouter } from "react-router-dom";
 
 afterEach(() => {
   cleanup();
@@ -340,5 +350,88 @@ describe("toggle-group icons", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "fmt-italic" }));
     expect(onChange).toHaveBeenCalledWith(["italic"], expect.anything());
+  });
+});
+
+describe("dropdown-menu", () => {
+  // Radix opens on the pointer sequence (real browsers send it natively).
+  const openMenu = (trigger: HTMLElement) => {
+    fireEvent.pointerDown(trigger, { pointerType: "mouse", button: 0 });
+    fireEvent.mouseDown(trigger, { button: 0 });
+    fireEvent.click(trigger);
+  };
+
+  it("opens on trigger and closes on Escape", async () => {
+    const onSelect = vi.fn();
+    render(
+      <DropdownMenu>
+        <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem onSelect={onSelect}>View</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+    openMenu(screen.getByRole("button", { name: "Actions" }));
+    expect(await screen.findByRole("menuitem", { name: "View" })).toBeTruthy();
+    fireEvent.keyDown(screen.getByRole("menuitem", { name: "View" }), { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("menuitem", { name: "View" })).toBeNull());
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("selects an item on click", async () => {
+    const onSelect = vi.fn();
+    render(
+      <DropdownMenu>
+        <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem onSelect={onSelect}>View</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+    openMenu(screen.getByRole("button", { name: "Actions" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "View" }));
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("collapsible", () => {
+  it("toggles its panel", async () => {
+    render(
+      <Collapsible>
+        <CollapsibleTrigger>Section</CollapsibleTrigger>
+        <CollapsiblePanel>panel body</CollapsiblePanel>
+      </Collapsible>,
+    );
+    expect(screen.queryByText("panel body")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Section" }));
+    expect(await screen.findByText("panel body")).toBeTruthy();
+  });
+});
+
+describe("breadcrumb", () => {
+  it("renders trail with current page", () => {
+    render(
+      <MemoryRouter>
+        <Breadcrumb trail={[{ label: "Admin", to: "/admin" }, { label: "Users" }]} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Admin" })).toBeTruthy();
+    expect(screen.getByText("Users")).toBeTruthy();
+  });
+});
+
+describe("separator", () => {
+  it("renders horizontal rule by default", () => {
+    const { container } = render(<Separator />);
+    const rule = container.querySelector('[role="separator"]');
+    expect(rule?.getAttribute("aria-orientation")).toBe("horizontal");
+  });
+});
+
+describe("avatar image", () => {
+  it("falls back to initials without src", () => {
+    render(<Avatar name="Ada Lovelace" />);
+    expect(screen.getByText("AL")).toBeTruthy();
   });
 });
