@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Avatar, initialsOf } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CircularProgress } from "@/components/ui/circular-progress";
-import { CopyButton } from "@/components/ui/copy-button";
+import { CircularProgress } from "@/components/custom-ui/components/circular-progress";
+import { CopyButton } from "@/components/custom-ui/components/copy-button";
 import {
   Dialog,
   DialogClose,
@@ -29,17 +29,27 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { FloatingInput } from "@/components/ui/floating-input";
+import { FloatingInput } from "@/components/custom-ui/components/floating-input";
 import { RadioGroup, RadioItem } from "@/components/ui/radio";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleItem } from "@/components/ui/toggle-group";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/custom-ui/components/tooltip/tooltip";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { EmptyState } from "@/components/error-state";
 import { AvatarGroup } from "@/components/avatar-group";
-import { FileTree } from "@/components/ui/file-tree";
+import { FileTree } from "@/components/custom-ui/components/file-tree";
 import { TabsPanels } from "@/components/ui/tabs";
+import { Breadcrumb } from "@/components/ui/breadcrumb";
+import { Separator } from "@/components/ui/separator";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/custom-ui/components/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/custom-ui/components/dropdown-menu/dropdown-menu";
+import { MemoryRouter } from "react-router-dom";
 
 afterEach(() => {
   cleanup();
@@ -66,14 +76,16 @@ describe("tabs", () => {
 });
 
 describe("tooltip", () => {
-  it("reveals content on focus", async () => {
+  it("reveals content on hover", async () => {
     render(
-      <Tooltip>
-        <TooltipTrigger>hover me</TooltipTrigger>
-        <TooltipContent>tip text</TooltipContent>
-      </Tooltip>,
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger>hover me</TooltipTrigger>
+          <TooltipContent>tip text</TooltipContent>
+        </Tooltip>
+      </TooltipProvider>,
     );
-    fireEvent.focus(screen.getByText("hover me"));
+    fireEvent.mouseEnter(screen.getByText("hover me"));
     expect(await screen.findByText("tip text")).toBeTruthy();
   });
 });
@@ -340,5 +352,88 @@ describe("toggle-group icons", () => {
     );
     fireEvent.click(screen.getByRole("button", { name: "fmt-italic" }));
     expect(onChange).toHaveBeenCalledWith(["italic"], expect.anything());
+  });
+});
+
+describe("dropdown-menu", () => {
+  // Radix opens on the pointer sequence (real browsers send it natively).
+  const openMenu = (trigger: HTMLElement) => {
+    fireEvent.pointerDown(trigger, { pointerType: "mouse", button: 0 });
+    fireEvent.mouseDown(trigger, { button: 0 });
+    fireEvent.click(trigger);
+  };
+
+  it("opens on trigger and closes on Escape", async () => {
+    const onSelect = vi.fn();
+    render(
+      <DropdownMenu>
+        <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem onSelect={onSelect}>View</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+    openMenu(screen.getByRole("button", { name: "Actions" }));
+    expect(await screen.findByRole("menuitem", { name: "View" })).toBeTruthy();
+    fireEvent.keyDown(screen.getByRole("menuitem", { name: "View" }), { key: "Escape" });
+    await waitFor(() => expect(screen.queryByRole("menuitem", { name: "View" })).toBeNull());
+    expect(onSelect).not.toHaveBeenCalled();
+  });
+
+  it("selects an item on click", async () => {
+    const onSelect = vi.fn();
+    render(
+      <DropdownMenu>
+        <DropdownMenuTrigger>Actions</DropdownMenuTrigger>
+        <DropdownMenuContent>
+          <DropdownMenuItem onSelect={onSelect}>View</DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>,
+    );
+    openMenu(screen.getByRole("button", { name: "Actions" }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: "View" }));
+    expect(onSelect).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("collapsible", () => {
+  it("toggles its panel", async () => {
+    render(
+      <Collapsible>
+        <CollapsibleTrigger>Section</CollapsibleTrigger>
+        <CollapsibleContent>panel body</CollapsibleContent>
+      </Collapsible>,
+    );
+    expect(screen.queryByText("panel body")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Section" }));
+    expect(await screen.findByText("panel body")).toBeTruthy();
+  });
+});
+
+describe("breadcrumb", () => {
+  it("renders trail with current page", () => {
+    render(
+      <MemoryRouter>
+        <Breadcrumb trail={[{ label: "Admin", to: "/admin" }, { label: "Users" }]} />
+      </MemoryRouter>,
+    );
+    expect(screen.getByRole("navigation", { name: "Breadcrumb" })).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Admin" })).toBeTruthy();
+    expect(screen.getByText("Users")).toBeTruthy();
+  });
+});
+
+describe("separator", () => {
+  it("renders horizontal rule by default", () => {
+    const { container } = render(<Separator />);
+    const rule = container.querySelector('[role="separator"]');
+    expect(rule?.getAttribute("aria-orientation")).toBe("horizontal");
+  });
+});
+
+describe("avatar image", () => {
+  it("falls back to initials without src", () => {
+    render(<Avatar name="Ada Lovelace" />);
+    expect(screen.getByText("AL")).toBeTruthy();
   });
 });

@@ -78,8 +78,9 @@ class Settings(BaseSettings):
     stripe_price_map: dict = {}
 
     # --- Password recovery (change B) ---
+    # No default on purpose: every deploy (including local) must complete it.
     password_reset_ttl_minutes: int = 60
-    frontend_url: str = "http://localhost:5173"
+    frontend_url: str = ""
 
     # --- Social login (change C; contract only, no active provider) ---
     social_login_enabled: bool = False
@@ -115,6 +116,8 @@ class Settings(BaseSettings):
             raise ValueError("PASSWORD_RESET_TTL_MINUTES must be within 5..1440")
         if not self.app_version or not self.app_version.strip():
             raise ValueError("APP_VERSION must be non-empty")
+        if not self.frontend_url or not self.frontend_url.strip():
+            raise ValueError("FRONTEND_URL must be set (e.g. http://localhost:5173 for local dev)")
         if self.environment == "production":
             if self.secret_key == DEV_DEFAULT_SECRET or len(self.secret_key) < 32:
                 raise ValueError("production requires a real SECRET_KEY (>=32 chars)")

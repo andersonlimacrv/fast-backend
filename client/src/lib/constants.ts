@@ -20,14 +20,19 @@ export const ROUTES = {
   orgs: "/orgs",
   members: (orgId: string) => `/orgs/${orgId}/members`,
   projects: "/projects",
+  projectNew: "/projects/new",
   grants: "/grants",
   audit: "/audit",
   account: "/account",
+  settings: "/settings",
   admin: "/admin",
   adminUsers: "/admin/users",
   adminOrgs: "/admin/orgs",
   adminAudit: "/admin/audit",
   gallery: "/admin/gallery",
+  playground: "/playground",
+  playgroundComponents: "/playground/components",
+  playgroundBlocks: "/playground/blocks",
 } as const;
 
 export const ROLES = ["owner", "admin", "member"] as const;

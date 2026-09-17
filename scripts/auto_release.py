@@ -125,6 +125,21 @@ def _replace_first(path: Path, pattern: str, replacement: str) -> None:
     path.write_text(updated, encoding="utf-8")
 
 
+def _replace_first_optional(path: Path, pattern: str, replacement: str) -> bool:
+    """Like `_replace_first`, but returns False (no write) when absent.
+
+    Used for `.env.example` entries the maintainer may prune (e.g.
+    script-managed `APP_VERSION`): the release must not fail over a
+    deliberately removed template line.
+    """
+    text = path.read_text(encoding="utf-8")
+    updated, count = re.subn(pattern, replacement, text, count=1, flags=re.MULTILINE)
+    if count != 1:
+        return False
+    path.write_text(updated, encoding="utf-8")
+    return True
+
+
 def sync_files(root: Path, version: str) -> list[str]:
     """Sync `X.Y.Z` (no `v`) into pyproject/settings/.env.example. Returns touched files."""
     touched = []
@@ -135,8 +150,8 @@ def sync_files(root: Path, version: str) -> list[str]:
     _replace_first(settings, r'^    app_version: str = "[^"]+"$', f'    app_version: str = "{version}"')
     touched.append(str(settings))
     example = root / ".env.example"
-    _replace_first(example, r"^APP_VERSION=.*$", f"APP_VERSION={version}")
-    touched.append(str(example))
+    if _replace_first_optional(example, r"^APP_VERSION=.*$", f"APP_VERSION={version}"):
+        touched.append(str(example))
     return touched
 
 

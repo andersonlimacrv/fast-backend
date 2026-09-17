@@ -1,315 +1,680 @@
-import { AnimatePresence, motion, useReducedMotion, type Transition } from "motion/react";
 import * as React from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink, useLocation, useMatch, useNavigate } from "react-router-dom";
 
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuAction,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
+  SidebarProvider,
+  SidebarSeparator,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/custom-ui/components/sidebar/sidebar";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/custom-ui/components/collapsible";
 import {
   Activity,
   Building2,
-  ChevronsLeft,
-  ChevronsRight,
+  Check,
+  ChevronRight,
+  ChevronsUpDown,
   FileText,
+  FlaskConical,
   FolderOpen,
   KeyRound,
   Layers,
   LayoutDashboard,
-  PanelLeft,
+  LogOut,
+  MoreHorizontal,
+  Plus,
   Settings,
   ShieldCheck,
   Users,
-  X,
 } from "@/lib/icons";
 import { useAuth } from "@/contexts/AuthContext";
+import { useProjects } from "@/hooks/useProjects";
+import type { ProjectRead } from "@/lib/api";
 import { ROUTES } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { projectCode } from "@/lib/utils";
+import { Avatar } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/custom-ui/components/dropdown-menu/dropdown-menu";
 
-/* Composable sidebar (shadcn Sidebar API shape, reimplemented on plain
- * React + motion instead of radix/animate-ui — see design-unification
- * design.md decision 1). Collapsed mode IS the icon rail
- * (DESIGN.md §6: drawer <lg, rail lg–xl, expanded ≥xl). */
+export {
+  SidebarInset,
+  SidebarTrigger,
+};
 
-/* Upstream animate-ui motion patterns only (Sidebar track is radix-based,
- * not vendored): drawer x-slide spring. Desktop width stays a CSS
- * transition — a motion width spring is incompatible with the w-16/w-64
- * class switch without restructuring the layout. */
-const DRAWER_TRANSITION: Transition = { type: "spring", stiffness: 150, damping: 22 };
-const OVERLAY_TRANSITION: Transition = { duration: 0.15 };
+/* Our content on the upstream animate-ui sidebar shell (radix behaviour,
+ * data-slot API, cookie sidebar_state). Brand/data wiring is ours:
+ * org switcher, subgroups, recents, user menu, role filtering. */
 
-interface SidebarContextValue {
-  collapsed: boolean;
-  setCollapsed: (v: boolean) => void;
-  mobileOpen: boolean;
-  setMobileOpen: (v: boolean) => void;
+const SIDEBAR_COOKIE = "sidebar_state";
+
+function readOpenCookie(): boolean | null {
+  const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${SIDEBAR_COOKIE}=(true|false)`));
+  if (!match) return null;
+  return match[1] === "true";
 }
 
-const SidebarContext = React.createContext<SidebarContextValue | null>(null);
-
-export function useSidebar(): SidebarContextValue {
-  const ctx = React.useContext(SidebarContext);
-  if (!ctx) throw new Error("useSidebar must be used inside <SidebarProvider>");
-  return ctx;
+function defaultOpen(): boolean {
+  const saved = readOpenCookie();
+  if (saved !== null) return saved;
+  if (typeof window !== "undefined" && typeof window.matchMedia === "function") {
+    return window.matchMedia("(min-width: 1280px)").matches;
+  }
+  return true;
 }
 
-export function SidebarProvider({
-  collapsed,
-  onCollapsedChange,
-  children,
-}: {
-  collapsed: boolean;
-  onCollapsedChange: (v: boolean) => void;
-  children: React.ReactNode;
-}) {
-  const [mobileOpen, setMobileOpen] = React.useState(false);
-  const value = React.useMemo(
-    () => ({ collapsed, setCollapsed: onCollapsedChange, mobileOpen, setMobileOpen }),
-    [collapsed, onCollapsedChange, mobileOpen],
-  );
-  return <SidebarContext.Provider value={value}>{children}</SidebarContext.Provider>;
-}
-
-export function SidebarHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex h-14 items-center gap-2 px-3", className)} {...props} />;
-}
-
-export function SidebarContent({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto px-2 py-2", className)} {...props} />;
-}
-
-export function SidebarGroup({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("flex flex-col gap-1", className)} {...props} />;
-}
-
-export function SidebarGroupLabel({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  const { collapsed } = useSidebar();
-  if (collapsed) return null;
+/** Provider with cookie-persisted open state (upstream writes the cookie). */
+export function AppSidebarProvider({ children }: { children: React.ReactNode }) {
+  const [open, setOpen] = React.useState<boolean>(() => defaultOpen());
   return (
-    <div
-      className={cn("px-2 text-xs font-medium tracking-wide text-muted-foreground uppercase", className)}
-      {...props}
-    />
+    <SidebarProvider open={open} onOpenChange={setOpen}>
+      {children}
+    </SidebarProvider>
   );
 }
 
-export function SidebarMenu({ className, ...props }: React.HTMLAttributes<HTMLUListElement>) {
-  return <ul className={cn("flex flex-col gap-1", className)} {...props} />;
-}
-
-export interface SidebarMenuItemProps {
+interface NavEntry {
   to: string;
-  icon: React.ReactNode;
   label: string;
+  icon: React.ReactNode;
   end?: boolean;
 }
 
-export function SidebarMenuItem({ to, icon, label, end }: SidebarMenuItemProps) {
-  const { collapsed, setMobileOpen } = useSidebar();
+function SideNavLink({ to, label, icon, end }: NavEntry) {
+  const match = useMatch({ path: to, end: end ?? false });
   return (
-    <li>
-      <NavLink
-        to={to}
-        end={end}
-        title={collapsed ? label : undefined}
-        aria-label={label}
-        onClick={() => setMobileOpen(false)}
-        className={({ isActive }) =>
-          cn(
-            "flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm text-muted-foreground",
-            "transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-            "focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:outline-none",
-            isActive && "bg-sidebar-accent font-medium text-sidebar-accent-foreground",
-            collapsed && "justify-center px-0",
-          )
-        }
-      >
-        <span className="flex size-5 shrink-0 items-center justify-center [&_svg]:size-4" aria-hidden="true">
+    <SidebarMenuItem>
+      <SidebarMenuButton asChild isActive={match !== null} tooltip={label}>
+        <NavLink to={to} end={end} aria-label={label}>
           {icon}
-        </span>
-        {!collapsed && <span className="truncate">{label}</span>}
-      </NavLink>
-    </li>
+          {/* truncate keeps the rail collapse working: without it the span
+            keeps a min-content box and leaks out of the icon rail (the
+            upstream span:last-child selector no longer matches with a
+            trailing chevron). */}
+          <span className="truncate">{label}</span>
+        </NavLink>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   );
 }
 
-export function SidebarFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
-  return <div className={cn("border-t border-sidebar-border p-3", className)} {...props} />;
-}
-
-/** Collapse/expand trigger for desktop (rail ↔ full). */
-export function SidebarTrigger({ className }: { className?: string }) {
-  const { collapsed, setCollapsed } = useSidebar();
-  const Icon = collapsed ? ChevronsRight : ChevronsLeft;
-  return (
-    <button
-      type="button"
-      onClick={() => setCollapsed(!collapsed)}
-      aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-      aria-expanded={!collapsed}
-      className={cn(
-        "hidden rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:block",
-        className,
-      )}
-    >
-      <Icon className="size-4" aria-hidden="true" />
-    </button>
-  );
-}
-
-/** Hamburger trigger for mobile (opens the drawer). */
-export function SidebarMobileTrigger({ className }: { className?: string }) {
-  const { setMobileOpen } = useSidebar();
-  return (
-    <button
-      type="button"
-      onClick={() => setMobileOpen(true)}
-      aria-label="Open navigation"
-      className={cn(
-        "rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:hidden",
-        className,
-      )}
-    >
-      <PanelLeft className="size-4" aria-hidden="true" />
-    </button>
-  );
-}
-
-/** Mobile close button rendered inside the drawer. */
-function SidebarDrawerClose() {
-  const { setMobileOpen } = useSidebar();
-  return (
-    <button
-      type="button"
-      onClick={() => setMobileOpen(false)}
-      aria-label="Close navigation"
-      className={cn(
-        "rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-        "focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none md:hidden",
-      )}
-    >
-      <X className="size-4" aria-hidden="true" />
-    </button>
-  );
-}
-
-const CONSOLE_NAV: SidebarMenuItemProps[] = [
+const CONSOLE_NAV: NavEntry[] = [
   { to: ROUTES.app, label: "Overview", icon: <LayoutDashboard aria-hidden="true" />, end: true },
   { to: ROUTES.health, label: "Health", icon: <Activity aria-hidden="true" /> },
-  { to: ROUTES.orgs, label: "Organizations", icon: <Building2 aria-hidden="true" /> },
-  { to: ROUTES.projects, label: "Projects", icon: <FolderOpen aria-hidden="true" /> },
-  { to: ROUTES.grants, label: "Grants", icon: <KeyRound aria-hidden="true" /> },
-  { to: ROUTES.audit, label: "Audit", icon: <FileText aria-hidden="true" /> },
-  { to: ROUTES.account, label: "Account", icon: <Settings aria-hidden="true" /> },
 ];
 
-const ADMIN_NAV: SidebarMenuItemProps[] = [
+const MANAGE_NAV: NavEntry[] = [
+  { to: ROUTES.grants, label: "Grants", icon: <KeyRound aria-hidden="true" /> },
+  { to: ROUTES.audit, label: "Audit", icon: <FileText aria-hidden="true" /> },
+  // Footer avatar already covers Account; the gear entry reserves Settings
+  // (placeholder page, future implementation).
+  { to: ROUTES.settings, label: "Settings", icon: <Settings aria-hidden="true" /> },
+];
+
+function SideNavSubLink({ to, label, end, trackActive = true }: { to: string; label: string; end?: boolean; trackActive?: boolean }) {
+  const match = useMatch({ path: to, end: end ?? false });
+  return (
+    <SidebarMenuSubItem>
+      <SidebarMenuSubButton asChild isActive={trackActive && match !== null}>
+        <NavLink to={to} end={end} aria-label={label}>
+          <span>{label}</span>
+        </NavLink>
+      </SidebarMenuSubButton>
+    </SidebarMenuSubItem>
+  );
+}
+
+/** Rail-mode Organizations: the icon opens a dropdown with the child pages
+ * (same layout as the Projects rail menu). */
+function OrganizationsRailMenuItem({
+  activeOrgId,
+  orgsActive,
+}: {
+  activeOrgId: string | null;
+  orgsActive: boolean;
+}) {
+  return (
+    <SidebarMenuItem>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <SidebarMenuButton tooltip="Organizations" isActive={orgsActive} aria-label="Organizations">
+            <Building2 aria-hidden="true" />
+          </SidebarMenuButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="start" className="w-56 rounded-lg">
+          <DropdownMenuItem onSelect={() => undefined}>
+            <Link to={ROUTES.orgs} className="flex w-full items-center gap-2">
+              <Building2 className="size-4" aria-hidden="true" /> All organizations
+            </Link>
+          </DropdownMenuItem>
+          {activeOrgId && (
+            <DropdownMenuItem onSelect={() => undefined}>
+              <Link to={ROUTES.members(activeOrgId)} className="flex w-full items-center gap-2">
+                <Users className="size-4" aria-hidden="true" /> Members
+              </Link>
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
+  );
+}
+
+/** Organizations: collapsible with the two subpaths (list + active-org
+ * members), following the upstream animate-ui sidebar DEMO verbatim
+ * (references/components_to_use/AnimateUi/Sidebar.md). */
+function OrganizationsGroup() {
+  const { activeOrgId } = useAuth();
+  const { state, isMobile } = useSidebar();
+  const { pathname } = useLocation();
+  const orgsActive = pathname === ROUTES.orgs || pathname.startsWith("/orgs/");
+  const [open, setOpen] = React.useState(orgsActive);
+  const rail = state === "collapsed" && !isMobile;
+  if (rail) {
+    return (
+      <SidebarGroup aria-label="Organizations">
+        <SidebarMenu>
+          <OrganizationsRailMenuItem activeOrgId={activeOrgId} orgsActive={orgsActive} />
+        </SidebarMenu>
+      </SidebarGroup>
+    );
+  }
+  return (
+    <SidebarGroup aria-label="Organizations">
+      <SidebarGroupLabel>Organizations</SidebarGroupLabel>
+      <SidebarMenu>
+        <Collapsible asChild open={open} onOpenChange={setOpen} className="group/collapsible">
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton
+                tooltip="Organizations"
+                isActive={orgsActive}
+                aria-label="Organizations"
+                  className="data-[state=open]:text-sidebar-accent-foreground"
+              >
+                <Building2 aria-hidden="true" />
+                <span className="truncate">Organizations</span>
+                <ChevronRight className="ml-auto transition-transform duration-300 group-data-[state=open]/collapsible:rotate-90" aria-hidden="true" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              <SidebarMenuSub>
+                <SideNavSubLink to={ROUTES.orgs} label="All organizations" end />
+                {activeOrgId && (
+                  <SideNavSubLink to={ROUTES.members(activeOrgId)} label="Members" />
+                )}
+              </SidebarMenuSub>
+            </CollapsibleContent>
+          </SidebarMenuItem>
+        </Collapsible>
+      </SidebarMenu>
+    </SidebarGroup>
+  );
+}
+
+/** Rail-mode Projects: the icon opens the same actions menu as the expanded
+ * "+" button (New project, All projects, divider, project list). */
+function ProjectsRailMenuItem({
+  projects,
+  loading,
+  projectsActive,
+}: {
+  projects: ProjectRead[];
+  loading: boolean;
+  projectsActive: boolean;
+}) {
+  const label = projects.length > 0 ? `Projects (${projects.length})` : "Projects";
+  return (
+    <SidebarMenuItem>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <SidebarMenuButton
+            tooltip={label}
+            isActive={projectsActive}
+            aria-label={`Projects, ${projects.length} total`}
+          >
+            <FolderOpen aria-hidden="true" />
+          </SidebarMenuButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent side="right" align="start" className="w-56 rounded-lg">
+          <DropdownMenuItem onSelect={() => undefined}>
+            <Link to={ROUTES.projectNew} className="flex w-full items-center gap-2">
+              <Plus className="size-4" aria-hidden="true" /> New project
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => undefined}>
+            <Link to={ROUTES.projects} className="flex w-full items-center gap-2">
+              <FolderOpen className="size-4" aria-hidden="true" /> All projects
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          {projects.map((p) => (
+            <DropdownMenuItem key={p.id} onSelect={() => undefined}>
+              <Link to={ROUTES.projects} title={p.name} className="flex w-full items-center gap-2">
+                <span className="flex h-6 w-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary px-1 text-[10px] font-extrabold tracking-wider text-sidebar-primary-foreground" aria-hidden="true">
+                  {projectCode(p.name)}
+                </span>
+                <span className="truncate">{p.name}</span>
+              </Link>
+            </DropdownMenuItem>
+          ))}
+          {projects.length === 0 && (
+            <DropdownMenuItem disabled>
+              <span>{loading ? "Loading…" : "No projects yet"}</span>
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </SidebarMenuItem>
+  );
+}
+
+/** Projects of the active org: collapsible flat list (the old Workspaces look)
+ * with live count + actions menu (New project -> dedicated page, All
+ * projects, future slot). Minimized by default; open state lives in memory
+ * (useState) while the sidebar stays mounted. Each row shows a mini avatar
+ * with the derived 4-letter project code + a DEMO "..." menu (View project);
+ * rows link to the management page (per-project detail routes are future).
+ * Tenant-scoped: useProjects refetches whenever activeOrgId changes, so
+ * switching orgs swaps the list. Flat rows hide in rail mode. */
+function ProjectsGroup() {
+  const { activeOrgId } = useAuth();
+  const { state, isMobile } = useSidebar();
+  const { pathname } = useLocation();
+  const projectsActive = pathname === ROUTES.projects || pathname.startsWith("/projects/");
+  const [open, setOpen] = React.useState(projectsActive);
+  const { items: projects, loading } = useProjects(activeOrgId);
+  const rail = state === "collapsed" && !isMobile;
+  if (rail) {
+    return (
+      <SidebarGroup aria-label="Projects">
+        <SidebarMenu>
+          <ProjectsRailMenuItem projects={projects} loading={loading} projectsActive={projectsActive} />
+        </SidebarMenu>
+      </SidebarGroup>
+    );
+  }
+  return (
+    <SidebarGroup aria-label="Projects">
+      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarMenu>
+        <Collapsible asChild open={open} onOpenChange={setOpen} className="group/collapsible">
+          <SidebarMenuItem>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton
+                tooltip={projects.length > 0 ? `Projects (${projects.length})` : "Projects"}
+                isActive={projectsActive}
+                  aria-label={`Projects, ${projects.length} total`}
+                  className="group data-[state=open]:text-sidebar-accent-foreground"
+                >
+                  <FolderOpen aria-hidden="true" />
+                  <span className="truncate">Projects</span>
+                <span className="shrink-0 rounded-md bg-muted/30 px-1.5 py-0.5 text-[11px] font-medium tabular-nums text-muted-foreground group-data-[active=true]:bg-transparent group-data-[active=true]:text-sidebar-accent-foreground group-data-[collapsible=icon]:hidden" aria-hidden="true">
+                  {loading ? "…" : projects.length}
+                </span>
+                <ChevronRight className="ml-auto size-4 shrink-0 text-muted-foreground transition-transform duration-300 group-data-[state=open]/collapsible:rotate-90 group-data-[state=open]/collapsible:text-sidebar-accent-foreground" aria-hidden="true" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="group-data-[collapsible=icon]:hidden">
+              <SidebarMenu>
+                {projects.map((p) => (
+                  <SidebarMenuItem key={p.id}>
+                    <SidebarMenuButton asChild tooltip={p.name}>
+                      <Link to={ROUTES.projects} title={p.name}>
+                        <span className="flex h-6 min-w-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary px-1 text-[10px] font-extrabold tracking-wider text-sidebar-primary-foreground" aria-hidden="true">
+                          {projectCode(p.name)}
+                        </span>
+                        <span className="truncate">{p.name}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                    <DropdownMenu modal={false}>
+                      <DropdownMenuTrigger asChild>
+                        <SidebarMenuAction showOnHover aria-label={`More actions for ${p.name}`}>
+                          <MoreHorizontal aria-hidden="true" />
+                        </SidebarMenuAction>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        side={isMobile ? "bottom" : "right"}
+                        align={isMobile ? "end" : "start"}
+                        className="w-48 rounded-lg"
+                      >
+                        <DropdownMenuItem onSelect={() => undefined}>
+                          <Link to={ROUTES.projects} className="flex w-full items-center gap-2">
+                            <FolderOpen className="size-4" aria-hidden="true" /> View project
+                          </Link>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </SidebarMenuItem>
+                ))}
+                {projects.length === 0 && !loading && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton disabled>
+                      <span>No projects yet</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
+              </SidebarMenu>
+            </CollapsibleContent>
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuAction
+                aria-label={`Project actions, ${projects.length} projects`}
+                title="Project actions"
+                className="border border-sidebar-border bg-muted/50 shadow-xs hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              >
+                <Plus aria-hidden="true" />
+              </SidebarMenuAction>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              side={isMobile ? "bottom" : "right"}
+              align={isMobile ? "end" : "start"}
+              className="w-56 rounded-lg"
+            >
+              <DropdownMenuGroup>
+                <DropdownMenuItem onSelect={() => undefined}>
+                  <Link to={ROUTES.projectNew} className="flex w-full items-center gap-2">
+                    <Plus className="size-4" aria-hidden="true" /> New project
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => undefined}>
+                  <Link to={ROUTES.projects} className="flex w-full items-center gap-2">
+                    <FolderOpen className="size-4" aria-hidden="true" /> All projects
+                  </Link>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
+              {/* Future project actions slot (rename/transfer/archive live here). */}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarMenuItem>
+        </Collapsible>
+      </SidebarMenu>
+    </SidebarGroup>
+  );
+}
+
+const ADMIN_NAV: NavEntry[] = [
   { to: ROUTES.admin, label: "Admin", icon: <ShieldCheck aria-hidden="true" />, end: true },
   { to: ROUTES.adminUsers, label: "Users", icon: <Users aria-hidden="true" /> },
   { to: ROUTES.adminOrgs, label: "Organizations", icon: <Building2 aria-hidden="true" /> },
   { to: ROUTES.adminAudit, label: "Global audit", icon: <FileText aria-hidden="true" /> },
   { to: ROUTES.gallery, label: "Gallery", icon: <Layers aria-hidden="true" /> },
+  { to: ROUTES.playground, label: "Playground", icon: <FlaskConical aria-hidden="true" /> },
 ];
 
-function SidebarBody() {
+/** Radix dropdowns are modal by default (background aria-hidden + focus trap),
+ * which trips axe aria-hidden-focus while open and fights the mobile Sheet.
+ * Nav menus are better non-modal (Esc/outside-click still dismiss): always false.
+ * (Replaces the earlier mobile-only useMenuModal — desktop modal added nothing.) */
+
+/** Org switcher: dropdown in the sidebar header (⌘1-9 shortcuts). */
+function OrgSwitcher() {
+  const { orgs, activeOrgId, switchOrg } = useAuth();
+  const { isMobile } = useSidebar();
+  const activeOrg = orgs.find((o) => o.id === activeOrgId) ?? orgs[0] ?? null;
+
+  React.useEffect(() => {
+    if (orgs.length < 2) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey) return;
+      const n = Number.parseInt(e.key, 10);
+      if (Number.isInteger(n) && n >= 1 && n <= Math.min(9, orgs.length)) {
+        const target = orgs[n - 1];
+        if (target && target.id !== activeOrgId) {
+          e.preventDefault();
+          void switchOrg(target.id);
+        }
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [orgs, activeOrgId, switchOrg]);
+
+  if (!activeOrg) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" disabled aria-label="No organization">
+            <span className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-black text-sidebar-primary-foreground" aria-hidden="true">
+              F
+            </span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
+
+  // Single org: static brand, no switcher (multitenancy mínimo).
+  if (orgs.length < 2) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton size="lg" aria-label={activeOrg.name}>
+            <span className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-black text-sidebar-primary-foreground" aria-hidden="true">
+              F
+            </span>
+            <span className="grid flex-1 text-left leading-tight">
+              <span className="truncate font-semibold">{activeOrg.name}</span>
+              <span className="truncate text-xs text-muted-foreground">{activeOrg.slug}</span>
+            </span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    );
+  }
+
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              size="lg"
+              aria-label={`Switch organization, current ${activeOrg.name}`}
+              className="group data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+              <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-black text-sidebar-primary-foreground" aria-hidden="true">
+                F
+              </span>
+              <span className="grid min-w-0 flex-1 text-left leading-tight">
+                <span className="truncate text-sm font-bold tracking-tight">{activeOrg.name}</span>
+<span className="truncate text-xs text-muted-foreground group-data-[state=open]:text-sidebar-accent-foreground">{activeOrg.slug}</span>
+              </span>
+              <ChevronsUpDown className="ml-auto size-4 shrink-0" aria-hidden="true" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            side={isMobile ? "bottom" : "right"}
+            sideOffset={24}
+            className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+          >
+        <DropdownMenuLabel>Organizations</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          {orgs.map((o, i) => (
+            <DropdownMenuItem key={o.id} onSelect={() => void switchOrg(o.id)}>
+              <span className="grid min-w-0 flex-1 leading-tight">
+                <span className="truncate">{o.name}</span>
+                <span className="truncate text-xs text-muted-foreground">{o.slug}</span>
+              </span>
+              {o.id === activeOrgId ? (
+                <Check className="size-4 shrink-0" aria-hidden="true" />
+              ) : (
+                i < 9 && <DropdownMenuShortcut>⌘{i + 1}</DropdownMenuShortcut>
+              )}
+            </DropdownMenuItem>
+          ))}
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => undefined}>
+          <Link to={ROUTES.orgs} className="flex w-full items-center gap-2">
+            <Plus className="size-4" aria-hidden="true" /> All organizations
+          </Link>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  );
+}
+
+/** Flat nav: Console items + staff Administration after a separator.
+ * The Organizations/Projects sections below are collapsibles (upstream
+ * animate-ui pattern); Workspaces was removed as duplicative of the header
+ * org switcher. (Collapsible primitive stays in the catalog for disclosures.) */
+
+/** User dropdown in the footer (Account / Logout / Logout everywhere). */
+function UserMenu() {
+  const { user, logout, logoutEverywhere } = useAuth();
+  const { isMobile } = useSidebar();
+  const navigate = useNavigate();
+  if (!user) return null;
+
+  const onLogout = async () => {
+    await logout();
+    navigate(ROUTES.login);
+  };
+  const onLogoutEverywhere = async () => {
+    await logoutEverywhere();
+    navigate(ROUTES.login);
+  };
+
+  return (
+    <SidebarMenu>
+      <SidebarMenuItem>
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <SidebarMenuButton
+              size="lg"
+              aria-label={`Account menu for ${user.email}`}
+              className="group data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+            >
+              <Avatar name={user.email} />
+              <span className="grid min-w-0 flex-1 text-left leading-tight">
+                <span className="truncate text-sm font-medium">{user.email}</span>
+                <span className="truncate text-xs text-muted-foreground group-data-[state=open]:text-sidebar-accent-foreground">
+                  {user.is_superuser ? "root" : user.is_staff ? "staff" : "member"}
+                </span>
+              </span>
+              <ChevronsUpDown className="ml-auto size-4 shrink-0" aria-hidden="true" />
+            </SidebarMenuButton>
+          </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        side={isMobile ? "bottom" : "right"}
+        sideOffset={24}
+        className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+      >
+        <DropdownMenuLabel>
+          <span className="grid leading-tight">
+            <span className="truncate text-sm">{user.email}</span>
+            <span className="truncate text-xs font-normal text-muted-foreground">Signed in</span>
+          </span>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem onSelect={() => undefined}>
+            <Link to={ROUTES.account} className="flex w-full items-center gap-2">
+              <Settings className="size-4" aria-hidden="true" /> Account
+            </Link>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem variant="destructive" onSelect={() => void onLogout()}>
+            <span className="flex w-full items-center gap-2">
+              <LogOut className="size-4" aria-hidden="true" /> Logout
+            </span>
+            <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onSelect={() => void onLogoutEverywhere()}>
+            <span className="flex w-full items-center gap-2">
+              <LogOut className="size-4" aria-hidden="true" /> Logout everywhere
+            </span>
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
+      </DropdownMenuContent>
+        </DropdownMenu>
+      </SidebarMenuItem>
+    </SidebarMenu>
+  );
+}
+
+/** The application sidebar: upstream shell + our content. */
+export function AppSidebar() {
   const { user } = useAuth();
   const isStaff = user?.is_staff === true || user?.is_superuser === true;
-  const { collapsed } = useSidebar();
   return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
+    <Sidebar collapsible="icon" role="complementary" aria-label="Primary">
       <SidebarHeader>
-        <span
-          className="flex size-7 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sm font-black text-sidebar-primary-foreground"
-          aria-hidden="true"
-        >
-          F
-        </span>
-        {!collapsed && (
-          <span className="truncate text-sm font-bold tracking-tight">
-            fast-backend<span className="text-muted-foreground"> /client</span>
-          </span>
-        )}
-        {!collapsed && (
-          <span className="ml-auto">
-            <SidebarDrawerClose />
-          </span>
-        )}
+        <OrgSwitcher />
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup aria-label="Console">
           <SidebarGroupLabel>Console</SidebarGroupLabel>
           <SidebarMenu>
             {CONSOLE_NAV.map((item) => (
-              <SidebarMenuItem key={item.to} {...item} />
+              <SideNavLink key={item.to} {...item} />
+            ))}
+          </SidebarMenu>
+        </SidebarGroup>
+        <OrganizationsGroup />
+        <ProjectsGroup />
+        <SidebarGroup aria-label="Manage">
+          <SidebarGroupLabel>Manage</SidebarGroupLabel>
+          <SidebarMenu>
+            {MANAGE_NAV.map((item) => (
+              <SideNavLink key={item.to} {...item} />
             ))}
           </SidebarMenu>
         </SidebarGroup>
         {isStaff && (
           <SidebarGroup aria-label="Administration">
-            <SidebarGroupLabel>Admin</SidebarGroupLabel>
+            <SidebarGroupLabel>Administration</SidebarGroupLabel>
+            <SidebarSeparator />
             <SidebarMenu>
               {ADMIN_NAV.map((item) => (
-                <SidebarMenuItem key={item.to} {...item} />
+                <SideNavLink key={item.to} {...item} />
               ))}
             </SidebarMenu>
           </SidebarGroup>
         )}
       </SidebarContent>
       <SidebarFooter>
-        {user && !collapsed ? (
-          <p className="truncate text-xs text-muted-foreground" title={user.email}>
-            {user.email}
+        <UserMenu />
+        {user && (
+          <p className="flex items-center gap-1.5 truncate px-2 pb-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+            {user.is_superuser && <Badge variant="secondary">root</Badge>}
+            {user.is_staff && !user.is_superuser && <Badge variant="secondary">staff</Badge>}
           </p>
-        ) : (
-          <span className="sr-only">Navigation footer</span>
         )}
       </SidebarFooter>
-    </div>
-  );
-}
-
-export function Sidebar() {
-  const { collapsed, mobileOpen, setMobileOpen } = useSidebar();
-  const reduceMotion = useReducedMotion();
-  return (
-    <>
-      {/* Desktop: static rail/full sidebar */}
-      <aside
-        aria-label="Primary"
-        className={cn(
-          "sticky top-0 hidden h-screen shrink-0 border-r border-sidebar-border md:block",
-          "transition-[width] duration-200 ease-out",
-          collapsed ? "w-16" : "w-64",
-        )}
-      >
-        <SidebarBody />
-      </aside>
-      {/* Mobile: drawer */}
-      <AnimatePresence>
-        {mobileOpen && (
-          <div className="fixed inset-0 z-40 md:hidden">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={reduceMotion ? { duration: 0 } : OVERLAY_TRANSITION}
-              className="absolute inset-0 bg-black/50"
-              onClick={() => setMobileOpen(false)}
-              aria-hidden="true"
-            />
-            <motion.aside
-              role="dialog"
-              aria-modal="true"
-              aria-label="Primary"
-              initial={reduceMotion ? false : { x: "-100%" }}
-              animate={{ x: 0 }}
-              exit={reduceMotion ? { x: 0 } : { x: "-100%" }}
-              transition={reduceMotion ? { duration: 0 } : DRAWER_TRANSITION}
-              className="absolute inset-y-0 left-0 w-72 border-r border-sidebar-border"
-            >
-              <SidebarBody />
-            </motion.aside>
-          </div>
-        )}
-      </AnimatePresence>
-    </>
+    </Sidebar>
   );
 }

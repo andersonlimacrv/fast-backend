@@ -1,35 +1,28 @@
-import { Navigate, Outlet, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
 
-import { useAuth } from "@/contexts/AuthContext";
-import { AppToaster } from "@/components/ui/toaster";
-import { DashboardLayout } from "@/layouts/dashboard-layout";
-import { AccountPage } from "@/pages/Account";
-import { AdminAuditPage } from "@/pages/AdminAudit";
-import { AdminOrgsPage } from "@/pages/AdminOrgs";
-import { AdminOverviewPage } from "@/pages/AdminOverview";
-import { AdminUsersPage } from "@/pages/AdminUsers";
-import { LandingPage } from "@/pages/Landing";
-import { LoginPage, RegisterPage } from "@/pages/Auth";
-import { AuditPage } from "@/pages/Audit";
-import { DashboardPage } from "@/pages/Dashboard";
-import { GrantsPage } from "@/pages/Grants";
-import { GalleryPage } from "@/pages/Gallery";
-import { HealthPage } from "@/pages/Health";
-import { MembersPage } from "@/pages/Members";
-import { NotFoundPage } from "@/pages/NotFound";
-import { OrgsPage } from "@/pages/Orgs";
-import { ProjectsPage } from "@/pages/Projects";
-
-function Protected() {
-  const { user, ready } = useAuth();
-  if (!ready) return <p className="p-8 text-sm text-muted-foreground">Loading session…</p>;
-  if (!user) return <Navigate to="/" replace />;
-  return (
-    <DashboardLayout>
-      <Outlet />
-    </DashboardLayout>
-  );
-}
+import { AppToaster } from "@/components/custom-ui/components/toaster";
+import { Protected } from "@/layouts/protected-layout";
+import { AccountPage } from "@/pages/account/Account";
+import { AdminAuditPage } from "@/pages/admin/Audit";
+import { AdminOrgsPage } from "@/pages/admin/Orgs";
+import { AdminOverviewPage } from "@/pages/admin/Overview";
+import { AdminUsersPage } from "@/pages/admin/Users";
+import { LandingPage } from "@/pages/landing/Landing";
+import { LoginPage } from "@/pages/auth/Login";
+import { RegisterPage } from "@/pages/auth/Register";
+import { AuditPage } from "@/pages/audit/Audit";
+import { DashboardPage } from "@/pages/overview/Dashboard";
+import { GrantsPage } from "@/pages/grants/Grants";
+import { GalleryPage } from "@/pages/admin/Gallery";
+import { HealthPage } from "@/pages/health/Health";
+import { MembersPage } from "@/pages/orgs/[orgId]/Members";
+import { NotFoundPage } from "@/pages/not-found/NotFound";
+import { OrgsPage } from "@/pages/orgs/Orgs";
+import { NewProjectPage, ProjectsPage } from "@/pages/projects/Projects";
+import { PlaygroundBlocksPage } from "@/pages/playground/Blocks";
+import { PlaygroundComponentsPage } from "@/pages/playground/Components";
+import { PlaygroundPage } from "@/pages/playground/Playground";
+import { SettingsPage } from "@/pages/settings/Settings";
 
 export default function App() {
   return (
@@ -44,14 +37,19 @@ export default function App() {
         <Route path="orgs" element={<OrgsPage />} />
         <Route path="orgs/:orgId/members" element={<MembersPage />} />
         <Route path="projects" element={<ProjectsPage />} />
+        <Route path="projects/new" element={<NewProjectPage />} />
         <Route path="grants" element={<GrantsPage />} />
         <Route path="audit" element={<AuditPage />} />
         <Route path="account" element={<AccountPage />} />
+        <Route path="settings" element={<SettingsPage />} />
         <Route path="admin" element={<AdminOverviewPage />} />
         <Route path="admin/users" element={<AdminUsersPage />} />
         <Route path="admin/orgs" element={<AdminOrgsPage />} />
         <Route path="admin/audit" element={<AdminAuditPage />} />
         <Route path="admin/gallery" element={<GalleryPage />} />
+        <Route path="playground" element={<PlaygroundPage />} />
+        <Route path="playground/components" element={<PlaygroundComponentsPage />} />
+        <Route path="playground/blocks" element={<PlaygroundBlocksPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
       </Routes>

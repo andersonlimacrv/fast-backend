@@ -74,3 +74,48 @@ def test_extra_keys_warn_without_failing(tmp_path) -> None:
     code, report = check_env(env, example)
     assert code == 0
     assert "MY_EXPERIMENT" in report
+
+
+@pytest.mark.unit
+def test_table_lists_every_key_with_source(tmp_path) -> None:
+    example = _write(tmp_path / ".env.example", "TENANCY_MODE=single\nMISSING_KEY=1\n")
+    env = _write(tmp_path / ".env", "TENANCY_MODE=row\n")
+    code, report = check_env(env, example)
+    assert code == 1
+    assert "TENANCY_MODE" in report and "MISSING_KEY" in report
+    assert "[env]" in report and "[code]" in report
+    assert "missing" in report
+
+
+@pytest.mark.unit
+def test_code_default_column_comes_from_settings(tmp_path) -> None:
+    example = _write(tmp_path / ".env.example", "TENANCY_MODE=single\n")
+    env = _write(tmp_path / ".env", "TENANCY_MODE=row\n")
+    _, report = check_env(env, example)
+    assert "single" in report  # Settings default, shown plain (public source)
+
+
+@pytest.mark.unit
+def test_secrets_masked_with_lengths_only(tmp_path) -> None:
+    example = _write(tmp_path / ".env.example", "SECRET_KEY=x\n")
+    env = _write(tmp_path / ".env", f"SECRET_KEY={SECRET * 10}\n")
+    _, report = check_env(env, example)
+    assert SECRET not in report
+    assert f"set ({len(SECRET * 10)} chars)" in report
+
+
+@pytest.mark.unit
+def test_url_credentials_redacted(tmp_path) -> None:
+    example = _write(tmp_path / ".env.example", "DATABASE_URL=x\n")
+    env = _write(tmp_path / ".env", "DATABASE_URL=postgresql://bob:hunter2@db:5432/app\n")
+    _, report = check_env(env, example)
+    assert "hunter2" not in report and "bob@" not in report
+    assert "db" in report
+
+
+@pytest.mark.unit
+def test_code_defaults_masked_like_env(tmp_path) -> None:
+    example = _write(tmp_path / ".env.example", "DATABASE_URL=x\n")
+    env = _write(tmp_path / ".env", "KEEP=1\n")
+    _, report = check_env(env, example)
+    assert "postgres:postgres" not in report

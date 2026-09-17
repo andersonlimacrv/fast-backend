@@ -27,6 +27,11 @@ from app.core.settings import Settings
 from app.infrastructure.db.base import Base
 from app.main import create_app
 
+# Test sessions must not depend on a developer `.env`: FRONTEND_URL is
+# required at real boot, so the suite pins its own test value here (os.environ
+# beats dotenv/defaults; production/dev strictness is untouched).
+os.environ.setdefault("FRONTEND_URL", "https://app.example.com")
+
 # Sandboxes without veth networking cannot use bridge mode:
 # run pytest with FB_TEST_NETWORK=host (fixed localhost ports, Ryuk disabled).
 # Read lazily by testcontainers at container start, so setting it here (after

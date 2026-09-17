@@ -1,9 +1,9 @@
 /* Shared e2e helpers: API-gated auth (real backend, no session mocks).
  *
  * Authed suites probe `E2E_API_URL` (default http://127.0.0.1:8000, same as
- * `scripts/e2e_spa_flow.py`) and SKIP when unreachable, so `make web-e2e`
- * stays green offline (anonymous routes) and goes full with the stack up
- * (`make db-up && make migrate && make api`).
+ * `scripts/e2e_spa_flow.py`) and SKIP when unreachable, so plain `make web-e2e`
+ * stays green offline (anonymous routes). Prefer `make e2e-full` (isolated
+ * DB/API on E2E_* ports) — running against the dev API pollutes the dev DB.
  */
 
 import { test as base, type Page } from "@playwright/test";
@@ -100,7 +100,7 @@ export function describeWithApi(title: string, fn: () => void): void {
   base.describe(title, () => {
     // eslint-disable-next-line no-empty-pattern -- Playwright requires object destructuring here
     base.beforeAll(async ({}, testInfo) => {
-      if (!(await apiUp())) testInfo.skip(true, "needs API: make db-up && make migrate && make api");
+      if (!(await apiUp())) testInfo.skip(true, "needs API: make e2e-full (isolated) or db-up && migrate && api (dev, pollutes)");
     });
     fn();
   });

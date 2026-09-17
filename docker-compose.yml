@@ -26,6 +26,36 @@ services:
       timeout: 3s
       retries: 10
 
+  # Isolated browser-E2E data services (profiles: never start with plain up).
+  # Own ports + volumes: e2e runs must not touch dev pgdata.
+  db-e2e:
+    image: ${POSTGRES_IMAGE:-postgres:17-alpine}
+    profiles: [e2e]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: fastbackend
+    ports:
+      - "${E2E_PG_PORT:-5434}:5432"
+    volumes:
+      - pgdata_e2e:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis-e2e:
+    image: ${REDIS_IMAGE:-valkey/valkey:9-alpine}
+    profiles: [e2e]
+    ports:
+      - "${E2E_REDIS_PORT:-6380}:6379"
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
   app:
     build:
       context: .
@@ -85,4 +115,5 @@ services:
 
 volumes:
   pgdata:
+  pgdata_e2e:
   miniodata:
