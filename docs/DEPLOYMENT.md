@@ -23,10 +23,24 @@ mkdir -p ~/fast-backend && cd ~/fast-backend
 ```bash
 # on the VPS / container with the production .env (BOOTSTRAP_KEY set):
 uv run python scripts/bootstrap_root.py --email root@example.com
-# or: make admin-bootstrap   (BOOTSTRAP_KEY + ROOT_EMAIL from env, password via prompt)
+# or: make admin-bootstrap email=root@example.com   (BOOTSTRAP_KEY read from .env, password twice via prompt)
 ```
 
 Fail-closed: wrong key OR existing root → generic `bootstrap failed`, exit 1 (never reveals which). Second run always fails (partial unique index `uq_single_root`). Audited as `root.bootstrap`.
+
+## First user in dev (zero to logged-in root)
+
+```bash
+make setup                                   # .env + deps + drift check + migrations (needs 0008)
+make env-check                               # BOOTSTRAP_KEY must be ok (≥32 chars, not the dev default)
+make admin-bootstrap email=you@example.com   # valid email required; BOOTSTRAP_KEY read from .env; password twice via prompt (min 8 chars)
+# verify (dev DB; see test query in "Minimum observability" spirit):
+# psql "$DATABASE_URL" -c "SELECT email, is_staff, is_superuser FROM users;"
+```
+
+Then log in (`POST /auth/login` or the SPA) as root: `is_staff + is_superuser`. Promote staff via `POST /admin/staff/{id}/grant`.
+
+`bootstrap failed` checklist (input rules only — the message never says which check fired, by design): `BOOTSTRAP_KEY` ok in `make env-check`? migrations at head (`make migrate`)? email valid (`user@domain`)? password ≥8? terminal with TTY for the password prompt (Git Bash normally provides one; without a TTY `getpass` fails closed)? root already exists (second run always fails)?
 
 ## Password recovery operations (change B)
 

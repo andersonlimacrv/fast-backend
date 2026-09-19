@@ -23,10 +23,24 @@ mkdir -p ~/fast-backend && cd ~/fast-backend
 ```bash
 # no VPS / container com o .env de produção (BOOTSTRAP_KEY definida):
 uv run python scripts/bootstrap_root.py --email root@example.com
-# ou: make admin-bootstrap   (BOOTSTRAP_KEY + ROOT_EMAIL do env, senha via prompt)
+# ou: make admin-bootstrap email=root@example.com   (BOOTSTRAP_KEY lida do .env, senha 2x via prompt)
 ```
 
 Falha-fechada: key errada OU root existente → `bootstrap failed` genérico, exit 1 (nunca revela qual). A 2ª execução sempre falha (índice parcial `uq_single_root`). Auditado como `root.bootstrap`.
+
+## Primeiro usuário em dev (do zero ao root logado)
+
+```bash
+make setup                                   # .env + deps + checagem de drift + migrations (precisa da 0008)
+make env-check                               # BOOTSTRAP_KEY precisa estar ok (≥32 chars, fora do default)
+make admin-bootstrap email=voce@example.com   # email válido obrigatório; BOOTSTRAP_KEY lida do .env; senha 2x via prompt (min 8 chars)
+# conferir (banco dev):
+# psql "$DATABASE_URL" -c "SELECT email, is_staff, is_superuser FROM users;"
+```
+
+Depois logue como root (`POST /auth/login` ou a SPA): `is_staff + is_superuser`. Promova staff via `POST /admin/staff/{id}/grant`.
+
+Checklist do `bootstrap failed` (só regras de entrada — a mensagem nunca diz qual checagem disparou, por desenho): `BOOTSTRAP_KEY` ok no `make env-check`? migrations no head (`make migrate`)? email válido (`user@domain`)? senha ≥8? terminal com TTY p/ o prompt de senha (Git Bash normalmente entrega um; sem TTY o `getpass` falha fechado)? root já existe (2ª execução sempre falha)?
 
 ## Operação do recovery (change B)
 

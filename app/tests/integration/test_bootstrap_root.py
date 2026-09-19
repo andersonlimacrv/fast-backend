@@ -118,6 +118,34 @@ async def test_amain_short_password_exits_1_without_user(monkeypatch, containers
 
 
 @pytest.mark.integration
+async def test_malformed_email_creates_nothing(base_settings, clean_db) -> None:
+    settings = _settings(base_settings)
+    with pytest.raises(Exception, match="bootstrap failed"):
+        await bootstrap(settings=settings, email="andersonlimacrv", password=PASSWORD, key=KEY)
+    engine = create_async_engine(settings.database_url)
+    try:
+        assert await _count(engine, User) == 0
+        assert await _count(engine, AuditLog, AuditLog.action == "root.bootstrap") == 0
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.integration
+async def test_amain_mismatched_passwords_create_nothing(monkeypatch, containers, clean_db, capsys) -> None:
+    _amain_env(monkeypatch, containers)
+    responses = iter([PASSWORD, "Different1!"])
+    monkeypatch.setattr(getpass, "getpass", lambda *args, **kwargs: next(responses))
+    assert await amain(["--email", EMAIL, "--key", KEY]) == 1
+    assert capsys.readouterr().out.strip() == GENERIC_FAILURE
+    engine = create_async_engine(containers["database_url"])
+    try:
+        assert await _count(engine, User) == 0
+        assert await _count(engine, AuditLog, AuditLog.action == "root.bootstrap") == 0
+    finally:
+        await engine.dispose()
+
+
+@pytest.mark.integration
 async def test_taken_email_refused(base_settings, clean_db, client) -> None:
     reg = await client.post("/auth/register", json={"email": EMAIL, "password": PASSWORD})
     assert reg.status_code == 201, reg.text

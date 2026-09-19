@@ -44,8 +44,9 @@ Documents modules, flags and release from live `GET /meta` (static fallback + of
 Needs a privileged user (backend change `A-admin-control-plane`):
 
 ```bash
-# repo root — one-shot root (BOOTSTRAP_KEY from .env, password via prompt):
-make admin-bootstrap
+# repo root — one-shot root (BOOTSTRAP_KEY read from .env, valid email,
+# password twice via prompt, min 8 chars):
+make admin-bootstrap email=you@example.com
 ```
 
 Then log in as root: nav shows **Admin / Admin users / Admin orgs / Admin audit**.

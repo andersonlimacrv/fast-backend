@@ -88,6 +88,14 @@ make dev     # stack backend (docker) + frontend (:5173)
 make api     # API com reload → http://127.0.0.1:8000/docs (precisa do db: make db-up)
 ```
 
+### 2. Primeiro usuário (root one-shot)
+
+```bash
+make admin-bootstrap email=voce@example.com   # email válido; senha 2x via prompt (min 8)
+```
+
+Depois logue como root (`POST /auth/login` ou a SPA). Runbook completo + checklist do `bootstrap failed`: `docs/DEPLOYMENT.pt-BR.md` ("Bootstrap do root", "Primeiro usuário em dev").
+
 <details>
 <summary>Por baixo dos panos</summary>
 

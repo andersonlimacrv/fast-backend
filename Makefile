@@ -277,8 +277,14 @@ new-project: ## Scaffold sibling (make new-project name=x dest=../x)
 	@if [ -z "$(name)" ] || [ -z "$(dest)" ]; then echo "Usage: make new-project name=<kebab> dest=<dir>"; exit 1; fi
 	$(UV) run python scripts/new_project.py --name "$(name)" --dest "$(dest)"
 
-admin-bootstrap: ## Create the one-shot root user (BOOTSTRAP_KEY from env, never logs secrets)
-	$(UV) run python scripts/bootstrap_root.py
+admin-bootstrap: _check-env ## Create the one-shot root user (ROOT_EMAIL=... or email=... — BOOTSTRAP_KEY read from .env, valid email, password twice via prompt, never logs secrets)
+	@if [ -z "$(email)" ] && [ -z "$${ROOT_EMAIL:-}" ]; then \
+		echo "Usage: ROOT_EMAIL=you@example.com make admin-bootstrap (or make admin-bootstrap email=you@example.com)"; exit 1; \
+	fi
+	@if [ -z "$${BOOTSTRAP_KEY:-}" ]; then \
+		export BOOTSTRAP_KEY="$$(grep '^BOOTSTRAP_KEY=' $(ENV_FILE) | cut -d= -f2-)"; \
+	fi; \
+	$(UV) run python scripts/bootstrap_root.py --email "$(or $(email),$${ROOT_EMAIL})"
 
 release-notes: ## Notes for a version (make release-notes v=v1.1.0)
 	@if [ -z "$(v)" ]; then echo "Usage: make release-notes v=vX.Y.Z"; exit 1; fi

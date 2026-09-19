@@ -18,6 +18,8 @@ import hmac
 import logging
 import os
 
+from email_validator import EmailNotValidError, validate_email
+
 from app.core.settings import Settings
 from app.infrastructure.auth.hashing import PwdlibHasher
 from app.infrastructure.auth.refresh_tokens import RefreshTokenRepository
@@ -31,10 +33,25 @@ logger = logging.getLogger(__name__)
 GENERIC_FAILURE = "bootstrap failed"
 
 
+def validate_root_email(email: str) -> None:
+    """Format gate for the one-shot root email (CLI edge; HTTP uses `EmailStr`).
+
+    Syntax only (`check_deliverability=False`): no DNS, no network, nothing
+    leaves the machine. The bootstrap is one-shot (`uq_single_root`), so a
+    typo here would be near-permanent — reject before any DB I/O. Raises the
+    generic failure (fail-closed like every other bootstrap gate).
+    """
+    try:
+        validate_email(email.strip(), check_deliverability=False)
+    except EmailNotValidError:
+        raise ValueError(GENERIC_FAILURE) from None
+
+
 async def bootstrap(*, settings: Settings, email: str, password: str, key: str):
     """Create the root. Raises on wrong key or existing root (caller maps to exit 1)."""
     if not settings.bootstrap_key or not key or not hmac.compare_digest(key, settings.bootstrap_key):
         raise ValueError(GENERIC_FAILURE)
+    validate_root_email(email)
     session_factory = create_session_factory(settings)
     hasher = PwdlibHasher(settings)
     refresh_repo = RefreshTokenRepository(settings)
@@ -79,6 +96,12 @@ async def amain(argv: list[str] | None = None) -> int:
         return 1
     password = getpass.getpass("root password (min 8 chars): ")
     if len(password) < 8:
+        print(GENERIC_FAILURE)
+        return 1
+    # One-shot + no echo: a typo would burn the single chance with a wrong
+    # hash nobody can see. Mismatch fails generic (same output, no oracle).
+    confirm = getpass.getpass("confirm root password: ")
+    if confirm != password:
         print(GENERIC_FAILURE)
         return 1
     try:
