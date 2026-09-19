@@ -36,6 +36,7 @@ async def test_smtp_delivery_lands_in_mailpit(mailpit: dict) -> None:
         smtp_host=host,
         smtp_port=port,
         smtp_from="no-reply@example.com",
+        frontend_url="https://app.example.com",
     )
     sender = SmtpEmailSender(settings)
     await sender.send_template(

@@ -61,6 +61,57 @@ def test_main_never_prints_values(tmp_path, capsys, monkeypatch) -> None:
 
 
 @pytest.mark.unit
+def test_proxy_hops_rule(tmp_path) -> None:
+    example = _write(tmp_path / ".env.example", "TRUSTED_PROXY_HOPS=0\n")
+    code, _ = check_env(_write(tmp_path / ".env", "TRUSTED_PROXY_HOPS=1\n"), example)
+    assert code == 0
+    # No upper cap (mirrors Settings >= 0): exotic proxy chains stay valid.
+    code, _ = check_env(_write(tmp_path / ".env", "TRUSTED_PROXY_HOPS=101\n"), example)
+    assert code == 0
+    code, report = check_env(_write(tmp_path / ".env", "TRUSTED_PROXY_HOPS=many\n"), example)
+    assert code == 1
+    assert "TRUSTED_PROXY_HOPS" in report
+    code, report = check_env(_write(tmp_path / ".env", "TRUSTED_PROXY_HOPS=-1\n"), example)
+    assert code == 1
+    assert "TRUSTED_PROXY_HOPS" in report
+
+
+@pytest.mark.unit
+def test_samesite_rule_is_case_insensitive(tmp_path) -> None:
+    example = _write(tmp_path / ".env.example", "AUTH_COOKIE_SAMESITE=lax\n")
+    for value in ("lax", "Lax", "LAX", "strict", "Strict"):
+        code, _ = check_env(_write(tmp_path / ".env", f"AUTH_COOKIE_SAMESITE={value}\n"), example)
+        assert code == 0, value
+    code, report = check_env(_write(tmp_path / ".env", "AUTH_COOKIE_SAMESITE=none\n"), example)
+    assert code == 1
+    assert "AUTH_COOKIE_SAMESITE" in report
+
+
+@pytest.mark.unit
+def test_rate_limit_rules(tmp_path) -> None:
+    example = _write(
+        tmp_path / ".env.example",
+        "REGISTER_MAX_ATTEMPTS=10\nREGISTER_WINDOW_SECONDS=3600\n"
+        "RATE_LIMIT_GLOBAL_MAX_ATTEMPTS=300\nRATE_LIMIT_GLOBAL_WINDOW_SECONDS=60\n",
+    )
+    code, _ = check_env(
+        _write(
+            tmp_path / ".env",
+            "REGISTER_MAX_ATTEMPTS=10\nREGISTER_WINDOW_SECONDS=3600\n"
+            "RATE_LIMIT_GLOBAL_MAX_ATTEMPTS=300\nRATE_LIMIT_GLOBAL_WINDOW_SECONDS=60\n",
+        ),
+        example,
+    )
+    assert code == 0
+    code, report = check_env(_write(tmp_path / ".env", "REGISTER_MAX_ATTEMPTS=many\n"), example)
+    assert code == 1
+    assert "REGISTER_MAX_ATTEMPTS" in report
+    code, report = check_env(_write(tmp_path / ".env", "RATE_LIMIT_GLOBAL_MAX_ATTEMPTS=0\n"), example)
+    assert code == 1
+    assert "RATE_LIMIT_GLOBAL_MAX_ATTEMPTS" in report
+
+
+@pytest.mark.unit
 def test_missing_file_exits_two(tmp_path) -> None:
     code, report = check_env(tmp_path / ".env", tmp_path / ".env.example")
     assert code == 2

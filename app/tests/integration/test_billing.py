@@ -37,6 +37,7 @@ async def billing_client(base_settings: Settings, clean_db: None):
         billing_enabled=True,
         stripe_webhook_secret=SECRET,
         stripe_price_map={PRICE_PRO: {"key": "projects.max", "limit": 50}},
+        frontend_url="https://app.example.com",
     )
     app = build_app(settings)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:

@@ -127,3 +127,16 @@ inalterada; seção "Bonus · KpiGrid" da gallery demonstra a live-region do she
 (registrada como extra intencional, não DEMO upstream); `line-length 128` vale p/
 Python (`ruff`) — no client o gate é `oxlint` (linhas longas herdadas quebradas
 oportunisticamente: `file-tree` ROW_CLASS, `toggle-group` cva).
+
+## 12. Errata (2026-09-17, change `docs-consolidacao`) — §§1–11 acima são o debate original e seguem históricos; o que mudou depois:
+
+**Continua válido:** regra de ouro dos ícones via `lib/icons.tsx` (§1); tokens do tema intactos (§3); `Inter Variable` + `JetBrains Mono` (§4); `motion/react` único + 120–250ms GPU + reduced-motion (§5); `GooeyMenu` restrito a debug + `DeplymentCard` descartado (§6); deferidos TanStack/Recharts/`ExpandDetails`/`FileTree` de produto/`SubscriptionCalendar` com gatilhos (§9 — `FileTree` como primitivo de UI foi portado no ledger §11 item 10, o que segue deferido é só seu uso em produto); `ring-2` em arquivo novo + `ring-1` legado oportunístico (§10); exceção `gooey-menu` width/height (§10); breakpoints drawer/rail (§10).
+
+**Superado (com a change que superou):**
+- §2 "não adicionar Radix novo" → exceção registrada: `dropdown-menu` radix vendored adotado a pedido do dono (`review-design.md:116-122`, change `sidebar-demo` S7.5); `ui/dropdown-menu.tsx` Base-UI **deletado** — um sistema só. Base-UI segue o padrão para o resto.
+- §2 sidebar sobre Base-UI → iterações S7–S13 (`sidebar-demo` tasks): org switcher, subgroups, Workspaces removido (duplicava o switcher), grupo Projects tenant-scoped, rail abre menus, shell full-width com breadcrumb no header, scrollbar por tokens.
+- §7 `use-mobile` "sem hook novo" → `use-mobile` blindado p/ SSR/jsdom existe (fix do crash S7.1).
+- Collapsible Base-UI → trocado por `primitives/radix/collapsible` vendored (S8.6: Base-UI fechava seco, upstream tem AnimatePresence open+close).
+- `components/animate-ui/` + `primitives/` planos → `custom-ui-restructure`: tudo sob `components/custom-ui/` (pasta por componente + `effects/`), proibido recriar `primitives/`, `radix/`, `animate/` (ver `docs/CLIENT-STRUCTURE.md`).
+- Faltava a convenção de rotas → criada: `docs/CLIENT-STRUCTURE.md` + ADR 0013 (pasta espelha `ROUTES`, gate em `layouts/`, segmento dinâmico nunca é autoridade).
+- Gallery "checklist manual de render staff" → segue manual; fila playground S2+ fatiada em uma change por componente (decisão do dono 2026-09-17).

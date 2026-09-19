@@ -102,6 +102,7 @@ async def test_login_throttling(base_settings: Settings, clean_db: None) -> None
         redis_url=base_settings.redis_url,
         login_max_attempts=3,
         login_window_seconds=60,
+        frontend_url="https://app.example.com",
     )
     app = build_app(settings)
     try:

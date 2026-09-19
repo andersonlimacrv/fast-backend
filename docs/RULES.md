@@ -94,7 +94,14 @@ Kubernetes, microservices, Kafka, event sourcing, CQRS completo, schema/database
 - Usuário (README, CONTRIBUTING, SECURITY, `docs/{ARCHITECTURE,SCALING,DEPLOYMENT}`, `guides/`, templates, CHANGELOG): **inglês padrão** + variante `.pt-BR.md` com banner de alternância.
 - Interno/processo (AGENTS.md, RULES, ROADMAP, ADRs, SKILLS-REGISTRY, ANALYSIS, openspec, agentes): PT-BR.
 
-## 10. Pin de versões (dependências externas)
+## 10. Anti-drift de números vivos (carimbo obrigatório)
+
+- Contagem que muda a cada merge (testes, specs, ADRs, fases) **nunca aparece nua na prosa**: todo número vivo carrega `medido em YYYY-MM-DD` + comando de medição ou link para a fonte (`CHANGELOG.md`, `openspec/specs/`, `docs/adr/`). Exemplo: `179 coletados (90 unit + 89 integration; medido 2026-09-17: pytest --collect-only)`.
+- Sem carimbo, sem número: apontar a fonte dinâmica (badge, CHANGELOG, `openspec list`) em vez de hardcodificar.
+- Exceções: seções versionadas do `CHANGELOG.md` (histórico, nunca reescritas) e comentários de medição junto ao número (ex.: `<!-- test tiers (medido ...) -->` no README) podem citar números antigos datados.
+- Espelhos EN/PT-BR atualizam juntos; o aceite de qualquer change de docs inclui `grep` pelos números antigos.
+
+## 11. Pin de versões (dependências externas)
 
 - Toda imagem/container e ferramenta externa deve ser pinada em `major.minor[-variant]` (ex.: `postgres:17-alpine`, `valkey/valkey:9-alpine`); **nunca** tag flutuante só-major (`redis:7`), nunca `:latest`.
 - Patches flutuam via tag minor (recebem CVE fixes); bumps de minor/major via OpenSpec change dedicada, com a suite verde como gate.

@@ -1,7 +1,7 @@
 # ROADMAP — fast-backend (fonte da verdade, v3)
 
 > Alinhado à referência congelada `references/implementation_v2.md` + `docs/RULES.md` + `docs/adr/*`.
-> Nomenclatura congelada: `CORE_MODULES`. Dir da aplicação: `app/` flat (ADR 0004). Estado: **v1.0.0 entregue** (tag `0.1.0`), Fases 0–11 concluídas, 150 testes backend (85 unit + 65 integration, Postgres/Redis reais) + 71 vitest e 10 Playwright em `client/`, 36 capabilities. Novas fases exigem nova change OpenSpec.
+> Nomenclatura congelada: `CORE_MODULES`. Dir da aplicação: `app/` flat (ADR 0004). Estado: **v1.0.0 entregue** (tag `0.1.0`), Fases 0–11 concluídas, Fase 12 com merge `#12` (WIP residual: ok visual da sidebar + `playground`), 179 testes backend coletados (90 unit + 89 integration, Postgres/Redis reais) + 102 vitest e 14 Playwright em `client/`, 37 capabilities, 13 ADRs (medido 2026-09-17). Novas fases exigem nova change OpenSpec.
 
 ## Fase 0 — Baseline repo (concluída)
 
@@ -80,15 +80,15 @@ Pipeline `PR → ruff → mypy → unit → integration → security → build`;
 
 `make-dev-loop` (`make dev`/`dev-down`, spec `dev-loop`) → `make-env-check` (`scripts/env_check.py` + `setup` encadeado, spec `env-validation`) → `client-reformulation` em 6 PRs (PR1 fundação: DESIGN.md + trio de agentes + Playwright; PR2 tokens; PR3 catálogo + Motion; PR4 base + RHF/Zod; PR5 páginas; PR6 auditoria total; capabilities `design-system-link`, `browser-e2e`, `client-landing`, `two-step-login`) → `docs-release-audit` (sync de documentação). ADR 0010 (remoção de `references/Makefile` com override).
 
-## Fase 12 — Sidebar rica, shell e isolamento e2e (em curso, branch `feat/sidebar-demo`)
+## Fase 12 — Sidebar rica, shell e isolamento e2e (merge `#12` em `main`; higiene 2026-09-17 arquivada, WIP residual abaixo)
 
-Sidebar DEMO (changes `sidebar-demo`, `client-routing-structure`, `custom-ui-restructure`, `playground` scaffold): triggers/avaliação por rota, grupo Projects tenant-scoped (count, mini-avatares, actions, rail abre menu), Organizations com subpastas, Settings placeholder, `/projects/new`, shell full-width com breadcrumb no header, tabelas com colunas prioritárias, scrollbar por tokens. Infra: `e2e-isolated-db` (`make e2e-full`, banco/API/preview dedicados — e2e não polui mais o dev), `root-bootstrap-tests` (unit sem DB + integração), `FRONTEND_URL` obrigatório (fail-fast), `env-check` em tabela com segredos mascarados. Suite atual verificada: 155 testes backend + 102 vitest + 16 Playwright (contagens vivas no CHANGELOG; prosa não hardcodifica — ver regra anti-drift proposta na consolidação de docs).
+Sidebar DEMO (client changes `client/openspec/changes/{sidebar-demo,client-routing-structure,custom-ui-restructure,playground}` + base `design-unification,animate-ui-adoption`): triggers/avaliação por rota, grupo Projects tenant-scoped (count, mini-avatares, actions, rail abre menu), Organizations com subpastas, Settings placeholder, `/projects/new`, shell full-width com breadcrumb no header, tabelas com colunas prioritárias, scrollbar por tokens. Arquivadas em 2026-09-17: `design-unification`, `animate-ui-adoption`, `client-routing-structure`, `custom-ui-restructure` (em `client/openspec/changes/archive/`). Infra: `e2e-isolated-db` (`make e2e-full`, banco/API/preview dedicados — e2e não polui mais o dev), `root-bootstrap-tests` (unit sem DB + integração) — ambas arquivadas em `openspec/changes/archive/2026-09-17-*`. `FRONTEND_URL` obrigatório (fail-fast), `env-check` em tabela com segredos mascarados. WIP residual: `sidebar-demo` S7.2–S7.4 (ok visual do dono) + `playground` S1.3–S1.4 e fila S2+ (fatiada: uma change por componente). Suite atual verificada: 179 coletados (90 unit + 89 integration) + 102 vitest + 14 Playwright (medido 2026-09-17; regra anti-drift em `docs/RULES.md`).
 
 ## Futuro registrado (implementação futura, por prioridade do dono)
 
-1. **`superuser-coverage`**: cobertura dedicada da implementação `is_superuser` — escalação grant/revoke staff (só root), `RequireStaff` nas rotas admin, `SuperuserContext` vs tenant comum, bootstrap one-shot, auditoria `root.bootstrap`.
-2. **Suite hermética**: isolar `.env` real no `conftest` (testes hoje leem o `.env` do dev; chaves customizadas balançam testes que assumem ausência).
-3. **Docs**: consolidação aprovada pendente (datas/contagens com carimbo, errata `review-design`, dobrar `CLIENT-STRUCTURE` no `ARCHITECTURE`, regra anti-drift em `RULES`).
+1. **`superuser-coverage`** ✅ entregue 2026-09-17 (test-only; `reason` com default — Opção B): matriz RBAC 14 rotas, grant/revoke + auditoria, `SuperuserContext` vs comum, bootstrap genérico, 409 estrito.
+2. **Suite hermética** ✅ entregue 2026-09-17 (test-only): fixture session-autouse + allowlist + `env_file=None`; verde com e sem `.env` customizado.
+3. **Docs** ✅ entregue 2026-09-17 (`docs-consolidacao`): contagens com carimbo (179 + 102 + 14, 37 specs, 13 ADRs), errata `review-design` §12, `CLIENT-STRUCTURE` dobrado no `ARCHITECTURE`, regra anti-drift em `RULES`.
 
 ## Gates de verificação (comandos atuais)
 

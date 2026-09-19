@@ -233,7 +233,7 @@ e2e-migrate: ## Migrate the isolated e2e database
 
 e2e-api: ## API for e2e in background (E2E_API_PORT; kill with `make e2e-stop`)
 	mkdir -p var
-	DATABASE_URL="$(E2E_DATABASE_URL)" REDIS_URL="$(E2E_REDIS_URL)" TASK_BROKER_URL="$(E2E_TASK_BROKER_URL)" CORS_ORIGINS='["http://localhost:$(E2E_WEB_PORT)"]' nohup $(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(E2E_API_PORT) > var/e2e-api.log 2>&1 & echo $$! > var/e2e-api.pid
+	DATABASE_URL="$(E2E_DATABASE_URL)" REDIS_URL="$(E2E_REDIS_URL)" TASK_BROKER_URL="$(E2E_TASK_BROKER_URL)" CORS_ORIGINS='["http://localhost:$(E2E_WEB_PORT)"]' AUTH_COOKIE_ENABLED=true AUTH_COOKIE_SECURE=false nohup $(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(E2E_API_PORT) > var/e2e-api.log 2>&1 & echo $$! > var/e2e-api.pid
 
 e2e-stop: ## Stop the e2e API + data services (keeps volumes)
 	@if [ -f var/e2e-api.pid ]; then pid=$$(cat var/e2e-api.pid); kill "$$pid" 2>/dev/null || true; taskkill //F //T //PID "$$pid" 2>/dev/null || true; rm -f var/e2e-api.pid; fi
@@ -252,7 +252,7 @@ e2e-full: ## Isolated browser E2E end-to-end (own DB/API/preview; teardown after
 	DATABASE_URL="$(E2E_DATABASE_URL)" $(UV) run alembic upgrade head; \
 	VITE_API_URL="http://127.0.0.1:$(E2E_API_PORT)" $(NPM) --prefix $(CLIENT_DIR) run build; \
 	mkdir -p var; \
-	DATABASE_URL="$(E2E_DATABASE_URL)" REDIS_URL="$(E2E_REDIS_URL)" TASK_BROKER_URL="$(E2E_TASK_BROKER_URL)" CORS_ORIGINS='["http://localhost:$(E2E_WEB_PORT)"]' nohup $(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(E2E_API_PORT) > var/e2e-api.log 2>&1 & echo $$! > var/e2e-api.pid; \
+	DATABASE_URL="$(E2E_DATABASE_URL)" REDIS_URL="$(E2E_REDIS_URL)" TASK_BROKER_URL="$(E2E_TASK_BROKER_URL)" CORS_ORIGINS='["http://localhost:$(E2E_WEB_PORT)"]' AUTH_COOKIE_ENABLED=true AUTH_COOKIE_SECURE=false nohup $(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(E2E_API_PORT) > var/e2e-api.log 2>&1 & echo $$! > var/e2e-api.pid; \
 	E2E_API_URL="http://127.0.0.1:$(E2E_API_PORT)" WEB_PORT=$(E2E_WEB_PORT) $(NPM) --prefix $(CLIENT_DIR) run e2e; \
 	status=$$?; $(MAKE) e2e-stop >/dev/null 2>&1; exit $$status
 
@@ -277,8 +277,14 @@ new-project: ## Scaffold sibling (make new-project name=x dest=../x)
 	@if [ -z "$(name)" ] || [ -z "$(dest)" ]; then echo "Usage: make new-project name=<kebab> dest=<dir>"; exit 1; fi
 	$(UV) run python scripts/new_project.py --name "$(name)" --dest "$(dest)"
 
-admin-bootstrap: ## Create the one-shot root user (BOOTSTRAP_KEY from env, never logs secrets)
-	$(UV) run python scripts/bootstrap_root.py
+admin-bootstrap: _check-env ## Create the one-shot root user (ROOT_EMAIL=... or email=... — BOOTSTRAP_KEY read from .env, valid email, password twice via prompt, never logs secrets)
+	@if [ -z "$(email)" ] && [ -z "$${ROOT_EMAIL:-}" ]; then \
+		echo "Usage: ROOT_EMAIL=you@example.com make admin-bootstrap (or make admin-bootstrap email=you@example.com)"; exit 1; \
+	fi
+	@if [ -z "$${BOOTSTRAP_KEY:-}" ]; then \
+		export BOOTSTRAP_KEY="$$(grep '^BOOTSTRAP_KEY=' $(ENV_FILE) | cut -d= -f2-)"; \
+	fi; \
+	$(UV) run python scripts/bootstrap_root.py --email "$(or $(email),$${ROOT_EMAIL})"
 
 release-notes: ## Notes for a version (make release-notes v=v1.1.0)
 	@if [ -z "$(v)" ]; then echo "Usage: make release-notes v=vX.Y.Z"; exit 1; fi

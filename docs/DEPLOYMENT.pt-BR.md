@@ -14,7 +14,7 @@ mkdir -p ~/fast-backend && cd ~/fast-backend
 
 ## Variáveis críticas de produção
 
-`ENVIRONMENT=production`, `SECRET_KEY` real (≥32), `TRUSTED_HOSTS=[dominio]`, `DATABASE_URL`/`POSTGRES_*`, `REDIS_URL`, `TASK_BROKER_URL`, `CORS_ORIGINS`, `BILLING_ENABLED` + `STRIPE_*` se aplicável. O boot falha alto com config insegura (validado em `Settings`).
+`ENVIRONMENT=production`, `SECRET_KEY` real (≥32), `TRUSTED_HOSTS=[dominio]`, `DATABASE_URL`/`POSTGRES_*`, `REDIS_URL`, `TASK_BROKER_URL`, `CORS_ORIGINS`, `BILLING_ENABLED` + `STRIPE_*` se aplicável. O boot falha alto com config insegura (validado em `Settings`). Atrás do proxy Caddy abaixo, defina também `TRUSTED_PROXY_HOPS=1` (ver "Proxies reversos e IPs de cliente").
 
 **Adições da Fase 9 (admin + recovery):** `BOOTSTRAP_KEY` (≥32, obrigatória em prod — auditoria do root; vazia desliga o bootstrap), `ADMIN_ENABLED=true` (flag do módulo folha), `PASSWORD_RESET_TTL_MINUTES` (padrão 60), `FRONTEND_URL=https://...` (obrigatória em todo ambiente — boot falha sem ela; https obrigatório em prod — links de reset), `SOCIAL_LOGIN_ENABLED=false` (só contrato). SMTP prod p/ host remoto exige `SMTP_USE_TLS=true` (Mailpit dev em `localhost:1025` isento).
 
@@ -23,10 +23,24 @@ mkdir -p ~/fast-backend && cd ~/fast-backend
 ```bash
 # no VPS / container com o .env de produção (BOOTSTRAP_KEY definida):
 uv run python scripts/bootstrap_root.py --email root@example.com
-# ou: make admin-bootstrap   (BOOTSTRAP_KEY + ROOT_EMAIL do env, senha via prompt)
+# ou: make admin-bootstrap email=root@example.com   (BOOTSTRAP_KEY lida do .env, senha 2x via prompt)
 ```
 
 Falha-fechada: key errada OU root existente → `bootstrap failed` genérico, exit 1 (nunca revela qual). A 2ª execução sempre falha (índice parcial `uq_single_root`). Auditado como `root.bootstrap`.
+
+## Primeiro usuário em dev (do zero ao root logado)
+
+```bash
+make setup                                   # .env + deps + checagem de drift + migrations (precisa da 0008)
+make env-check                               # BOOTSTRAP_KEY precisa estar ok (≥32 chars, fora do default)
+make admin-bootstrap email=voce@example.com   # email válido obrigatório; BOOTSTRAP_KEY lida do .env; senha 2x via prompt (min 8 chars)
+# conferir (banco dev):
+# psql "$DATABASE_URL" -c "SELECT email, is_staff, is_superuser FROM users;"
+```
+
+Depois logue como root (`POST /auth/login` ou a SPA): `is_staff + is_superuser`. Promova staff via `POST /admin/staff/{id}/grant`.
+
+Checklist do `bootstrap failed` (só regras de entrada — a mensagem nunca diz qual checagem disparou, por desenho): `BOOTSTRAP_KEY` ok no `make env-check`? migrations no head (`make migrate`)? email válido (`user@domain`)? senha ≥8? terminal com TTY p/ o prompt de senha (Git Bash normalmente entrega um; sem TTY o `getpass` falha fechado)? root já existe (2ª execução sempre falha)?
 
 ## Operação do recovery (change B)
 
@@ -63,6 +77,26 @@ api.seudominio.com {
 ```
 
 O compose não termina TLS de propósito (domínio varia por deploy).
+
+## Proxies reversos e IPs de cliente (`TRUSTED_PROXY_HOPS`)
+
+O throttling de login `(ip, email)` mais `audit_log.ip` / `refresh_tokens.ip` precisam enxergar o IP real do cliente. Por padrão (`TRUSTED_PROXY_HOPS=0`, falha-fechada) o app ignora `X-Forwarded-For` por completo e usa o par TCP direto — um header forjado não desvia o throttling nem polui a auditoria.
+
+- Atrás de exatamente um proxy reverso (deploy canônico: Caddy externo terminando TLS acima): defina `TRUSTED_PROXY_HOPS=1` para o app honrar o último hop do `X-Forwarded-For`. Conte **seus** proxies e defina o número explicitamente; hops são contados da direita (proxy mais próximo por último). Alto demais lê uma entrada controlada pelo atacante; baixo demais lê o endereço de um proxy.
+- Alternativa: deixar com o uvicorn — o `uvicorn[standard]` (já dependência) traz o `ProxyHeadersMiddleware`; rode o uvicorn com `--proxy-headers --forwarded-allow-ips='<ip-do-proxy>'`. Escolha uma abordagem ou outra, nunca as duas (deslocar o header duas vezes resolve o hop errado).
+
+Dev local e CI mantêm o padrão `0` (sem proxy na frente).
+
+## Sessões por cookie + CSRF (`AUTH_COOKIE_ENABLED`)
+
+O padrão (`AUTH_COOKIE_ENABLED=false`) é o fluxo só-header: a SPA guarda os tokens e envia `Authorization: Bearer` (dev/e2e atuais). Com `AUTH_COOKIE_ENABLED=true`, a API passa ao transporte de produção da SPA sem quebrar clientes header (leitura dual — header OU cookie — durante a transição):
+
+- `POST /auth/login` emite `access_token` (`HttpOnly`, `Path=/`) + `refresh_token` (`HttpOnly`, `Path=/auth`, só viaja p/ `/auth/*`) + `csrf_token` (synchronizer legível por JS), todos `SameSite=Lax` (navegação top-level continua; `Strict` opt-in via `AUTH_COOKIE_SAMESITE`) com `Max-Age` igual aos TTLs. Os bodies seguem trazendo os tokens durante a transição.
+- `POST /auth/refresh` aceita o refresh do body (fluxo header) ou do cookie (fluxo cookie com body vazio) e reemite access + refresh; `POST /auth/switch-organization` reemite o access; `POST /auth/logout` expira os três cookies.
+- **Mutações** autenticadas por cookie (`POST/PUT/PATCH/DELETE`) precisam ecoar o cookie CSRF no header `X-CSRF-Token`, senão `403` (métodos seguros como `GET /auth/me` são isentos; chamadas com header nunca precisam). O forgery cross-site não lê o valor do cookie, logo não o ecoa — esta é a camada interna, `SameSite=Lax` a externa (`Origin` sozinho não é defesa).
+- `Secure` acompanha o HTTPS: mantenha `AUTH_COOKIE_SECURE=true` onde há TLS (o host Caddy acima — cookies `Secure` só viajam em https). Dev local em http puro precisa de `AUTH_COOKIE_SECURE=false`, ou o navegador descarta a sessão em silêncio. O boot de produção falha com cookies ligados + `Secure` desligado, e com cookies ligados + `CSRF_ENABLED=false`.
+- Mesma eTLD por desenho (SPA e API sob um domínio registrável); a SPA envia `credentials: "include"` e o `CORS_ORIGINS` precisa listar a origem exata da SPA (`allow_credentials` já ligado). `active_org_id` segue dica não-secreta do client (é contexto, nunca autoridade — quem decide é o membership no Postgres).
+- Sunset: a remoção do header-only é uma change futura dedicada (esta change não remove nada); rollback é `AUTH_COOKIE_ENABLED=false`. Sessões criadas antes da flag não têm cookie CSRF e precisam de novo login.
 
 ## Backup (cron diário sugerido)
 

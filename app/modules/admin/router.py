@@ -3,6 +3,8 @@
 from fastapi import APIRouter, Depends, Request
 
 from app.core.contracts.audit import audit_request
+from app.infrastructure.security.client_ip import client_ip_from_request
+from app.infrastructure.security.rate_limit import enforce_global_rate_limit
 from app.modules.admin.dependencies import AdminContext, assert_audit_available, current_root, current_staff
 from app.modules.admin.schemas import (
     AdminAuditRead,
@@ -15,7 +17,13 @@ from app.modules.admin.schemas import (
     StatusAccepted,
 )
 
-router = APIRouter(prefix="/admin", tags=["admin"])
+
+async def _global_rate_limit(request: Request) -> None:
+    """Count every request against the per-IP global budget BEFORE auth (anti-scrape)."""
+    await enforce_global_rate_limit(request)
+
+
+router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(_global_rate_limit)])
 
 
 def _service(request: Request):
@@ -109,8 +117,8 @@ async def force_password_reset(
 ):
     """Privileged recovery without ever returning the secret (change B)."""
     assert_audit_available(request)
-    forwarded = request.headers.get("x-forwarded-for")
-    ip = forwarded.split(",")[0].strip() if forwarded else (request.client.host if request.client else "unknown")
+    hops: int = request.app.state.settings.trusted_proxy_hops
+    ip = client_ip_from_request(request, hops)
     await _service(request).force_password_reset(ctx=ctx, user_id=user_id, reason=payload.reason, ip=ip)
     await audit_request(
         request,

@@ -8,7 +8,7 @@ from app.infrastructure.email.sender import LogEmailSender, SmtpEmailSender
 
 @pytest.fixture()
 def sender() -> SmtpEmailSender:
-    return SmtpEmailSender(Settings(secret_key="x" * 32))
+    return SmtpEmailSender(Settings(secret_key="x" * 32, frontend_url="https://app.example.com"))
 
 
 @pytest.mark.unit

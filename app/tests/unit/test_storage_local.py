@@ -10,7 +10,9 @@ from app.infrastructure.storage.local import LocalFilesystemStorage
 
 @pytest.fixture()
 def storage(tmp_path: Path) -> LocalFilesystemStorage:
-    return LocalFilesystemStorage(Settings(secret_key="x" * 32, storage_dir=str(tmp_path)))
+    return LocalFilesystemStorage(
+        Settings(secret_key="x" * 32, storage_dir=str(tmp_path), frontend_url="https://app.example.com")
+    )
 
 
 @pytest.mark.unit
@@ -39,7 +41,9 @@ async def test_traversal_rejected(storage: LocalFilesystemStorage) -> None:
 
 @pytest.mark.unit
 async def test_size_limit_enforced(tmp_path: Path) -> None:
-    small = LocalFilesystemStorage(Settings(secret_key="x" * 32, storage_dir=str(tmp_path), storage_max_bytes=2))
+    small = LocalFilesystemStorage(
+        Settings(secret_key="x" * 32, storage_dir=str(tmp_path), storage_max_bytes=2, frontend_url="https://app.example.com")
+    )
     with pytest.raises(ValueError):
         await small.put(key="big", data=b"123")
 

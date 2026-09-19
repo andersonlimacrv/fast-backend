@@ -35,6 +35,7 @@ def minio_storage():
             s3_access_key="minioadmin",
             s3_secret_key="minioadmin123",
             s3_region="us-east-1",
+            frontend_url="https://app.example.com",
         )
         storage = S3CompatibleStorage(settings)
 

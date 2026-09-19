@@ -88,7 +88,7 @@ ambiente, nunca de variáveis do Makefile ou arquivos.
 - **`make lint`** — `ruff check` + `format --check` em `app scripts`.
 - **`make format-fix`** — auto-fix + format (muta a árvore; nunca no CI).
 - **`make types`** — `mypy app scripts`.
-- **`make arch`** — `lint-imports`: 12 contratos (layers, DAG, fronteiras).
+- **`make arch`** — `lint-imports`: 13 contratos (layers, DAG, fronteiras; verificado 2026-09-17).
 - **`make security`** — `bandit -r app scripts -q -ll` (gate 0 Medium+) +
   `pip-audit` + `gitleaks`.
 - **`make verify`** — todos os gates estáticos (`lint` + `types` + `arch`).

@@ -27,6 +27,7 @@ async def redis_down_client(base_settings: Settings, clean_db: None):
         database_url=base_settings.database_url,
         redis_url="redis://localhost:6390/0",
         login_max_attempts=1000,
+        frontend_url="https://app.example.com",
     )
     app = build_app(settings)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
@@ -51,6 +52,7 @@ async def db_down_client(base_settings: Settings, clean_db: None):
         database_url="postgresql+asyncpg://postgres:postgres@localhost:5433/nodb",
         redis_url=base_settings.redis_url,
         login_max_attempts=1000,
+        frontend_url="https://app.example.com",
     )
     app = build_app(settings)
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:

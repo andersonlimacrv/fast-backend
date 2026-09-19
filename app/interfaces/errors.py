@@ -5,6 +5,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.errors import (
     AuditUnavailableError,
+    CsrfError,
     DomainError,
     EmailAlreadyRegisteredError,
     EntitlementDeniedError,
@@ -35,6 +36,8 @@ def _status_for(exc: DomainError) -> int:
         return 403
     if isinstance(exc, EntitlementDeniedError):
         return 403
+    if isinstance(exc, CsrfError):
+        return 403
     if isinstance(exc, (LastOwnerProtectedError, SlugUnavailableError)):
         return 409
     if isinstance(exc, LastRootProtectedError):
@@ -59,4 +62,9 @@ def install_error_handlers(app: FastAPI) -> None:
     async def domain_error_handler(_: Request, exc: DomainError) -> JSONResponse:
         status = _status_for(exc)
         detail = "internal error" if status == 500 else str(exc) or "request failed"
+        if isinstance(exc, ThrottledError):
+            # Generic body (never which limit fired); backoff hint lives only
+            # in the header (change rate-limit-global).
+            retry_after = exc.retry_after if exc.retry_after and exc.retry_after > 0 else 60
+            return JSONResponse(status_code=status, content={"detail": detail}, headers={"Retry-After": str(retry_after)})
         return JSONResponse(status_code=status, content={"detail": detail})

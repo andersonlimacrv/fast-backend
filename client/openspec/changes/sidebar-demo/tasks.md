@@ -4,31 +4,31 @@
 
 ## S1 — Fundamentos (eu)
 
-- [ ] 1.1 `ui/dropdown-menu.tsx` (Base-UI Menu: Trigger/Content/Item/Label/Separator/Shortcut)
-- [ ] 1.2 `ui/breadcrumb.tsx` + `ui/separator.tsx` (CSS puros, tokens)
-- [ ] 1.3 `ui/collapsible.tsx` (Base-UI Collapsible fino; accordion não serve)
-- [ ] 1.4 `Avatar` + `AvatarImage` (foto) com fallback initials
-- [ ] 1.5 Auditoria 1-a-1 dos 22 ícones do DEMO → `lib/icons.tsx` (equivalente documentado se faltar)
-- [ ] 1.6 Casos no `ui-catalog.test.tsx` (dropdown abre/fecha/Esc; collapsible; breadcrumb)
+- [x] 1.1 `ui/dropdown-menu.tsx` (Base-UI Menu: Trigger/Content/Item/Label/Separator/Shortcut)
+- [x] 1.2 `ui/breadcrumb.tsx` + `ui/separator.tsx` (CSS puros, tokens)
+- [x] 1.3 `ui/collapsible.tsx` (Base-UI Collapsible fino; accordion não serve)
+- [x] 1.4 `Avatar` + `AvatarImage` (foto) com fallback initials
+- [x] 1.5 Auditoria 1-a-1 dos 22 ícones do DEMO → `lib/icons.tsx` (equivalente documentado se faltar)
+- [x] 1.6 Casos no `ui-catalog.test.tsx` (dropdown abre/fecha/Esc; collapsible; breadcrumb)
 
 ## S2 — Org Switcher (eu)
 
-- [ ] 2.1 Header da sidebar vira dropdown (orgs do `AuthContext`, ⌘1-9 hint, "Add" → `/orgs`)
-- [ ] 2.2 Remove select da topbar (mantém badge slug); single-mode com 1 org esconde switcher
-- [ ] 2.3 Teste: troca real de `active_org_id` (mock de contexto, sem rede)
+- [x] 2.1 Header da sidebar vira dropdown (orgs do `AuthContext`, ⌘1-9 hint, "Add" → `/orgs`)
+- [x] 2.2 Remove select da topbar (mantém badge slug); single-mode com 1 org esconde switcher
+- [x] 2.3 Teste: troca real de `active_org_id` (mock de contexto, sem rede)
 
 ## S3–S5 — Nav + recentes + user (eu)
 
-- [ ] 3.1 Subgroups colapsáveis Console/Admin (chevron rotate, tooltip no rail, teclado)
-- [ ] 4.1 Orgs recentes (3) + `...` (View org / View members; sem Delete/Share)
-- [ ] 5.1 User dropdown (Account / Logout / Logout everywhere; sem Upgrade/Billing/Notifs)
+- [x] 3.1 Subgroups colapsáveis Console/Admin (chevron rotate, tooltip no rail, teclado)
+- [x] 4.1 Orgs recentes (3) + `...` (View org / View members; sem Delete/Share)
+- [x] 5.1 User dropdown (Account / Logout / Logout everywhere; sem Upgrade/Billing/Notifs)
 
 ## S6 — Breadcrumb + verificação (eu)
 
-- [ ] 6.1 Breadcrumb por rota (mapa estático path → trilha; fallback: último segmento)
-- [ ] 6.2 e2e: axe + snapshots sidebar nova + 403 intacto + keyboard Tab
-- [ ] 6.3 Ledger §11 linha 11: DEMO aplicado; `tasks.md` implementation notes
-- [ ] 6.4 Gates full: vitest/tsc/build/oxlint + e2e + `lint/types/test-unit` + CHANGELOG `[Unreleased]`
+- [x] 6.1 Breadcrumb por rota (mapa estático path → trilha; fallback: último segmento)
+- [x] 6.2 e2e: axe + snapshots sidebar nova + 403 intacto + keyboard Tab (verificado 2026-09-17: 14/14, axe limpo, 403 member intacto)
+- [x] 6.3 Ledger §11 linha 11: DEMO aplicado; `tasks.md` implementation notes
+- [x] 6.4 Gates full: vitest 102/tsc/build/oxlint (só warnings pré-existentes) + e2e 14/14 + backend unit 89/integration 89 + `lint/types` verdes (verificado 2026-09-17)
 - [ ] 6.5 **PARAR p/ ok visual do dono — sem commit/PR até lá**
 
 ## S7 — Backlog de verificação visual (dono, 2026-09-16, screenshot Orgs)

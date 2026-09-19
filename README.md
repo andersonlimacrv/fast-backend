@@ -2,7 +2,7 @@
   <img src="docs/assets/fast-backend.webp" alt="FastBACKEND — FastAPI + Vite Boilerplate" width="640" />
 </p>
 
-# Stop rebuilding auth, tenancy, and billing for every SaaS — clone this Argon2id + JWT-rotation + row-tenancy kernel (150 backend tests green on real Postgres/Redis, staff admin + append-only audit + encrypted backups built in) and ship your product in days, not months.
+# Stop rebuilding auth, tenancy, and billing for every SaaS — clone this Argon2id + JWT-rotation + row-tenancy kernel (179 backend tests collected on real Postgres/Redis, staff admin + append-only audit + encrypted backups built in) and ship your product in days, not months.
 
 > 🇬🇧 **English** | [Português (BR)](README.pt-BR.md) — deep docs (`docs/`) are in PT-BR for now.
 
@@ -28,21 +28,21 @@
   <img src="https://img.shields.io/badge/Vite-222?style=flat-square&logo=vite" alt="Vite" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-222?style=flat-square&logo=tailwindcss" alt="Tailwind CSS" />
 </p>
-<!-- test tiers (measured 2026-09-16: pytest --collect-only 85 unit + 65 integration, vitest json 71, playwright --list 10) -->
+<!-- test tiers (measured 2026-09-17: `uv run pytest --collect-only -m unit` → 90, `-m integration` → 89; `npm run test:run -- --reporter=json` → 102 passed; `playwright test --list` → 14. Unit greens are 89 + 1 pre-existing worktree-only failure in test_new_project, see CHANGELOG.) -->
 <p align="center">
-  <img src="https://img.shields.io/badge/backend_unit-85_tests-0AAAB8?style=flat-square&labelColor=222" alt="backend-unit" />
-  <img src="https://img.shields.io/badge/backend_integration-65_tests-0AAAB8?style=flat-square&labelColor=222" alt="backend-integration" />
-  <img src="https://img.shields.io/badge/client_vitest-71_tests-0AAAB8?style=flat-square&labelColor=222" alt="client-vitest" />
-  <img src="https://img.shields.io/badge/browser_e2e-10_tests-0AAAB8?style=flat-square&labelColor=222" alt="browser-e2e" />
+  <img src="https://img.shields.io/badge/backend_unit-90_tests-0AAAB8?style=flat-square&labelColor=222" alt="backend-unit" />
+  <img src="https://img.shields.io/badge/backend_integration-89_tests-0AAAB8?style=flat-square&labelColor=222" alt="backend-integration" />
+  <img src="https://img.shields.io/badge/client_vitest-102_tests-0AAAB8?style=flat-square&labelColor=222" alt="client-vitest" />
+  <img src="https://img.shields.io/badge/browser_e2e-14_tests-0AAAB8?style=flat-square&labelColor=222" alt="browser-e2e" />
 </p>
 
 | Fact | Value |
 |---|---|
-| Release | [`v0.1.1`](https://github.com/andersonlimacrv/fast-backend/releases) (kernel `0.1.0`, Phases 0–11) |
-| Backend | 150 tests — 85 unit + 65 integration (real Postgres/Redis) |
-| Frontend | 71 vitest + 10 Playwright (`client/`) |
+| Release | [releases](https://github.com/andersonlimacrv/fast-backend/releases) (kernel `0.1.0`, Phases 0–12; measured 2026-09-17) |
+| Backend | 179 collected — 90 unit + 89 integration (real Postgres/Redis; measured 2026-09-17) |
+| Frontend | 102 vitest + 14 Playwright (`client/`; measured 2026-09-17) |
 | Specs | 37 capabilities in [`openspec/specs/`](openspec/specs/) |
-| Decisions | 12 ADRs in [`docs/adr/`](docs/adr/) · auto-release ([ADR 0011](docs/adr/0011-auto-release.md)) + guard ([ADR 0012](docs/adr/0012-release-guard.md)) |
+| Decisions | 13 ADRs in [`docs/adr/`](docs/adr/) · auto-release ([ADR 0011](docs/adr/0011-auto-release.md)) + guard ([ADR 0012](docs/adr/0012-release-guard.md)) |
 
 - **Release notes:** [`CHANGELOG.md`](./CHANGELOG.md) — releases cut automatically on every merged PR ([ADR 0011](docs/adr/0011-auto-release.md)), behavior PRs gated by [`release-check.yml`](.github/workflows/release-check.yml) ([ADR 0012](docs/adr/0012-release-guard.md)).
 - **Start here:** [Getting started](#getting-started) (`make setup` → `make dev` → `make check`) · commands manual [`docs/Makefile.md`](docs/Makefile.md).
@@ -87,6 +87,14 @@ make dev     # backend stack (docker) + frontend (:5173)
 ```bash
 make api     # API with reload → http://127.0.0.1:8000/docs (needs db: make db-up)
 ```
+
+### 2. First user (one-shot root)
+
+```bash
+make admin-bootstrap email=you@example.com   # valid email; password twice via prompt (min 8)
+```
+
+Then log in as root (`POST /auth/login` or the SPA). Full runbook + `bootstrap failed` checklist: `docs/DEPLOYMENT.md` ("Root bootstrap", "First user in dev").
 
 <details>
 <summary>Under the hood</summary>
@@ -224,7 +232,7 @@ app/                  # package (imports from app.*)
 ├── migrations/       # Alembic 0001–0008
 └── tests/            # unit, integration, e2e, fixtures
 scripts/              # auto_release.py, backup.py, bootstrap_root.py, deploy.py, e2e_spa_flow.py, env_check.py, new_project.py, release_notes.py
-openspec/             # specs (36 capabilities) + archived changes
+openspec/             # specs (37 capabilities, medido 2026-09-17) + archived changes
 docs/                 # RULES, ROADMAP, ARCHITECTURE, SCALING, DEPLOYMENT, guides/, ADRs
 ```
 

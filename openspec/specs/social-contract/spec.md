@@ -1,7 +1,7 @@
 # social-contract Specification
 
 ## Purpose
-TBD - created by archiving change C-social-contract. Update Purpose after archive.
+Social login stays flag-off in v1: contract (`SocialProvider` Protocol) + `linked_identities` table exist, but no provider is wired and no `/auth/social/*` route is exposed while `SOCIAL_LOGIN_ENABLED=false`. OAuth activation (state+PKCE, routes, account-linking flow) is deferred to a dedicated change.
 ## Requirements
 ### Requirement: Contrato sem provider ativo
 

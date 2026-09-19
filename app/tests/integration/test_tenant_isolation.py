@@ -58,6 +58,7 @@ async def test_row_mode_requires_claim(client: AsyncClient, base_settings: Setti
         database_url=base_settings.database_url,
         redis_url=base_settings.redis_url,
         tenancy_mode="row",
+        frontend_url="https://app.example.com",
     )
     row_app = build_app(settings)
     try:
@@ -90,3 +91,34 @@ async def test_superuser_read_is_explicit(client: AsyncClient, application) -> N
         repo = TenantScopedRepository.scoped_for_superuser(session, SuperuserContext(reason="test"))
         found = await repo.get(Project, created["id"])
         assert found is not None and found.name == "segredo-a"
+
+
+@pytest.mark.integration
+async def test_tenant_repository_has_no_implicit_bypass(client: AsyncClient, application) -> None:
+    """Common tenants never read cross-tenant rows; bypass needs an explicit SuperuserContext."""
+    from app.modules.projects.models import Project
+    from app.modules.tenancy.public import SuperuserContext, TenantScopedRepository
+
+    headers_a, org_a, _ = await _org_with_token(client, "Org A")
+    headers_b, org_b, _ = await _org_with_token(client, "Org B")
+    created_a = (await client.post("/projects", json={"name": "segredo-a"}, headers=headers_a)).json()
+    created_b = (await client.post("/projects", json={"name": "segredo-b"}, headers=headers_b)).json()
+
+    factory = application.state.session_factory
+    async with factory() as session:
+        # No implicit bypass: tenant_id=None without a superuser is refused.
+        with pytest.raises(ValueError):
+            TenantScopedRepository(session, None)
+        # Tenant-scoped reads stay inside their own tenant (Postgres real).
+        repo_a = TenantScopedRepository(session, org_a["id"])
+        assert await repo_a.get(Project, created_a["id"]) is not None
+        assert await repo_a.get(Project, created_b["id"]) is None
+        repo_b = TenantScopedRepository(session, org_b["id"])
+        assert await repo_b.get(Project, created_b["id"]) is not None
+        assert await repo_b.get(Project, created_a["id"]) is None
+        listed_a = await repo_a.list(Project)
+        assert [p.id for p in listed_a] == [created_a["id"]]
+        # Explicit bypass reads across tenants (reason is always visible at the call site).
+        su = TenantScopedRepository.scoped_for_superuser(session, SuperuserContext(reason="containment audit"))
+        assert await su.get(Project, created_a["id"]) is not None
+        assert await su.get(Project, created_b["id"]) is not None

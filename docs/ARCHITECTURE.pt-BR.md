@@ -16,14 +16,15 @@ modules     (domínio por slice vertical)
 ├── entitlements    grants + require_entitlement (core leve, sem billing)
 ├── projects        recurso tenant-scoped de exemplo (vitrine do padrão)
 ├── audit           trilha append-only (folha)
-└── billing_stripe  webhook → grants (folha, flag BILLING_ENABLED)
-    ↓
+├── billing_stripe  webhook → grants (folha, flag BILLING_ENABLED)
+└── admin           control plane staff/root (folha, flag ADMIN_ENABLED, ADR 0005)
+     ↓
 core        (contratos e primitivas: errors, settings, security port, contracts/)
-    ↓
+     ↓
 infrastructure (adapters: auth, db, email, storage, jobs, observability, payments, security)
 ```
 
-## DAG (12 contratos `import-linter`, todos KEPT)
+## DAG (13 contratos `import-linter`, todos KEPT)
 
 `identity → organization → tenancy → entitlements`; folhas (`projects`, `audit`, `billing_stripe`) consomem core sem retorno. Regra: nunca importar internals (`models|repository|service|dependencies|router|schemas`) de outro módulo — só `modules/<nome>/public.py`, `core/contracts/` ou eventos Taskiq. Raiz `app/main.py` (composition root) é isenta e monta tudo.
 
@@ -44,3 +45,16 @@ Refresh: `SELECT FOR UPDATE` → marca `used_at` → emite sucessor → `replace
 - `0002-tenancy-model` — `single|row`, sem RLS no v1.
 - `0003-module-tiers` — `CORE_MODULES` + folhas opcionais.
 - `0004-app-dir` — pacote flat `app/`, imports `from app.*`.
+- `0005-root-admin` — root one-shot via CLI + `BOOTSTRAP_KEY`, `is_staff`, folha `admin/`.
+- `0006-password-recovery` — token opaco single-use, boundary event, force-reset administrativo.
+- `0007-social-contract` — só contrato + tabela, flag off, OAuth adiado.
+- `0008-public-release-meta` — `GET /meta` público (allowlist) + `APP_VERSION`.
+- `0009-login-enumeration` — login always-advance + Argon2 dummy, tradeoff do 409.
+- `0010-references-makefile-removal` — `references/Makefile` removido com override.
+- `0011-auto-release` — release a cada PR mergeado.
+- `0012-release-guard` — check em tempo de PR + silêncio pós-merge.
+- `0013-client-routing-structure` — pastas espelham `ROUTES` (ver seção client).
+
+## Client (`client/`, canônico: `docs/CLIENT-STRUCTURE.md`)
+
+Pastas espelham `ROUTES` (`:param` → `[param]`, sem `index.tsx`, arquivo mantém o nome); `App.tsx` só roteia, gates de grupo em `layouts/` (`protected-layout.tsx`); rota nova = pasta + linha em `ROUTES` + entrada no `App` + breadcrumb + grupo de layout. Segmento dinâmico nunca é autoridade — páginas derivam contexto de `AuthContext` e `RequireStaff`/membership. Componentes: padrão shadcn em `components/ui`, tudo custom em `components/custom-ui/` (uma entrada por componente, `effects/` p/ efeitos compartilhados); ícones só via `lib/icons.tsx`; tokens de tema/motion por `docs/DESIGN.md`.

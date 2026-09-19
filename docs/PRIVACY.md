@@ -17,6 +17,8 @@
 | Audit metadata (`reason`, action context) | `audit_log.metadata` | Accountability of privileged actions | Legal obligation / legitimate interest |
 | Email queue payloads | `outbox_messages` | Reliable delivery; **reset token redacted after send** | Contract |
 | Org/project names, slugs, roles | `organizations`, `memberships`, `projects`, grants | Tenancy and authorization | Contract |
+| Session cookies (`access_token`, `refresh_token`: `HttpOnly`) | browser cookies, only with `AUTH_COOKIE_ENABLED=true` | SPA session transport (JS cannot read) | Contract |
+| CSRF cookie (`csrf_token`, readable) + `X-CSRF-Token` header | browser cookie + request header, only with `AUTH_COOKIE_ENABLED=true` | Mutation forgery protection for cookie sessions | Legitimate interest |
 
 Never stored in logs or audit: passwords, access/refresh/reset tokens, secrets. Tokens exist **hash-only** in Postgres; the reset token lives minutes in the outbox payload and is redacted after dispatch (proven by `test_leak_audit.py`).
 
@@ -39,7 +41,7 @@ Never stored in logs or audit: passwords, access/refresh/reset tokens, secrets. 
 
 ## Cookies, storage, third parties
 
-- Browser: access/refresh JWT in `localStorage` (**dev convenience only** — never ship as-is; use `HttpOnly`/`Secure` cookies + CSRF for prod).
+- Browser session, two modes: default header flow keeps short-lived tokens in the SPA memory/`localStorage` (dev convenience); with `AUTH_COOKIE_ENABLED=true` (production SPA transport) the tokens travel as `HttpOnly`/`Secure`/`SameSite=Lax` cookies the JS cannot read, plus a readable `csrf_token` synchronizer echoed in `X-CSRF-Token` on mutations (`Path=/auth` confines the refresh cookie to `/auth/*`). Cookie-authenticated mutations without the token get `403`. See `docs/DEPLOYMENT.md` ("Cookie sessions + CSRF") for the TLS/`Secure` runbook.
 - Landing (`/`): no trackers, no third-party requests, no analytics.
 - Subprocessors depend on deploy: SMTP provider (`EMAIL_BACKEND=smtp`), S3-compatible storage, Stripe (only with `BILLING_ENABLED=true`).
 

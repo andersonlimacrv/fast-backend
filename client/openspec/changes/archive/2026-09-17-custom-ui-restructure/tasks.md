@@ -14,7 +14,7 @@
 - [x] 2.1 Seção custom-ui em `docs/CLIENT-STRUCTURE.md`
 - [x] 2.2 **APRESENTAR árvore/diff ao dono ANTES dos gates** (ordem permanente)
 - [x] 2.3 Gates: `tsc+build`, vitest 102, e2e 16/16 (sem regen — só paths), `oxlint` sem erros
-- [ ] 2.4 Sem commit sem pedido
+- [x] 2.4 Sem commit sem pedido (resolvido: merge #12 `1fb3d24` + `git status` limpo em 2026-09-17)
 
 ## S3 — `/ui` só shadcn default (dono)
 

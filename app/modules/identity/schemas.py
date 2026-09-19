@@ -30,11 +30,17 @@ class TokenPair(BaseModel):
 
 
 class RefreshRequest(BaseModel):
-    refresh_token: str = Field(min_length=1)
+    """Refresh credential: body token (header flow) or empty when the HttpOnly
+    cookie carries it (cookie flow, flag-gated in the router). Empty reaches
+    the service as invalid (401) unless a cookie supplies the token."""
+
+    refresh_token: str = Field(default="")
 
 
 class LogoutRequest(BaseModel):
-    refresh_token: str = Field(min_length=1)
+    """Same dual source as refresh: body token or session cookie (cleared on logout)."""
+
+    refresh_token: str = Field(default="")
 
 
 class ChangePasswordRequest(BaseModel):

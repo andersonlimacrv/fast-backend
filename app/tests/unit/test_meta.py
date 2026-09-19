@@ -14,7 +14,7 @@ from app.main import create_app
 
 @pytest_asyncio.fixture(loop_scope="function")
 async def bare_client() -> AsyncIterator[AsyncClient]:
-    app = create_app(Settings(secret_key="x" * 32))
+    app = create_app(Settings(secret_key="x" * 32, frontend_url="https://app.example.com"))
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
         yield ac
     await app.state.throttler.aclose()
@@ -49,7 +49,9 @@ async def test_meta_shape_anonymous(bare_client: AsyncClient) -> None:
 
 @pytest.mark.unit
 async def test_meta_flags_follow_settings() -> None:
-    app = create_app(Settings(secret_key="x" * 32, admin_enabled=False, billing_enabled=False))
+    app = create_app(
+        Settings(secret_key="x" * 32, admin_enabled=False, billing_enabled=False, frontend_url="https://app.example.com")
+    )
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             resp = await ac.get("/meta")
@@ -64,7 +66,7 @@ async def test_meta_flags_follow_settings() -> None:
 
 @pytest.mark.unit
 async def test_meta_version_follows_setting() -> None:
-    app = create_app(Settings(secret_key="x" * 32, app_version="v9.9.9"))
+    app = create_app(Settings(secret_key="x" * 32, app_version="v9.9.9", frontend_url="https://app.example.com"))
     try:
         async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
             resp = await ac.get("/meta")
@@ -84,4 +86,4 @@ async def test_meta_leaks_nothing(bare_client: AsyncClient) -> None:
 @pytest.mark.unit
 def test_app_version_rejects_blank() -> None:
     with pytest.raises(ValidationError):
-        Settings(secret_key="x" * 32, app_version="   ")
+        Settings(secret_key="x" * 32, app_version="   ", frontend_url="https://app.example.com")

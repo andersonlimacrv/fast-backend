@@ -124,7 +124,12 @@ async def test_dispatch_redacts_token(application, client: AsyncClient) -> None:
     await client.post("/auth/password/forgot", json={"email": victim["email"]})
     outbox = application.state.outbox
     sender = application.state.email_sender
-    task = register_tasks(build_broker(Settings(secret_key="x" * 32), in_memory=True), outbox, sender, renderer=EmailRenderer())
+    task = register_tasks(
+        build_broker(Settings(secret_key="x" * 32, frontend_url="https://app.example.com"), in_memory=True),
+        outbox,
+        sender,
+        renderer=EmailRenderer(),
+    )
     await (await task.kiq("email.template")).wait_result(timeout=30)
     async with application.state.session_factory() as session:
         from app.infrastructure.jobs.models import OutboxMessage
