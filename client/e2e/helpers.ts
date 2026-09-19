@@ -105,3 +105,41 @@ export function describeWithApi(title: string, fn: () => void): void {
     fn();
   });
 }
+
+/** Probe whether the API emits HttpOnly session cookies (`AUTH_COOKIE_ENABLED`). */
+export async function cookiesUp(): Promise<boolean> {
+  try {
+    const email = `e2e-probe-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6)}@example.com`;
+    const password = "Str0ng!Passw0rd";
+    const reg = await fetch(`${API_BASE}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!reg.ok) return false;
+    const login = await fetch(`${API_BASE}/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!login.ok) return false;
+    return login.headers.getSetCookie().some((c) => c.startsWith("access_token="));
+  } catch {
+    return false;
+  }
+}
+
+/** Skip the whole file unless the API serves cookie sessions (flag-gated transport). */
+export function describeWithCookies(title: string, fn: () => void): void {
+  base.describe(title, () => {
+    // eslint-disable-next-line no-empty-pattern -- Playwright requires object destructuring here
+    base.beforeAll(async ({}, testInfo) => {
+      if (!(await apiUp())) {
+        testInfo.skip(true, "needs API: make e2e-full (isolated) or db-up && migrate && api (dev, pollutes)");
+      } else if (!(await cookiesUp())) {
+        testInfo.skip(true, "needs API with AUTH_COOKIE_ENABLED=true: make e2e-full (isolated)");
+      }
+    });
+    fn();
+  });
+}

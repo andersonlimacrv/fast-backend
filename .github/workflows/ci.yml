@@ -86,6 +86,10 @@ jobs:
       # Browser origin must be allowed or every SPA fetch fails closed (status 0).
       CORS_ORIGINS: '["http://localhost:5173"]'
       FRONTEND_URL: http://localhost:5173
+      # Cookie sessions on (dual-read keeps header tests green); Secure off:
+      # plain-http preview would silently drop Secure cookies (see DEPLOYMENT).
+      AUTH_COOKIE_ENABLED: 'true'
+      AUTH_COOKIE_SECURE: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5

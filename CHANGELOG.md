@@ -9,6 +9,7 @@ An empty `[Unreleased]` below is the normal idle state — the bot (`auto_releas
 
 ## [Unreleased]
 
+- **`ci-cookie-sessions`**: `cookie-auth.spec.ts` pula quando a API não emite cookies (`describeWithCookies`, mesmo padrão do `describeWithApi`); job `web` do CI liga `AUTH_COOKIE_ENABLED=true` + `SECURE=false` (http puro) para os 4 testes rodarem lá; `.env.example` sem o falso-positivo `generic-api-key` do gitleaks (comentário `AUTH_COOKIE_DOMAIN` reescrito, 0 achados em tracked).
 - **`bootstrap-email-validation`**: `scripts/bootstrap_root.py` rejeita email sem formato válido antes de qualquer I/O de banco (sintaxe via `email-validator`, sem DNS; genérico preservado) — typo no one-shot não vira root permanente; testes unit sem DB + integração (0 users).
 - **`bootstrap-ux-fixes`**: `amain` pede a senha 2x (divergência → genérico, exit 1, 0 linhas); `make admin-bootstrap` lê `BOOTSTRAP_KEY` do `.env` sozinho (antes exigia export manual e falhava fechado) e exige email (`ROOT_EMAIL=` ou `email=`) com mensagem de uso; runbook de primeiro uso em `DEPLOYMENT.md` (+pt-BR) + pointer no README (EN+PT).
 - **`proxy-hops-trusted`**: `TRUSTED_PROXY_HOPS=0` fail-closed (nunca honra `X-Forwarded-For` por default); helper único de IP real (throttle + `audit.ip` à prova de spoof); teste de spoof com Postgres/Redis reais; runbook Caddy/`ProxyHeadersMiddleware` no `DEPLOYMENT.md`.

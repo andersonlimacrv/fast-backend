@@ -1,11 +1,12 @@
 /* Cookie sessions (change auth-cookies-http-only): HttpOnly transport + CSRF.
- * Runs against the isolated e2e API, which boots with AUTH_COOKIE_ENABLED=true
- * (see Makefile e2e-api). Header flow keeps working (dual-read transition).
+ * Needs an API with AUTH_COOKIE_ENABLED=true (`make e2e-full` boots it so;
+ * plain `make web-e2e` vs a flag-off dev API skips this file, like the
+ * API-down skip). Header flow keeps working (dual-read transition).
  */
 
 import { expect, test } from "@playwright/test";
 
-import { API_BASE, describeWithApi, registerMember } from "./helpers";
+import { API_BASE, describeWithCookies, registerMember } from "./helpers";
 
 async function loginCookies(email: string, password: string) {
   // eslint-disable-next-line no-undef -- node fetch in the e2e runner
@@ -18,7 +19,7 @@ async function loginCookies(email: string, password: string) {
   return resp.headers.getSetCookie();
 }
 
-describeWithApi("cookie sessions", () => {
+describeWithCookies("cookie sessions", () => {
   test("login mints HttpOnly session cookies + readable CSRF", async () => {
     const member = await registerMember();
     const cookies = await loginCookies(member.email, "Str0ng!Passw0rd");
