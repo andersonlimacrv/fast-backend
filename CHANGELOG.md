@@ -7,6 +7,12 @@ An empty `[Unreleased]` below is the normal idle state — the bot (`auto_releas
 > Version convention: tags and sections use the `v` prefix from here on (`v1.1.0`, …).
 > The `0.1.0` section below is historical (tag `0.1.0` without prefix) and stays as is.
 
+## [Unreleased]
+
+- **`proxy-hops-trusted`**: `TRUSTED_PROXY_HOPS=0` fail-closed (nunca honra `X-Forwarded-For` por default); helper único de IP real (throttle + `audit.ip` à prova de spoof); teste de spoof com Postgres/Redis reais; runbook Caddy/`ProxyHeadersMiddleware` no `DEPLOYMENT.md`.
+- **`rate-limit-global`**: `POST /auth/register` throttled por IP antes do Argon2 (só 409 consome; 201 nunca) com 429 genérico idêntico p/ email novo/existente; teto global anti-abuso por IP em `/auth/*` + `/admin/*` (`RATE_LIMIT_GLOBAL_*`, `REGISTER_*` em settings + `.env.example` + `env-check`); 429 com `Retry-After` (TTL da chave) e corpo genérico; chaves sobre o IP real da `proxy-hops-trusted` (`TRUSTED_PROXY_HOPS`); Redis real nos testes.
+- **`auth-cookies-http-only`** (backend; transição dual, flag off por default): `AUTH_COOKIE_ENABLED=true` emite sessão por cookies `HttpOnly`/`SameSite=Lax` (`access_token` `Path=/`, `refresh_token` `Path=/auth`, `Max-Age`=TTLs) em login/refresh/switch e expira no logout; leitura dual header-OU-cookie em `CurrentPrincipal`; mutações por cookie exigem synchronizer `csrf_token` legível ecoado em `X-CSRF-Token` (403 sem ele; `CSRF_ENABLED` kill-switch); `AUTH_COOKIE_SECURE` amarrado a HTTPS (dev-http usa `false`; prod falha sem `Secure`/CSRF); `AUTH_COOKIE_SAMESITE=lax|strict`, `AUTH_COOKIE_DOMAIN` opcional; bodies seguem com tokens (remoção do header-only é change futura; rollback = flag off); `active_org_id` segue não-secreto; runbook em `DEPLOYMENT.md` (+pt-BR), inventário em `PRIVACY.md` (+pt-BR); testes com Postgres/Redis reais.
+
 ## [0.1.0] — 2026-09-11 — Complete SaaS kernel (Phases 0–8)
 
 - **Phase 0**: repo, 6 agents, OpenSpec, ADRs 0001–0004, skills registry.

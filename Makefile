@@ -233,7 +233,7 @@ e2e-migrate: ## Migrate the isolated e2e database
 
 e2e-api: ## API for e2e in background (E2E_API_PORT; kill with `make e2e-stop`)
 	mkdir -p var
-	DATABASE_URL="$(E2E_DATABASE_URL)" REDIS_URL="$(E2E_REDIS_URL)" TASK_BROKER_URL="$(E2E_TASK_BROKER_URL)" CORS_ORIGINS='["http://localhost:$(E2E_WEB_PORT)"]' nohup $(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(E2E_API_PORT) > var/e2e-api.log 2>&1 & echo $$! > var/e2e-api.pid
+	DATABASE_URL="$(E2E_DATABASE_URL)" REDIS_URL="$(E2E_REDIS_URL)" TASK_BROKER_URL="$(E2E_TASK_BROKER_URL)" CORS_ORIGINS='["http://localhost:$(E2E_WEB_PORT)"]' AUTH_COOKIE_ENABLED=true AUTH_COOKIE_SECURE=false nohup $(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(E2E_API_PORT) > var/e2e-api.log 2>&1 & echo $$! > var/e2e-api.pid
 
 e2e-stop: ## Stop the e2e API + data services (keeps volumes)
 	@if [ -f var/e2e-api.pid ]; then pid=$$(cat var/e2e-api.pid); kill "$$pid" 2>/dev/null || true; taskkill //F //T //PID "$$pid" 2>/dev/null || true; rm -f var/e2e-api.pid; fi
@@ -252,7 +252,7 @@ e2e-full: ## Isolated browser E2E end-to-end (own DB/API/preview; teardown after
 	DATABASE_URL="$(E2E_DATABASE_URL)" $(UV) run alembic upgrade head; \
 	VITE_API_URL="http://127.0.0.1:$(E2E_API_PORT)" $(NPM) --prefix $(CLIENT_DIR) run build; \
 	mkdir -p var; \
-	DATABASE_URL="$(E2E_DATABASE_URL)" REDIS_URL="$(E2E_REDIS_URL)" TASK_BROKER_URL="$(E2E_TASK_BROKER_URL)" CORS_ORIGINS='["http://localhost:$(E2E_WEB_PORT)"]' nohup $(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(E2E_API_PORT) > var/e2e-api.log 2>&1 & echo $$! > var/e2e-api.pid; \
+	DATABASE_URL="$(E2E_DATABASE_URL)" REDIS_URL="$(E2E_REDIS_URL)" TASK_BROKER_URL="$(E2E_TASK_BROKER_URL)" CORS_ORIGINS='["http://localhost:$(E2E_WEB_PORT)"]' AUTH_COOKIE_ENABLED=true AUTH_COOKIE_SECURE=false nohup $(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(E2E_API_PORT) > var/e2e-api.log 2>&1 & echo $$! > var/e2e-api.pid; \
 	E2E_API_URL="http://127.0.0.1:$(E2E_API_PORT)" WEB_PORT=$(E2E_WEB_PORT) $(NPM) --prefix $(CLIENT_DIR) run e2e; \
 	status=$$?; $(MAKE) e2e-stop >/dev/null 2>&1; exit $$status
 

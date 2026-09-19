@@ -65,12 +65,23 @@ class AuthenticationService:
             self._dummy_hash = self._hasher.hash(secrets.token_hex(32))
         return self._dummy_hash
 
-    async def register(self, *, email: str, password: str) -> User:
+    async def register(self, *, email: str, password: str, ip: str) -> User:
+        """Create an account. Throttled per IP *before* the Argon2 cost.
+
+        The scope check runs first so throttled callers get the same generic
+        429 for new and existing emails (no enumeration oracle). Only the
+        duplicate (409) path consumes the budget — 201 never does (a NAT with
+        many legitimate signups must not lock out; mass creation with fresh
+        emails is covered by the global per-IP ceiling instead).
+        """
         email = canonical_email(email)
+        await self._throttler.check_register(ip)
         async with self._sessions() as session:
             async with session.begin():
                 exists = await session.scalar(select(User.id).where(User.email == email))
                 if exists is not None:
+                    # Redis write, rolled-back PG read-tx is harmless (same as login).
+                    await self._throttler.record_register_failure(ip)
                     raise EmailAlreadyRegisteredError("email already registered")
                 user = User(email=email)
                 session.add(user)

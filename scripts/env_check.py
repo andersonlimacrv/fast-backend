@@ -56,6 +56,11 @@ def _one_of(*opts: str) -> Check:
     return check
 
 
+def _bool_flag(value: str) -> str | None:
+    """Pydantic-settings bool shapes (case-insensitive)."""
+    return None if value.strip().lower() in ("true", "false", "1", "0", "yes", "no", "on", "off") else "expected a boolean"
+
+
 def _int_in(lo: int, hi: int) -> Check:
     def check(value: str) -> str | None:
         try:
@@ -63,6 +68,28 @@ def _int_in(lo: int, hi: int) -> Check:
         except ValueError:
             return "not an integer"
         return None if lo <= number <= hi else f"out of range {lo}..{hi}"
+
+    return check
+
+
+def _int_min(lo: int) -> Check:
+    """Lower bound only — mirrors Settings validators without an upper cap."""
+
+    def check(value: str) -> str | None:
+        try:
+            number = int(value.strip())
+        except ValueError:
+            return "not an integer"
+        return None if number >= lo else f"out of range {lo}.."
+
+    return check
+
+
+def _one_of_ci(*opts: str) -> Check:
+    """Case-insensitive `_one_of` — mirrors Settings validators using `.lower()`."""
+
+    def check(value: str) -> str | None:
+        return None if value.strip().lower() in [o.lower() for o in opts] else f"expected one of {', '.join(opts)}"
 
     return check
 
@@ -104,7 +131,17 @@ RULES: dict[str, Check] = {
     "REDIS_URL": _starts_with("redis://"),
     "LOGIN_MAX_ATTEMPTS": _int_in(1, 10000),
     "LOGIN_WINDOW_SECONDS": _int_in(1, 3600),
+    "REGISTER_MAX_ATTEMPTS": _int_in(1, 10000),
+    "REGISTER_WINDOW_SECONDS": _int_in(1, 86400),
+    "RATE_LIMIT_GLOBAL_MAX_ATTEMPTS": _int_in(1, 100000),
+    "RATE_LIMIT_GLOBAL_WINDOW_SECONDS": _int_in(1, 86400),
     "TENANCY_MODE": _one_of("single", "row"),
+    "TRUSTED_PROXY_HOPS": _int_min(0),
+    "AUTH_COOKIE_ENABLED": _bool_flag,
+    "AUTH_COOKIE_SECURE": _bool_flag,
+    # NOTE: AUTH_COOKIE_DOMAIN is intentionally unvalidated (free-form; empty = host-only).
+    "AUTH_COOKIE_SAMESITE": _one_of_ci("lax", "strict"),
+    "CSRF_ENABLED": _bool_flag,
     "BOOTSTRAP_KEY": _bootstrap_key,
     "EMAIL_BACKEND": _one_of("log", "smtp"),
     "SMTP_PORT": _int_in(1, 65535),

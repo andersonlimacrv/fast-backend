@@ -40,6 +40,37 @@ class Settings(BaseSettings):
     # --- Throttling ---
     login_max_attempts: int = 10
     login_window_seconds: int = 60
+    # --- Registration throttle (change rate-limit-global): per-IP failure
+    # budget. Only duplicate (409) attempts consume it; 201 never does (NAT
+    # with many legitimate signups must not lock out). Mass creation with
+    # fresh emails is covered by the global ceiling below instead.
+    register_max_attempts: int = 10
+    register_window_seconds: int = 3600
+    # --- Global per-IP ceiling (change rate-limit-global): anti-abuse only,
+    # deliberately higher than auth budgets; every sensitive request counts.
+    rate_limit_global_max_attempts: int = 300
+    rate_limit_global_window_seconds: int = 60
+
+    # --- Auth cookies + CSRF (change auth-cookies-http-only): session transport
+    # for browser SPAs. Off by default (transition): flag off = current
+    # header-only behavior, byte-identical. Flag on = dual read (header OR
+    # cookie) + `Set-Cookie` on login/refresh/switch + CSRF synchronizer-token
+    # on cookie-authenticated mutations. Sunset: header-only removal is a
+    # dedicated follow-up change (no removal here); rollback = flag off.
+    auth_cookie_enabled: bool = False
+    # `Secure` requires HTTPS (see docs/DEPLOYMENT.md "Cookie sessions"): keep
+    # true in staging/prod (Caddy terminates TLS); local dev over plain http
+    # must set `AUTH_COOKIE_SECURE=false` or the browser will not send them.
+    auth_cookie_secure: bool = True
+    # `lax` (default) keeps top-level navigation working; `strict` is tighter
+    # but drops the session on inbound top-level navigation. Never `none`
+    # (would need cross-site CORS, outside the same-eTLD design).
+    auth_cookie_samesite: str = "lax"
+    # Optional cookie `Domain` (empty = host-only, the default).
+    auth_cookie_domain: str = ""
+    # CSRF synchronizer-token enforcement for cookie-authenticated mutations.
+    # Kill-switch only (default on): production refuses cookies without it.
+    csrf_enabled: bool = True
 
     # --- Tenancy (Fase 1: single only; row enforced in Fase 3) ---
     tenancy_mode: str = "single"
@@ -88,6 +119,8 @@ class Settings(BaseSettings):
     # --- HTTP hardening ---
     trusted_hosts: list[str] = ["*"]
     cors_origins: list[str] = []
+    # Reverse-proxy trust (change proxy-hops-trusted): 0 = never honor X-Forwarded-For (fail-closed).
+    trusted_proxy_hops: int = 0
 
     @model_validator(mode="before")
     @classmethod
@@ -104,6 +137,16 @@ class Settings(BaseSettings):
     def _reject_insecure_production(self) -> "Settings":
         if self.tenancy_mode not in ("single", "row"):
             raise ValueError(f"unknown TENANCY_MODE: {self.tenancy_mode!r}")
+        if self.trusted_proxy_hops < 0:
+            raise ValueError("TRUSTED_PROXY_HOPS must be >= 0")
+        if not 1 <= self.register_max_attempts <= 10000:
+            raise ValueError("REGISTER_MAX_ATTEMPTS must be within 1..10000")
+        if not 1 <= self.register_window_seconds <= 86400:
+            raise ValueError("REGISTER_WINDOW_SECONDS must be within 1..86400")
+        if not 1 <= self.rate_limit_global_max_attempts <= 100000:
+            raise ValueError("RATE_LIMIT_GLOBAL_MAX_ATTEMPTS must be within 1..100000")
+        if not 1 <= self.rate_limit_global_window_seconds <= 86400:
+            raise ValueError("RATE_LIMIT_GLOBAL_WINDOW_SECONDS must be within 1..86400")
         if self.email_backend not in ("log", "smtp"):
             raise ValueError(f"unknown EMAIL_BACKEND: {self.email_backend!r}")
         if self.storage_backend not in ("local", "s3"):
@@ -118,17 +161,25 @@ class Settings(BaseSettings):
             raise ValueError("APP_VERSION must be non-empty")
         if not self.frontend_url or not self.frontend_url.strip():
             raise ValueError("FRONTEND_URL must be set (e.g. http://localhost:5173 for local dev)")
+        if self.auth_cookie_samesite.lower() not in ("lax", "strict"):
+            raise ValueError("AUTH_COOKIE_SAMESITE must be lax or strict (never none: same-eTLD design)")
         if self.environment == "production":
             if self.secret_key == DEV_DEFAULT_SECRET or len(self.secret_key) < 32:
                 raise ValueError("production requires a real SECRET_KEY (>=32 chars)")
             if self.trusted_hosts == ["*"]:
                 raise ValueError("production requires explicit TRUSTED_HOSTS")
+            if "*" in self.cors_origins:
+                raise ValueError("production requires explicit CORS_ORIGINS (never '*' with allow_credentials)")
             if not self.bootstrap_key or len(self.bootstrap_key) < 32:
                 raise ValueError("production requires BOOTSTRAP_KEY (>=32 chars, root bootstrap audit)")
             if self.email_backend == "smtp" and not self.smtp_use_tls and self.smtp_host not in ("localhost", "127.0.0.1"):
                 raise ValueError("production smtp to a remote host requires SMTP_USE_TLS=true")
             if not self.frontend_url.startswith("https://"):
                 raise ValueError("production requires FRONTEND_URL https (reset links)")
+            if self.auth_cookie_enabled and not self.auth_cookie_secure:
+                raise ValueError("production cookies require AUTH_COOKIE_SECURE=true (HTTPS only)")
+            if self.auth_cookie_enabled and not self.csrf_enabled:
+                raise ValueError("production cookies require CSRF_ENABLED=true (synchronizer token)")
         return self
 
 

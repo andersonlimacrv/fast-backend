@@ -66,4 +66,23 @@ class WebhookVerificationError(DomainError):
 
 
 class ThrottledError(DomainError):
-    """Too many attempts; client must back off."""
+    """Too many attempts; client must back off.
+
+    The message stays generic on purpose (no limit values, no account-oracle);
+    `retry_after` only feeds the `Retry-After` response header (change
+    rate-limit-global). Services set it from the Redis key TTL.
+    """
+
+    def __init__(self, message: str = "too many attempts", *, retry_after: int | None = None) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after
+
+
+class CsrfError(DomainError):
+    """Cookie-authenticated mutation without a valid CSRF synchronizer token.
+
+    Raised exclusively at the HTTP boundary (`CurrentPrincipal` for
+    bearer-or-cookie routes, refresh/logout routers for cookie-sourced
+    tokens); maps to 403 in `interfaces/errors.py` (change
+    auth-cookies-http-only).
+    """

@@ -1,10 +1,11 @@
 """Organization HTTP routes. Actor identity comes from identity's public surface."""
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from sqlalchemy import select
 
 from app.core.contracts.audit import audit_request
 from app.core.errors import OrganizationAccessDeniedError
+from app.infrastructure.auth.cookies import set_access_cookie
 from app.infrastructure.auth.jwt import mint_access_token
 from app.modules.identity.public import Principal, current_principal
 from app.modules.organization.models import Membership
@@ -129,14 +130,20 @@ async def remove_member(
 async def switch_organization(
     payload: SwitchOrganizationRequest,
     request: Request,
+    response: Response,
     me: Principal = Depends(current_principal),
 ) -> SwitchTokenPair:
     """Mint a new access token bound to the requested org — membership required.
 
     Lives here (not in identity) because only organization may enforce
-    membership without violating the module DAG (ADR 0003).
+    membership without violating the module DAG (ADR 0003). Cookie CSRF is
+    enforced inside `current_principal` (this POST is a mutation); with the
+    cookie flag on, the new access token is also re-emitted as a cookie
+    (refresh + CSRF cookies stay untouched).
     """
     service = _service(request)
     await assert_membership(service, user_id=me.user_id, org_id=payload.org_id)
     access_token = mint_access_token(settings=request.app.state.settings, user_id=me.user_id, active_org_id=payload.org_id)
+    if request.app.state.settings.auth_cookie_enabled:
+        set_access_cookie(response, request.app.state.settings, access_token=access_token)
     return SwitchTokenPair(access_token=access_token)

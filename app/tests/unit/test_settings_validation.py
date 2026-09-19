@@ -100,6 +100,50 @@ def test_unknown_tenancy_rejected() -> None:
 
 
 @pytest.mark.unit
+def test_proxy_hops_default_fail_closed() -> None:
+    s = Settings(secret_key="x" * 32, frontend_url="http://localhost:5173")
+    assert s.trusted_proxy_hops == 0
+
+
+@pytest.mark.unit
+def test_negative_proxy_hops_rejected() -> None:
+    with pytest.raises(ValidationError, match="TRUSTED_PROXY_HOPS"):
+        Settings(secret_key="x" * 32, frontend_url="https://app.example.com", trusted_proxy_hops=-1)
+
+
+@pytest.mark.unit
+def test_production_rejects_wildcard_cors_with_credentials() -> None:
+    with pytest.raises(ValidationError, match="CORS_ORIGINS"):
+        Settings(
+            environment="production",
+            secret_key="x" * 32,
+            trusted_hosts=["example.com"],
+            bootstrap_key="y" * 32,
+            frontend_url="https://app.example.com",
+            cors_origins=["*"],
+        )
+
+
+@pytest.mark.unit
+def test_rate_limit_defaults() -> None:
+    s = Settings(secret_key="x" * 32, frontend_url="http://localhost:5173")
+    assert (s.register_max_attempts, s.register_window_seconds) == (10, 3600)
+    assert (s.rate_limit_global_max_attempts, s.rate_limit_global_window_seconds) == (300, 60)
+
+
+@pytest.mark.unit
+def test_rate_limit_bounds() -> None:
+    with pytest.raises(ValidationError):
+        Settings(secret_key="x" * 32, frontend_url="https://app.example.com", register_max_attempts=0)
+    with pytest.raises(ValidationError):
+        Settings(secret_key="x" * 32, frontend_url="https://app.example.com", register_window_seconds=0)
+    with pytest.raises(ValidationError):
+        Settings(secret_key="x" * 32, frontend_url="https://app.example.com", rate_limit_global_max_attempts=0)
+    with pytest.raises(ValidationError):
+        Settings(secret_key="x" * 32, frontend_url="https://app.example.com", rate_limit_global_window_seconds=0)
+
+
+@pytest.mark.unit
 def test_csv_lists_accepted() -> None:
     s = Settings(
         secret_key="x" * 32,

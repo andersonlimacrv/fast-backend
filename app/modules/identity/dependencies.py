@@ -13,6 +13,8 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.errors import InvalidCredentialsError
 from app.core.settings import Settings
+from app.infrastructure.auth.cookies import ACCESS_COOKIE_NAME
+from app.infrastructure.auth.csrf import assert_csrf
 from app.infrastructure.auth.jwt import decode_access_token
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -26,6 +28,11 @@ class Principal:
     is_staff: bool
     active_org_id: str | None
     token_iat: int
+    # Transport the credential arrived on (change auth-cookies-http-only).
+    # Cookie-authenticated mutations additionally pass the CSRF check below;
+    # header flows never do (bearer is not ambient). Defaults False so every
+    # existing construction keeps working.
+    via_cookie: bool = False
 
 
 def _settings_of(request: Request) -> Settings:
@@ -42,11 +49,30 @@ async def current_principal(
     request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> Principal:
-    if credentials is None or not credentials.credentials:
-        raise InvalidCredentialsError("missing bearer token")
+    """Resolve the caller from Bearer header OR (flag-gated) access cookie.
+
+    Transition (change auth-cookies-http-only): flag off = header-only,
+    byte-identical to before (cookies ignored entirely). Flag on = explicit
+    header wins when present (cross-site forgeries cannot set it), otherwise
+    the `access_token` cookie is accepted. Cookie-authenticated *mutations*
+    additionally require the CSRF synchronizer token (safe methods exempt);
+    the check lives here — never in services, never per-route. Sunset:
+    header-only removal is a dedicated follow-up change (no removal here).
+    """
     settings = _settings_of(request)
+    raw_token: str | None = None
+    via_cookie = False
+    if credentials is not None and credentials.credentials:
+        raw_token = credentials.credentials
+    elif settings.auth_cookie_enabled:
+        cookie_token = request.cookies.get(ACCESS_COOKIE_NAME)
+        if cookie_token:
+            raw_token = cookie_token
+            via_cookie = True
+    if raw_token is None:
+        raise InvalidCredentialsError("missing bearer token")
     try:
-        payload = decode_access_token(settings=settings, token=credentials.credentials)
+        payload = decode_access_token(settings=settings, token=raw_token)
     except pyjwt.PyJWTError as exc:
         raise InvalidCredentialsError("invalid access token") from exc
     service = _service_of(request)
@@ -63,6 +89,8 @@ async def current_principal(
         # greater (v2 §3.5 formula adapted to integer-second iat).
         if iat <= int(valid_after.timestamp()):
             raise InvalidCredentialsError("token revoked")
+    if via_cookie and settings.csrf_enabled:
+        assert_csrf(request)
     return Principal(
         user_id=user.id,
         email=user.email,
@@ -70,6 +98,7 @@ async def current_principal(
         is_staff=user.is_staff or user.is_superuser,
         active_org_id=payload.get("active_org_id"),
         token_iat=iat,
+        via_cookie=via_cookie,
     )
 
 

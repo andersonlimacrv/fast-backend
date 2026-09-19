@@ -1,8 +1,18 @@
 """Identity HTTP routes. Translates domain errors (interfaces maps them to status)."""
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 
 from app.core.contracts.audit import audit_request
+from app.infrastructure.auth.cookies import (
+    REFRESH_COOKIE_NAME,
+    clear_session_cookies,
+    new_csrf_token,
+    set_rotated_cookies,
+    set_session_cookies,
+)
+from app.infrastructure.auth.csrf import assert_csrf
+from app.infrastructure.security.client_ip import client_ip_from_request
+from app.infrastructure.security.rate_limit import enforce_global_rate_limit
 from app.modules.identity.dependencies import Principal, current_principal
 from app.modules.identity.schemas import (
     ChangePasswordRequest,
@@ -16,7 +26,17 @@ from app.modules.identity.schemas import (
     UserRead,
 )
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+
+async def _global_rate_limit(request: Request) -> None:
+    """Count every request against the per-IP global budget BEFORE auth.
+
+    Router-level dependencies run before endpoint ones, so anonymous floods
+    fill the bucket instead of dying at 401 uncounted (anti-scrape).
+    """
+    await enforce_global_rate_limit(request)
+
+
+router = APIRouter(prefix="/auth", tags=["auth"], dependencies=[Depends(_global_rate_limit)])
 
 
 def _service(request: Request):
@@ -24,20 +44,18 @@ def _service(request: Request):
 
 
 def _client_ip(request: Request) -> str:
-    forwarded = request.headers.get("x-forwarded-for")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
+    hops: int = request.app.state.settings.trusted_proxy_hops
+    return client_ip_from_request(request, hops)
 
 
 @router.post("/register", response_model=UserRead, status_code=201)
 async def register(payload: RegisterRequest, request: Request) -> UserRead:
-    user = await _service(request).register(email=str(payload.email), password=payload.password)
+    user = await _service(request).register(email=str(payload.email), password=payload.password, ip=_client_ip(request))
     return UserRead.model_validate(user)
 
 
 @router.post("/login", response_model=TokenPair)
-async def login(payload: LoginRequest, request: Request) -> TokenPair:
+async def login(payload: LoginRequest, request: Request, response: Response) -> TokenPair:
     result = await _service(request).login(
         email=str(payload.email),
         password=payload.password,
@@ -45,22 +63,61 @@ async def login(payload: LoginRequest, request: Request) -> TokenPair:
         user_agent=request.headers.get("user-agent"),
     )
     await audit_request(request, action="auth.login", actor_user_id=result.user.id, resource_type="user")
+    settings = request.app.state.settings
+    if settings.auth_cookie_enabled:
+        # Full trio: HttpOnly access+refresh plus the JS-readable CSRF token.
+        # Body tokens stay (dual transition; removal is a follow-up change).
+        csrf_token = new_csrf_token()
+        set_session_cookies(
+            response, settings, access_token=result.access_token, refresh_token=result.refresh_token, csrf_token=csrf_token
+        )
     return TokenPair(access_token=result.access_token, refresh_token=result.refresh_token)
 
 
+def _presented_refresh_token(request: Request, body_token: str) -> tuple[str, bool]:
+    """Resolve the refresh credential: explicit body wins, else the HttpOnly cookie (flag-gated).
+
+    Returns (token, from_cookie). Empty body + no/flag-off cookie yields ("", False),
+    which the service rejects as invalid (401) — same as an unknown token.
+    """
+    if body_token:
+        return body_token, False
+    settings = request.app.state.settings
+    if settings.auth_cookie_enabled:
+        cookie_token = request.cookies.get(REFRESH_COOKIE_NAME, "")
+        if cookie_token:
+            return cookie_token, True
+    return "", False
+
+
 @router.post("/refresh", response_model=TokenPair)
-async def refresh(payload: RefreshRequest, request: Request) -> TokenPair:
+async def refresh(payload: RefreshRequest, request: Request, response: Response) -> TokenPair:
+    presented, from_cookie = _presented_refresh_token(request, payload.refresh_token)
+    settings = request.app.state.settings
+    if from_cookie and settings.csrf_enabled:
+        # Cookie-sourced rotation is a mutation: synchronizer token required (fail-closed first).
+        assert_csrf(request)
     result = await _service(request).refresh(
-        refresh_token=payload.refresh_token,
+        refresh_token=presented,
         ip=_client_ip(request),
         user_agent=request.headers.get("user-agent"),
     )
+    if settings.auth_cookie_enabled:
+        # Re-emit access+refresh; CSRF stays stable (see cookies.py).
+        set_rotated_cookies(response, settings, access_token=result.access_token, refresh_token=result.refresh_token)
     return TokenPair(access_token=result.access_token, refresh_token=result.refresh_token)
 
 
 @router.post("/logout", status_code=204)
-async def logout(payload: LogoutRequest, request: Request) -> None:
-    await _service(request).logout(refresh_token=payload.refresh_token)
+async def logout(payload: LogoutRequest, request: Request, response: Response) -> None:
+    presented, from_cookie = _presented_refresh_token(request, payload.refresh_token)
+    settings = request.app.state.settings
+    if from_cookie and settings.csrf_enabled:
+        assert_csrf(request)
+    # Idempotent single-token revoke: unknown/empty token revokes nothing (still 204).
+    await _service(request).logout(refresh_token=presented)
+    if settings.auth_cookie_enabled:
+        clear_session_cookies(response, settings)
 
 
 @router.post("/logout-everywhere", status_code=204)

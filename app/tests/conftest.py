@@ -338,6 +338,10 @@ def base_settings(containers: dict[str, str], _hermetic_suite_env: None) -> Sett
         database_url=containers["database_url"],
         redis_url=containers["redis_url"],
         login_max_attempts=1000,  # throttling tested separately with low limits
+        # The global ceiling counts every sensitive request from the shared
+        # test-client IP: keep it out of the way here, burst it on purpose in
+        # `test_rate_limit_global.py` (change rate-limit-global).
+        rate_limit_global_max_attempts=100000,
         frontend_url="https://app.example.com",  # fail-fast is explicit, never global
     )
 
@@ -361,6 +365,30 @@ async def clean_db(base_settings: Settings, migrated_db: None) -> None:
             )
         )
     await engine.dispose()
+
+
+@pytest_asyncio.fixture(loop_scope="function", autouse=True)
+async def _clean_throttle_buckets(request: pytest.FixtureRequest) -> AsyncIterator[Any]:
+    """Fresh Redis throttle slate per integration test (change rate-limit-global).
+
+    Throttle buckets (`login:*`, `register:*`, `global:*`) are keyed by the
+    shared test-client IP in one session-scoped Redis: without this, the
+    global per-IP counter would pile up across the suite and throttle later
+    tests for no reason. Mirrors `clean_db` for Postgres. Lazy and
+    integration-marked only, so `-m unit` stays container-free.
+    """
+    if "integration" not in request.keywords:
+        yield
+        return
+    settings = request.getfixturevalue("base_settings")
+    import redis.asyncio as redis
+
+    client = redis.from_url(settings.redis_url, decode_responses=True)
+    try:
+        await client.flushdb()
+    finally:
+        await client.aclose()
+    yield
 
 
 def build_app(settings: Settings):

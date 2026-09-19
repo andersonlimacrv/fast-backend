@@ -17,6 +17,8 @@
 | Metadados de auditoria (`reason`, contexto) | `audit_log.metadata` | Responsabilização de ações privilegiadas | Obrigação legal / legítimo interesse |
 | Payloads da fila de email | `outbox_messages` | Entrega confiável; **token redigido após envio** | Contrato |
 | Nomes/slugs de orgs/projetos, papéis | `organizations`, `memberships`, `projects`, grants | Tenancy e autorização | Contrato |
+| Cookies de sessão (`access_token`, `refresh_token`: `HttpOnly`) | cookies do navegador, só com `AUTH_COOKIE_ENABLED=true` | Transporte de sessão da SPA (JS não lê) | Contrato |
+| Cookie CSRF (`csrf_token`, legível) + header `X-CSRF-Token` | cookie + header, só com `AUTH_COOKIE_ENABLED=true` | Proteção anti-forgery das mutações por cookie | Legítimo interesse |
 
 Nunca em logs ou auditoria: senhas, tokens (access/refresh/reset), segredos. Tokens existem **só como hash** no Postgres; o token de reset vive minutos no payload do outbox e é redigido após o despacho (provado por `test_leak_audit.py`).
 
@@ -39,7 +41,7 @@ Nunca em logs ou auditoria: senhas, tokens (access/refresh/reset), segredos. Tok
 
 ## Cookies, storage, terceiros
 
-- Navegador: JWT em `localStorage` (**conveniência dev** — nunca levar assim p/ prod; usar cookies `HttpOnly`/`Secure` + CSRF).
+- Sessão no navegador, dois modos: o fluxo header padrão mantém tokens curtos na memória/`localStorage` da SPA (conveniência dev); com `AUTH_COOKIE_ENABLED=true` (transporte de produção) os tokens viajam como cookies `HttpOnly`/`Secure`/`SameSite=Lax` que o JS não lê, mais um synchronizer `csrf_token` legível ecoado em `X-CSRF-Token` nas mutações (`Path=/auth` confina o cookie de refresh a `/auth/*`). Mutação por cookie sem o token recebe `403`. Ver `docs/DEPLOYMENT.pt-BR.md` ("Sessões por cookie + CSRF") p/ o runbook TLS/`Secure`.
 - Landing (`/`): sem trackers, sem requisições a terceiros, sem analytics.
 - Suboperadores dependem do deploy: provedor SMTP (`EMAIL_BACKEND=smtp`), storage S3-compatível, Stripe (só com `BILLING_ENABLED=true`).
 

@@ -6,25 +6,26 @@
  * rotation. On 401 the request refreshes once and retries; refresh failure or
  * reuse invokes `onUnauthorized` so the app can force logout — expected
  * backend behavior, see client/README.md.
+ * Cookie mode (`VITE_AUTH_COOKIES=true`): tokens travel in HttpOnly cookies
+ * (`credentials: "include"`), access lives in memory, mutations carry the
+ * `x-csrf-token` synchronizer; header mode stays byte-identical.
  */
 
 import { API_BASE } from "@/lib/constants";
 import {
+  CSRF_HEADER_NAME,
   clearSession,
   getAccessToken,
+  getCsrfToken,
   getRefreshToken,
+  isCookieMode,
   notifySessionExpired,
   setActiveOrgId as persistActiveOrgId,
   storeTokenPair,
 } from "@/services/session";
 
 export { API_BASE };
-export {
-  clearSession,
-  getAccessToken,
-  getActiveOrgId,
-  setActiveOrgId as setActiveOrgId,
-} from "@/services/session";
+export { clearSession, getAccessToken, getActiveOrgId, setActiveOrgId } from "@/services/session";
 
 export class ApiError extends Error {
   status: number;
@@ -168,7 +169,9 @@ function friendlyMessage(status: number, payload: unknown): string {
 async function raw<T>(path: string, init?: RequestInit): Promise<T> {
   let resp: Response;
   try {
-    resp = await fetch(`${API_BASE}${path}`, init);
+    // `credentials: "include"` is a no-op in header mode and carries the
+    // HttpOnly session cookies in cookie mode (same-eTLD API).
+    resp = await fetch(`${API_BASE}${path}`, { ...init, credentials: "include" });
   } catch {
     throw new ApiError(0, "Cannot reach backend. Is the API running?");
   }
@@ -183,15 +186,25 @@ async function raw<T>(path: string, init?: RequestInit): Promise<T> {
   return payload as T;
 }
 
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS", "TRACE"]);
+
 async function authed<T>(path: string, init?: RequestInit, retried = false): Promise<T> {
   const token = getAccessToken();
+  const cookieMode = isCookieMode();
   const headers = new Headers(init?.headers);
   headers.set("Content-Type", "application/json");
   if (token) headers.set("Authorization", `Bearer ${token}`);
+  if (cookieMode && !SAFE_METHODS.has((init?.method ?? "GET").toUpperCase())) {
+    // Mutations authenticated by cookie require the synchronizer token.
+    const csrf = getCsrfToken();
+    if (csrf) headers.set(CSRF_HEADER_NAME, csrf);
+  }
   try {
     return await raw<T>(path, { ...init, headers });
   } catch (err) {
-    if (err instanceof ApiError && err.status === 401 && !retried && token) {
+    // In cookie mode there may be no in-memory token (e.g. after a reload):
+    // the HttpOnly cookies still authenticate the silent refresh.
+    if (err instanceof ApiError && err.status === 401 && !retried && (token || cookieMode)) {
       await refreshOnce();
       return authed<T>(path, init, true);
     }
@@ -205,12 +218,19 @@ async function refreshOnce(): Promise<void> {
   if (!refreshPromise) {
     refreshPromise = (async () => {
       const refreshToken = getRefreshToken();
-      if (!refreshToken) onUnauthorized();
+      // In cookie mode there is no stored refresh token: the HttpOnly cookie
+      // authenticates the rotation (empty body, backend reads the cookie).
+      if (!refreshToken && !isCookieMode()) onUnauthorized();
       try {
+        const headers = new Headers({ "Content-Type": "application/json" });
+        if (isCookieMode()) {
+          const csrf = getCsrfToken();
+          if (csrf) headers.set(CSRF_HEADER_NAME, csrf);
+        }
         const pair = await raw<TokenPair>("/auth/refresh", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ refresh_token: refreshToken }),
+          headers,
+          body: JSON.stringify({ refresh_token: refreshToken ?? "" }),
         });
         storeTokenPair(pair.access_token, pair.refresh_token);
       } catch {
@@ -252,11 +272,18 @@ export async function login(email: string, password: string): Promise<void> {
 export async function logout(): Promise<void> {
   const refreshToken = getRefreshToken();
   try {
-    if (refreshToken) {
+    // In cookie mode the HttpOnly cookie identifies the session even with an
+    // empty body (and the response clears the cookies server-side).
+    if (refreshToken || isCookieMode()) {
+      const headers = new Headers({ "Content-Type": "application/json" });
+      if (isCookieMode()) {
+        const csrf = getCsrfToken();
+        if (csrf) headers.set(CSRF_HEADER_NAME, csrf);
+      }
       await raw("/auth/logout", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ refresh_token: refreshToken }),
+        headers,
+        body: JSON.stringify({ refresh_token: refreshToken ?? "" }),
       });
     }
   } finally {
