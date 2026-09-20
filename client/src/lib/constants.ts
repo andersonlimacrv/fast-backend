@@ -29,10 +29,9 @@ export const ROUTES = {
   adminUsers: "/admin/users",
   adminOrgs: "/admin/orgs",
   adminAudit: "/admin/audit",
-  gallery: "/admin/gallery",
-  playground: "/playground",
-  playgroundComponents: "/playground/components",
-  playgroundBlocks: "/playground/blocks",
+  adminGallery: "/admin/gallery",
+  adminLab: "/admin/lab",
+  adminLabTrials: "/admin/lab/trials",
 } as const;
 
 export const ROLES = ["owner", "admin", "member"] as const;

@@ -140,3 +140,24 @@ oportunisticamente: `file-tree` ROW_CLASS, `toggle-group` cva).
 - `components/animate-ui/` + `primitives/` planos → `custom-ui-restructure`: tudo sob `components/custom-ui/` (pasta por componente + `effects/`), proibido recriar `primitives/`, `radix/`, `animate/` (ver `docs/CLIENT-STRUCTURE.md`).
 - Faltava a convenção de rotas → criada: `docs/CLIENT-STRUCTURE.md` + ADR 0013 (pasta espelha `ROUTES`, gate em `layouts/`, segmento dinâmico nunca é autoridade).
 - Gallery "checklist manual de render staff" → segue manual; fila playground S2+ fatiada em uma change por componente (decisão do dono 2026-09-17).
+- Nomes "Gallery"/"Playground" não remetiam à relação prova→uso (dono, 2026-09-19) → **funil**: `/admin/lab` (+ `/admin/lab/trials`) prova os itens `pending`, `/admin/gallery` mostra só os `validated` com onde são usados. `stamped` → `validated`; `playground`/`components` deixam de existir como rota. Staff-only vive sob `/admin`. Changes `lab-harness`/`lab-components`.
+
+## 13. Catálogo do Lab (change `lab-harness` + `lab-components`, 2026-09-19)
+
+**Fonte única**: `client/src/lib/catalog/` — `types.ts` (tipos), `entries.ts` (23 entradas, uma por
+doc de `references/components_to_use/`), `index.ts` (helpers). Cada entrada tem `n` **estável e
+imutável** (append-only, compartilhado Lab ↔ Gallery), `class` (`component` | `block`), `kind`
+(base/buttons/data/media/shell/identity/feedback), `status` (`pending` | `validated` | `dropped`),
+`ref`/`refGroup` (doc-fonte), `source` (implementação ou `null` = not ported) e `usedIn[]`
+(`{label, to?, scope}` — link rápido quando há rota, senão texto; `scope` = app/admin/shell).
+
+**Provas**: `components/catalog-demos.tsx` mapeia `slug → ReactNode` (mesmo registro nas duas
+telas). **Validar um item = flipar `status` no catálogo** — a prova migra de `/admin/lab/trials`
+para `/admin/gallery` sozinha. Novos itens chegam como novo doc em `references/` → append com o
+próximo `n`.
+
+| # | Item | class | kind | status | Decisão |
+|---|---|---|---|---|---|
+| 01 | 404PageNotFound | block | feedback | ✅ validated | Portado como `ErrorOne`, em produção na rota `*`; validado pelo dono (visual, 2026-09-19). |
+| 02 | Accordion | component | base | pending | Prova viva pronta (single + `multiple`); `keepRendered`/`showArrow` do DEMO **sem equivalente** (Base UI desmonta painel fechado, chevron sempre renderiza) — não-port documentado, não bug. Aguarda ok do dono. |
+| 03–23 | (demais) | — | — | pending | `DeplymentCard` (08) `dropped` (duplicata do RunActionButton, §6); `ExpandDetails` (11) e `SubsriptionCalendar` (18) ainda não portados. Todo o resto será revisto 1-a-1. |

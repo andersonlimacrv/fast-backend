@@ -424,8 +424,8 @@ const ADMIN_NAV: NavEntry[] = [
   { to: ROUTES.adminUsers, label: "Users", icon: <Users aria-hidden="true" /> },
   { to: ROUTES.adminOrgs, label: "Organizations", icon: <Building2 aria-hidden="true" /> },
   { to: ROUTES.adminAudit, label: "Global audit", icon: <FileText aria-hidden="true" /> },
-  { to: ROUTES.gallery, label: "Gallery", icon: <Layers aria-hidden="true" /> },
-  { to: ROUTES.playground, label: "Playground", icon: <FlaskConical aria-hidden="true" /> },
+  { to: ROUTES.adminGallery, label: "Gallery", icon: <Layers aria-hidden="true" /> },
+  { to: ROUTES.adminLab, label: "Lab", icon: <FlaskConical aria-hidden="true" /> },
 ];
 
 /** Radix dropdowns are modal by default (background aria-hidden + focus trap),

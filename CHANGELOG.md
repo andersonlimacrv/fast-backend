@@ -21,3 +21,5 @@ An empty `[Unreleased]` below is the normal idle state — the bot (`auto_releas
 
 ## [Unreleased]
 
+- **`lab-harness`** (com `lab-components`): catálogo único em `client/src/lib/catalog/` (23 entradas — uma por doc de `references/components_to_use/` — com `n` estável, `class` component|block, `kind`, `status` pending|validated|dropped, `ref`, `source`, `usedIn`); `/admin/lab` lista a adoção (Components/Blocks), `/admin/lab/trials` prova os `pending` (registro compartilhado `components/catalog-demos.tsx`) e `/admin/gallery` mostra só os `validated` com prova + onde são usados de verdade (link rápido quando há rota); validar = flipar `status` no catálogo (a prova migra sozinha); rotas `playground*`/`admin/components` deixam de existir; únicos validados: `404PageNotFound` (`ErrorOne` na rota `*`).
+
