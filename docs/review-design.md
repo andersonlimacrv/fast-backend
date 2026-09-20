@@ -145,11 +145,12 @@ oportunisticamente: `file-tree` ROW_CLASS, `toggle-group` cva).
 ## 13. Catálogo do Lab (change `lab-harness` + `lab-components`, 2026-09-19)
 
 **Fonte única**: `client/src/lib/catalog/` — `types.ts` (tipos), `entries.ts` (23 entradas, uma por
-doc de `references/components_to_use/`), `index.ts` (helpers). Cada entrada tem `n` **estável e
-imutável** (append-only, compartilhado Lab ↔ Gallery), `class` (`component` | `block`), `kind`
-(base/buttons/data/media/shell/identity/feedback), `status` (`pending` | `validated` | `dropped`),
-`ref`/`refGroup` (doc-fonte), `source` (implementação ou `null` = not ported) e `usedIn[]`
-(`{label, to?, scope}` — link rápido quando há rota, senão texto; `scope` = app/admin/shell).
+doc de `references/components_to_use/`, + `24 Collapsible`), `index.ts` (helpers). Cada entrada tem
+`n` **estável e imutável** (append-only, compartilhado Lab ↔ Gallery), `class` (`component` |
+`block`), `kind` (base/buttons/data/media/shell/identity/feedback), `status` (`pending` |
+`validated` | `dropped`), `ref`/`refGroup` (doc-fonte), `source` (implementação ou `null` =
+not ported) e `usedIn[]` (`{label, to?, scope}` — link rápido quando há rota, senão texto;
+`scope` = app/admin/shell).
 
 **Provas**: `components/catalog-demos.tsx` mapeia `slug → ReactNode` (mesmo registro nas duas
 telas). **Validar um item = flipar `status` no catálogo** — a prova migra de `/admin/lab/trials`
@@ -159,5 +160,31 @@ próximo `n`.
 | # | Item | class | kind | status | Decisão |
 |---|---|---|---|---|---|
 | 01 | 404PageNotFound | block | feedback | ✅ validated | Portado como `ErrorOne`, em produção na rota `*`; validado pelo dono (visual, 2026-09-19). |
-| 02 | Accordion | component | base | pending | Prova viva pronta (single + `multiple`); `keepRendered`/`showArrow` do DEMO **sem equivalente** (Base UI desmonta painel fechado, chevron sempre renderiza) — não-port documentado, não bug. Aguarda ok do dono. |
+| 02 | Accordion | component | base | ✅ validated | Porte **próprio** em `custom-ui/components/accordion.tsx` sobre o `Collapsible` (radix + AnimatePresence). Reveal padrão **`mask`** — fiel ao primitivo upstream (`primitives-base-accordion`): máscara CSS animada (`--mask-stop` 0%→100%) + `y: 20`, então o conteúdo é revelado por cortina de cima p/ baixo e o que ainda não foi revelado fica invisível (sem texto translúcido sobre a separadora, que era o defeito do `slide` puro). Spring padrão `150/22` (igual ao componente do site). `reveal="depth"` (rotateX topo + scale) fica como alternativa e `slide` continua o default do `Collapsible`/sidebar. `multiple`, `keepRendered` e `onHover` suportados. Validado pelo dono em 2026-09-19 (prova de 5 colunas). |
+| 02 · extra | `onHover` | — | — | — | Prop opt-in (`false` default) no `Collapsible` **e** no `Accordion`: o item abre no `mouseenter` e fecha no `mouseleave` pelo mesmo `setIsOpen` do clique (mesma animação). Clique/teclado/touch seguem funcionando — hover é gatilho **extra**, nunca o único. |
 | 03–23 | (demais) | — | — | pending | `DeplymentCard` (08) `dropped` (duplicata do RunActionButton, §6); `ExpandDetails` (11) e `SubsriptionCalendar` (18) ainda não portados. Todo o resto será revisto 1-a-1. |
+| 24 | Collapsible | component | base | pending | Vendored radix + AnimatePresence; é o padrão de disclosure da sidebar (e a base do item 02). Sem doc próprio — entrou com o porte do Sidebar (`ref: AnimateUi/Sidebar.md`). |
+
+## 14. Dívida declarada: customização em `/ui` (change `custom-ui-accordion`, 2026-09-19)
+
+Regra (dono, 2026-09-19; em `CLIENT-STRUCTURE.md` §Componentes): **`/ui` é a base shadcn intocada**;
+o componente visual que a página usa mora em `/custom-ui` e pode compor a base por baixo.
+
+O `animate-ui-adoption` reconciliou motion/padrões **dentro** de `/ui` antes de a regra existir, e o
+`custom-ui-restructure` moveu só os 9 avulsos. Ficou dívida:
+
+| Arquivo em `/ui` | O que carrega | Quem importa hoje |
+|---|---|---|
+| `accordion.tsx` | Base UI + motion/spring upstream | ninguém (o 02 usa o porte `custom-ui`) |
+| `alert-dialog.tsx` | + motion/spring | prova do 03 |
+| `checkbox.tsx` | + motion | prova do 05 |
+| `dialog.tsx` | + motion/spring | prova do 09 |
+| `radio.tsx` | + motion | prova do 15 |
+| `tabs.tsx` | pill deslizante + motion | prova do 20 |
+| `toggle-group.tsx` | variantes do referência + contexto | prova do 21 |
+| `avatar.tsx` | AvatarImage + presence dot | `app-sidebar.tsx`, `avatar-group.tsx` |
+| `switch.tsx` | Base UI próprio | `pages/grants/Grants.tsx` |
+
+**Convergência**: nenhum deles é editado; ao validar cada item no Lab, cria-se a versão
+`custom-ui/components/<nome>` e o catálogo/ página passam a apontar para ela. Itens que **já** têm
+consumidor de produção (`avatar` → sidebar, `switch` → Grants) têm prioridade quando chegar a vez.

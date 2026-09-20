@@ -29,7 +29,10 @@ Páginas staff usam ainda `RequireStaff` por dentro.
 
 ## Componentes (`components/`)
 
-1. Base shadcn em `/ui`; tudo custom em `/custom-ui` (nunca o inverso).
+1. `/ui` é a **base shadcn, intocada** — serve de referência/primitivo, nunca é
+   editada nem vira dependência direta de página. Componente visual usado por
+   página vive em `/custom-ui` (pode compor `/ui` por baixo dos panos), e é de
+   lá que as páginas importam (`@/components/custom-ui/...`).
 2. Um componente = uma entrada em `custom-ui/components/`: pasta quando há
    2+ arquivos (`<nome>.tsx` estilizado + `primitive.tsx` comportamento —
    ex. `dropdown-menu/`, `sheet/`, `tooltip/`; `sidebar/` em pasta por
@@ -37,3 +40,9 @@ Páginas staff usam ainda `RequireStaff` por dentro.
 3. Efeito compartilhado vai em `custom-ui/effects/` (hoje: `highlight`).
 4. Proibido recriar níveis `primitives/`, `radix/`, `animate/`; imports sempre
    `@/components/custom-ui/...`. Change: `custom-ui-restructure`.
+5. Dívida declarada (change `custom-ui-accordion`): alguns arquivos de `/ui`
+   ainda carregam customização herdada do `animate-ui-adoption`
+   (`accordion`, `alert-dialog`, `checkbox`, `dialog`, `radio`, `tabs`,
+   `toggle-group`, `avatar`, `switch`). Convergem 1-a-1: ao validar o item no
+   Lab, cria-se a versão `custom-ui` e o catálogo passa a apontar para ela —
+   nenhum deles é editado fora de `/custom-ui`.

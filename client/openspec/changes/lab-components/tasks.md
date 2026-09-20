@@ -11,9 +11,9 @@
 
 ## S2 — Accordion (prova pronta, aguardando ok)
 
-- [x] 2.1 Prova viva single + `multiple` no registro de demos (dados neutros)
-- [x] 2.2 Nota do não-porte (`keepRendered`/`showArrow`) no catálogo
-- [ ] 2.3 **Ok visual do dono** → `status: "validated"` (a prova migra para a Gallery)
+- [x] 2.1 Prova viva single + `multiple` + `keepRendered` no registro de demos (dados neutros)
+- [x] 2.2 Porte próprio do accordion (`custom-ui-accordion`) + `source`/nota no catálogo
+- [x] 2.3 **Ok visual do dono** em 2026-09-19 → `status: "validated"` (a prova migrou para a Gallery)
 
 ## S3 — Verificação
 

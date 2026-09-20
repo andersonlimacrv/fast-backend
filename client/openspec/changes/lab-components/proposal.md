@@ -5,7 +5,7 @@ Primeiro item da fila validado 1-a-1 pelo dono. `404PageNotFound` é o único `v
 ## What Changes
 
 - `404PageNotFound`: `status: "validated"` no catálogo + prova compacta (`ErrorOne`) no registro de demos + `usedIn` ("Catch-all (`*`) — NotFound page").
-- `Accordion`: prova viva (single + `multiple`, dados neutros) no registro de demos; `status` segue `pending` até o ok do dono; nota do não-porte (`keepRendered`/`showArrow`).
+- `Accordion`: prova viva (single + `multiple` + `keepRendered`, dados neutros) sobre o porte próprio em `custom-ui` (change `custom-ui-accordion`); `status` segue `pending` até o ok do dono.
 - Ledger `review-design` §13 atualizado com o modelo do catálogo.
 
 ## Capabilities

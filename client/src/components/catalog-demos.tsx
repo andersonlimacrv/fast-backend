@@ -20,7 +20,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from "@/components/ui/accordion";
+} from "@/components/custom-ui/components/accordion";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
@@ -91,6 +91,38 @@ const TREE: FileTreeNode[] = [
   },
 ];
 
+function AccordionHover() {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-medium text-muted-foreground">Single — onHover (abre/fecha sem clique)</p>
+      <Accordion onHover>
+        {FAQ.map((i) => (
+          <AccordionItem key={i.value} value={i.value}>
+            <AccordionTrigger>{i.title}</AccordionTrigger>
+            <AccordionContent>{i.body}</AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </div>
+  );
+}
+
+function AccordionDepthForComparison() {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-medium text-muted-foreground">Single — reveal="depth" (alternativa)</p>
+      <Accordion>
+        {FAQ.map((i) => (
+          <AccordionItem key={i.value} value={i.value}>
+            <AccordionTrigger>{i.title}</AccordionTrigger>
+            <AccordionContent reveal="depth">{i.body}</AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </div>
+  );
+}
+
 const FAQ = [
   { value: "shipping", title: "How long does shipping take?", body: "Standard orders arrive in 3–5 business days; express in 1–2." },
   { value: "returns", title: "What is the return window?", body: "Unused items can be returned within 30 days of delivery." },
@@ -126,6 +158,22 @@ function AccordionMultiple() {
   );
 }
 
+function AccordionKeepRendered() {
+  return (
+    <div>
+      <p className="mb-2 text-xs font-medium text-muted-foreground">keepRendered (panel stays mounted)</p>
+      <Accordion multiple defaultValue={["shipping"]}>
+        {FAQ.map((i) => (
+          <AccordionItem key={i.value} value={i.value}>
+            <AccordionTrigger>{i.title}</AccordionTrigger>
+            <AccordionContent keepRendered>{i.body}</AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </div>
+  );
+}
+
 export const DEMOS: Record<string, React.ReactNode> = {
   "404-page-not-found": (
     <div className="rounded-md border border-border">
@@ -140,12 +188,15 @@ export const DEMOS: Record<string, React.ReactNode> = {
   ),
 
   accordion: (
-    <div className="grid gap-6 lg:grid-cols-2">
+    <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
       <div>
-        <p className="mb-2 text-xs font-medium text-muted-foreground">Single (default)</p>
+        <p className="mb-2 text-xs font-medium text-muted-foreground">Single — mask (upstream, default)</p>
         <AccordionSingle />
       </div>
+      <AccordionHover />
       <AccordionMultiple />
+      <AccordionKeepRendered />
+      <AccordionDepthForComparison />
     </div>
   ),
 
