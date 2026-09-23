@@ -233,7 +233,7 @@ export function AdminUsersPage() {
                 <TableCell>
                   <span className="text-sm">{u.email}</span>{" "}
                   <span className="font-mono text-xs text-muted-foreground">{u.id.slice(0, 8)}</span>{" "}
-                  <CopyButton content={u.id} />
+                  <CopyButton content={u.id} variant="ghost" />
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <div className="flex flex-wrap gap-1">

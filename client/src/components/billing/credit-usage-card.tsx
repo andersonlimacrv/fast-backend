@@ -1,6 +1,7 @@
 import * as React from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
+import { Switch } from "@/components/custom-ui/components/switch";
 import { Check, ChevronDown, Download, MoreVertical, Printer, RefreshCw, Share2 } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
@@ -99,8 +100,7 @@ export function CreditUsageCard({
     };
   }, []);
 
-  function handleToggleAutoSwitch(): void {
-    const next = !autoSwitch;
+  function handleAutoSwitchChange(next: boolean): void {
     setAutoSwitch(next);
     onAutoSwitchChange?.(next);
   }
@@ -126,7 +126,10 @@ export function CreditUsageCard({
     {
       label: "Print history",
       icon: <Printer className="size-3.5" aria-hidden="true" />,
-      action: () => setActivePopover(null),
+      action: () => {
+        window.print();
+        setActivePopover(null);
+      },
     },
     {
       label: "Share report",
@@ -141,8 +144,8 @@ export function CreditUsageCard({
   ];
 
   return (
-    <div className="w-full max-w-xl overflow-hidden rounded-lg border border-border bg-card font-sans text-foreground shadow-lg select-none">
-      <div className="flex flex-col items-start justify-between gap-4 bg-muted/50 px-4 py-5 sm:flex-row sm:items-center sm:px-6">
+    <div className="w-full max-w-135 overflow-hidden rounded-xl border border-border bg-card font-sans text-foreground shadow-lg transition-all duration-500 select-none">
+      <div className="flex flex-col items-start justify-between gap-4 bg-muted/50 px-4 py-5 sm:flex-row sm:items-center sm:px-6 md:px-8">
         <div>
           <h3 className="mb-1 text-[10px] font-bold tracking-[0.2em] text-muted-foreground uppercase">
             Credits Used
@@ -153,31 +156,14 @@ export function CreditUsageCard({
           <span className="max-w-40 text-right text-[10px] leading-tight font-bold tracking-wider text-muted-foreground uppercase">
             Auto-switch to cheaper model at limit
           </span>
-          <button
-            type="button"
-            role="switch"
-            aria-checked={autoSwitch}
+          <Switch
+            width={40}
+            height={20}
+            checked={autoSwitch}
+            onCheckedChange={handleAutoSwitchChange}
             aria-label="Auto-switch to cheaper model at limit"
-            onClick={handleToggleAutoSwitch}
-            className={cn(
-              "relative flex h-5 w-10 shrink-0 items-center rounded-full border p-0.5 transition-colors duration-200",
-              "motion-reduce:transition-none focus-visible:ring-ring focus-visible:ring-1 focus-visible:outline-none",
-              autoSwitch ? "border-primary/40 bg-primary/15" : "border-border bg-muted",
-            )}
-          >
-            <motion.span
-              animate={{ x: autoSwitch ? 18 : 0 }}
-              transition={
-                reduceMotion
-                  ? { duration: 0 }
-                  : { type: "spring", stiffness: 500, damping: 30 }
-              }
-              className={cn(
-                "block h-3.5 w-4 rounded-full",
-                autoSwitch ? "bg-primary" : "bg-muted-foreground",
-              )}
-            />
-          </button>
+            className="shrink-0"
+          />
         </div>
       </div>
 
@@ -187,7 +173,7 @@ export function CreditUsageCard({
         aria-valuemax={100}
         aria-valuenow={clamped}
         aria-label="Credits used"
-        className="flex h-3 gap-px bg-muted/50 px-4 sm:gap-1 sm:px-6"
+        className="flex h-3.5 gap-px bg-muted/50 px-4 sm:px-6 md:px-8"
       >
         {Array.from({ length: SEGMENTS }).map((_, i) => {
           const filled = i < (clamped / 100) * SEGMENTS;
@@ -196,15 +182,15 @@ export function CreditUsageCard({
               key={i}
               style={filled ? { opacity: 1 - i * 0.004 } : undefined}
               className={cn(
-                "flex-1 rounded-sm transition-all duration-200 motion-reduce:transition-none",
-                filled ? "bg-primary" : "bg-muted",
+                "flex-1 rounded-sm transition-all duration-700 motion-reduce:transition-none",
+                filled ? "border border-primary-foreground/60 bg-primary" : "bg-muted-foreground/70",
               )}
             />
           );
         })}
       </div>
 
-      <div className="flex items-center justify-between bg-muted/50 px-4 py-4 text-xs font-bold sm:px-6">
+      <div className="flex items-center justify-between bg-muted/50 px-4 py-4 text-xs font-bold sm:px-6 md:px-8">
         <span className="text-muted-foreground">
           {creditsUsedLabel} <span className="text-muted-foreground/70">/ {totalCreditsLabel}</span>
         </span>
@@ -216,7 +202,7 @@ export function CreditUsageCard({
 
       <div className="h-px w-full border-b border-dashed border-border" />
 
-      <div className="flex flex-row flex-wrap items-center justify-between gap-2 bg-muted/50 px-4 pt-4 pb-4 sm:flex-nowrap sm:px-6">
+      <div className="flex flex-row flex-wrap items-center justify-between gap-2 bg-muted/50 px-4 pt-4 pb-4 sm:flex-nowrap sm:px-6 md:px-8">
         <div className="flex flex-shrink-0 items-center gap-2">
           <h4 className="font-sans text-sm font-medium whitespace-nowrap sm:text-base">
             Usage History
@@ -284,7 +270,7 @@ export function CreditUsageCard({
       </div>
 
       <div className="overflow-x-auto bg-muted/50 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="min-w-[500px] space-y-0.5 border-b border-border px-4 py-2 sm:px-6">
+        <div className="min-w-[500px] space-y-0.5 border-b border-border px-4 py-2 sm:px-6 md:px-8">
           <div className="grid grid-cols-4 px-1 pb-2 text-[10px] font-bold tracking-wider text-muted-foreground uppercase">
             <span>Date</span>
             <span>Model</span>
@@ -313,7 +299,7 @@ export function CreditUsageCard({
         </div>
       </div>
 
-      <div className="flex flex-col items-center justify-between gap-4 bg-card px-4 pt-4 pb-4 sm:flex-row sm:px-6">
+      <div className="flex flex-col items-center justify-between gap-4 bg-card px-4 pt-4 pb-4 sm:flex-row sm:px-6 md:px-8">
         <div className="flex items-center gap-3 self-start text-muted-foreground sm:self-auto">
           <div ref={moreRef} className="relative flex items-center">
             <button
@@ -361,7 +347,11 @@ export function CreditUsageCard({
             className="group relative flex items-center justify-center rounded-md focus-visible:ring-1 focus-visible:ring-ring focus-visible:outline-none"
           >
             <motion.span
-              animate={downloadDone && !reduceMotion ? { scale: [1, 1.2, 1] } : { scale: 1 }}
+              animate={
+                downloadDone && !reduceMotion
+                  ? { scale: [1, 1.25, 1], rotate: [0, 5, -5, 0] }
+                  : { scale: 1, rotate: 0 }
+              }
               transition={{ duration: 0.2, ease: "easeOut" }}
               className={cn(
                 "flex items-center justify-center transition-colors",

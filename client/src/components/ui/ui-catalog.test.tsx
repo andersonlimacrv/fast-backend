@@ -20,7 +20,17 @@ import {
 import { Avatar, initialsOf } from "@/components/ui/avatar";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CircularProgress } from "@/components/custom-ui/components/circular-progress";
+import { Checkbox as CustomCheckbox } from "@/components/custom-ui/components/checkbox";
+import { Switch as CustomSwitch } from "@/components/custom-ui/components/switch";
 import { CopyButton } from "@/components/custom-ui/components/copy-button";
+import { CreditUsageCard } from "@/components/billing/credit-usage-card";
+import {
+  Dialog as CustomDialog,
+  DialogClose as CustomDialogClose,
+  DialogContent as CustomDialogContent,
+  DialogTitle as CustomDialogTitle,
+  DialogTrigger as CustomDialogTrigger,
+} from "@/components/custom-ui/components/dialog";
 import {
   Dialog,
   DialogClose,
@@ -208,6 +218,55 @@ describe("dialog", () => {
   });
 });
 
+describe("credit-usage-card", () => {
+  it("uses the custom-ui switch and reports the auto-switch change", async () => {
+    const onChange = vi.fn();
+    render(<CreditUsageCard onAutoSwitchChange={onChange} />);
+    const toggle = screen.getByRole("switch", { name: /auto-switch to cheaper model/i });
+    expect(toggle.getAttribute("aria-checked")).toBe("true");
+    /* The validated 25 Switch paints the active track with the full-strength
+     * primary — the hand-rolled toggle it replaced used a `/15` tint. */
+    expect(toggle.className).toContain("bg-primary");
+    fireEvent.click(toggle);
+    expect(onChange).toHaveBeenCalledWith(false);
+    await waitFor(() => expect(toggle.getAttribute("aria-checked")).toBe("false"));
+  });
+});
+
+describe("custom-ui dialog", () => {
+  it("opens from the trigger and closes via the close button", async () => {
+    render(
+      <CustomDialog>
+        <CustomDialogTrigger>open custom</CustomDialogTrigger>
+        <CustomDialogContent>
+          <CustomDialogTitle>Composed dialog</CustomDialogTitle>
+        </CustomDialogContent>
+      </CustomDialog>,
+    );
+    fireEvent.click(screen.getByText("open custom"));
+    expect(await screen.findByText("Composed dialog")).toBeTruthy();
+    fireEvent.click(screen.getByText("Close"));
+    await waitFor(() => expect(screen.queryByText("Composed dialog")).toBeNull());
+  });
+
+  it("hides the close button and still closes via DialogClose", async () => {
+    render(
+      <CustomDialog>
+        <CustomDialogTrigger>open custom</CustomDialogTrigger>
+        <CustomDialogContent showCloseButton={false}>
+          <CustomDialogTitle>No X here</CustomDialogTitle>
+          <CustomDialogClose>Dismiss</CustomDialogClose>
+        </CustomDialogContent>
+      </CustomDialog>,
+    );
+    fireEvent.click(screen.getByText("open custom"));
+    expect(await screen.findByText("No X here")).toBeTruthy();
+    expect(screen.queryByText("Close")).toBeNull();
+    fireEvent.click(screen.getByText("Dismiss"));
+    await waitFor(() => expect(screen.queryByText("No X here")).toBeNull());
+  });
+});
+
 describe("toggle-group", () => {
   it("selects a single value", () => {
     const onChange = vi.fn();
@@ -241,10 +300,66 @@ describe("circular-progress", () => {
     rerender(<CircularProgress value={150} />);
     expect(screen.getByRole("progressbar").getAttribute("aria-valuenow")).toBe("100");
   });
+
+  it("fills from min on mount by default", () => {
+    render(<CircularProgress value={25} />);
+    // aria reflects the real value; the painted value starts at 0.
+    expect(screen.getByRole("progressbar").getAttribute("data-current-value")).toBe("0");
+  });
+
+  it("animateOnMount={false} starts at the value", () => {
+    render(<CircularProgress value={25} animateOnMount={false} />);
+    expect(screen.getByRole("progressbar").getAttribute("data-current-value")).toBe("25");
+  });
+
+  it("reaches the value when the fill finishes", async () => {
+    render(<CircularProgress value={40} transitionLength={30} />);
+    await waitFor(() =>
+      expect(screen.getByRole("progressbar").getAttribute("data-current-value")).toBe("40"),
+    );
+  });
 });
 
-describe("theme-toggle", () => {
-  it("flips the dark class", async () => {
+describe("custom-ui checkbox", () => {
+  it("toggles on click and renders the indicator", () => {
+    render(<CustomCheckbox aria-label="demo" />);
+    const box = () => screen.getByRole("checkbox");
+    expect(box().getAttribute("aria-checked")).toBe("false");
+    fireEvent.click(box());
+    expect(box().getAttribute("aria-checked")).toBe("true");
+    expect(document.querySelector('[data-slot="checkbox-indicator"]')).not.toBeNull();
+  });
+
+  it("exposes the mixed state when indeterminate", () => {
+    render(<CustomCheckbox indeterminate aria-label="demo mixed" />);
+    expect(screen.getByRole("checkbox").getAttribute("aria-checked")).toBe("mixed");
+  });
+});
+
+describe("custom-ui switch", () => {
+  it("toggles uncontrolled and reports the change", () => {
+    const onChange = vi.fn();
+    render(<CustomSwitch aria-label="auto" onCheckedChange={onChange} />);
+    const sw = () => screen.getByRole("switch");
+    expect(sw().getAttribute("aria-checked")).toBe("false");
+    fireEvent.click(sw());
+    expect(sw().getAttribute("aria-checked")).toBe("true");
+    expect(onChange).toHaveBeenCalledWith(true);
+  });
+
+  it("honours the controlled value", () => {
+    render(<CustomSwitch aria-label="auto" checked onCheckedChange={() => {}} />);
+    expect(screen.getByRole("switch").getAttribute("aria-checked")).toBe("true");
+  });
+
+  it("does not toggle while disabled", () => {
+    render(<CustomSwitch aria-label="auto" disabled />);
+    fireEvent.click(screen.getByRole("switch"));
+    expect(screen.getByRole("switch").getAttribute("aria-checked")).toBe("false");
+  });
+});
+
+describe("theme-toggle", () => {  it("flips the dark class", async () => {
     document.documentElement.classList.remove("dark");
     render(<ThemeToggle />);
     const toggle = await screen.findByRole("switch", { name: /dark mode/i });
@@ -333,10 +448,10 @@ describe("checkbox variants", () => {
 });
 
 describe("copy-button controlled", () => {
-  it("honours controlled copied + custom scales", async () => {
+  it("honours controlled copied + custom press scale", async () => {
     const writeText = vi.fn(async () => {});
     vi.stubGlobal("navigator", { clipboard: { writeText } });
-    render(<CopyButton content="x" copied hoverScale={1.1} tapScale={0.9} delay={20} />);
+    render(<CopyButton content="x" copied tapScale={0.9} delay={20} />);
     expect(await screen.findByRole("button", { name: /copied/i })).toBeTruthy();
   });
 });
