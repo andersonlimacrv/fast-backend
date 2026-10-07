@@ -74,10 +74,15 @@ def main(argv: list[str] | None = None) -> int:
         sys.stderr.write(f"{exc}\n")
         return 2
     if args.make:
+        # Semicolon-separated: Make's $(shell) folds newlines into spaces, so
+        # newline-separated assignments would eval as ONE variable holding
+        # garbage (WEB_PORT="3001 API_PORT=8001 ..."). `;` splits statements.
+        parts = []
         for key, _ in PORTS:
             if key in os.environ:
                 continue  # CLI/env override wins; Make ?= keeps it
-            sys.stdout.write(f"{key}={resolved[key]}\n")
+            parts.append(f"{key}={resolved[key]}")
+        sys.stdout.write(";".join(parts) + (";" if parts else ""))
     else:
         for key, _ in PORTS:
             sys.stdout.write(f"{key}={resolved[key]}\n")

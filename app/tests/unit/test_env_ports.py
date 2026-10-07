@@ -36,3 +36,6 @@ def test_make_output_skips_environ_overrides(tmp_path, monkeypatch, capsys) -> N
     out = capsys.readouterr().out
     assert "WEB_PORT=3002" in out
     assert "API_PORT=" not in out  # CLI/env override wins; Make ?= keeps it
+    # Semicolon-separated: Make $(shell) folds newlines into spaces, so plain
+    # lines would eval as a single garbage assignment.
+    assert ";" in out
