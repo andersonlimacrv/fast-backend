@@ -1,4 +1,6 @@
 # Local dev: app + worker + postgres + redis. Tools (mailpit/minio) via profiles.
+# Host ports come from .env (WEB_PORT/API_PORT/POSTGRES_PORT/REDIS_PORT,
+# docs/RULES.md §13); container internals stay fixed.
 services:
   db:
     image: ${POSTGRES_IMAGE:-postgres:17-alpine}
@@ -7,7 +9,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: fastbackend
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5401}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -19,7 +21,7 @@ services:
   redis:
     image: ${REDIS_IMAGE:-valkey/valkey:9-alpine}
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6401}:6379"
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
@@ -36,7 +38,7 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: fastbackend
     ports:
-      - "${E2E_PG_PORT:-5434}:5432"
+      - "${E2E_PG_PORT:-5501}:5432"
     volumes:
       - pgdata_e2e:/var/lib/postgresql/data
     healthcheck:
@@ -49,7 +51,7 @@ services:
     image: ${REDIS_IMAGE:-valkey/valkey:9-alpine}
     profiles: [e2e]
     ports:
-      - "${E2E_REDIS_PORT:-6380}:6379"
+      - "${E2E_REDIS_PORT:-6501}:6379"
     healthcheck:
       test: ["CMD", "valkey-cli", "ping"]
       interval: 5s
@@ -61,7 +63,7 @@ services:
       context: .
       target: dev
     ports:
-      - "8000:8000"
+      - "${API_PORT:-8001}:8000"
     env_file: .env
     environment:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@db:5432/fastbackend
@@ -98,7 +100,7 @@ services:
     profiles: [tools]
     ports:
       - "1025:1025"
-      - "8025:8025"
+      - "${MAILPIT_UI_PORT:-8025}:8025"
 
   minio:
     image: minio/minio:RELEASE.2025-04-22T22-12-26Z
@@ -108,8 +110,8 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin123
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${MINIO_API_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
     volumes:
       - miniodata:/data
 

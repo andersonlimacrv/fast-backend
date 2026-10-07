@@ -78,14 +78,14 @@ Python ≥3.11, `uv`, Docker, Node 20+ (`npm`), Git.
 
 ```bash
 make setup   # .env + deps + drift check + migrations
-make dev     # backend stack (docker) + frontend (:5173)
+make dev     # backend stack (docker) + frontend (:3001)
 ```
 
-- API → http://127.0.0.1:8000/docs · SPA → http://localhost:5173 (`/` public landing, `/~` logged home, `/admin*` staff).
-- Needs `client/.env` (`VITE_API_URL=http://localhost:8000`, see `client/.env.example`) and backend `CORS_ORIGINS=["http://localhost:5173"]`.
+- API → http://127.0.0.1:8001/docs · SPA → http://localhost:3001 (`/` public landing, `/~` logged home, `/admin*` staff).
+- Needs `client/.env` (`VITE_API_URL=http://localhost:8001`, see `client/.env.example`) and backend `CORS_ORIGINS=["http://localhost:3001"]`.
 
 ```bash
-make api     # API with reload → http://127.0.0.1:8000/docs (needs db: make db-up)
+make api     # API with reload → http://127.0.0.1:8001/docs (needs db: make db-up)
 ```
 
 ### 2. First user (one-shot root)
@@ -103,7 +103,7 @@ Then log in as root (`POST /auth/login` or the SPA). Full runbook + `bootstrap f
 cp .env.example .env                       # make env-template (never overwrites)
 uv sync --extra dev                        # make sync
 uv run alembic upgrade head                # make migrate
-uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload  # make api
+uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8001 --reload  # make api
 ```
 
 </details>
@@ -129,7 +129,7 @@ docker compose --profile tools up -d --build  # make tools
 
 ```bash
 make web-install   # one time: npm ci in client/
-make dev           # backend stack + Vite dev → http://localhost:5173 (or `make web` for frontend only)
+make dev           # backend stack + Vite dev → http://localhost:3001 (or `make web` for frontend only)
 ```
 
 Public landing at `/` (modules, flags, release — works offline), session home at `/~`, two-step login, staff admin at `/admin*`. Privacy notes in `docs/PRIVACY.md`.
@@ -139,10 +139,10 @@ Public landing at `/` (modules, flags, release — works offline), session home 
 
 ```bash
 cd client && npm ci
-cd client && npm run dev -- --port 5173 --strictPort
+cd client && npm run dev -- --port 3001 --strictPort
 ```
 
-Needs `client/.env` (`VITE_API_URL=http://localhost:8000`, see `client/.env.example`) and backend `CORS_ORIGINS=["http://localhost:5173"]`. Read-only visualization SPA — details in `client/README.md`.
+Needs `client/.env` (`VITE_API_URL=http://localhost:8001`, see `client/.env.example`) and backend `CORS_ORIGINS=["http://localhost:3001"]`. Read-only visualization SPA — details in `client/README.md`.
 
 </details>
 

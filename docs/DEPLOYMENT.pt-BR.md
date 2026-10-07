@@ -72,7 +72,7 @@ Duas travas: o `release-check.yml` reprova a PR quando há mudança de comportam
 
 ```caddyfile
 api.seudominio.com {
-    reverse_proxy 127.0.0.1:8000
+    reverse_proxy 127.0.0.1:{$API_PORT:8001}
 }
 ```
 

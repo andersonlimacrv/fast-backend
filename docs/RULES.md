@@ -107,3 +107,19 @@ Kubernetes, microservices, Kafka, event sourcing, CQRS completo, schema/database
 - Patches flutuam via tag minor (recebem CVE fixes); bumps de minor/major via OpenSpec change dedicada, com a suite verde como gate.
 - Fonte única: variáveis `?=` do `Makefile` (`POSTGRES_IMAGE`, `REDIS_IMAGE`, `COMPOSE`, `DOCKER`); composes consomem via `${VAR:-default}`, fixtures de teste via `os.getenv` com os mesmos defaults. Troca-se em 1 lugar.
 - Licença conta: preferir upstream mantido e OSI-aprovado/permissivo (BSD/MIT/Apache-2.0); source-available (RSAL/SSPL) ou copyleft forte (AGPL) exige decisão explícita registrada (esta seção ou ADR).
+
+## 13. Portas por app (dono, 2026-10-01)
+
+- App N: front `3000+N`, back `8000+N`, Postgres `5400+N`, Redis `6400+N`
+  (este app = N=1: **3001/8001/5401/6401**); E2E isolado `+500`
+  (3501/8501/5501/6501). Novos apps repetem o esquema com N+1.
+- Fonte: `WEB_PORT`/`API_PORT`/`POSTGRES_PORT`/`REDIS_PORT` no `.env`; o
+  tooling lê do `.env` (nunca o contrário). Portas internas dos containers
+  ficam fixas; só o mapa host muda.
+- `env_check` falha se qualquer URL/CORS sair do par do app.
+
+## 12. Prova-em-trials obrigatória (dono, 2026-09-30)
+
+- Tudo que é testado/validado no client tem prova **dedicada e permanente** em `/admin/lab/trials` (registro `components/catalog-demos.tsx`, chaveada por slug): cenas temporárias fora do lab (rotas `__*-debug`, screenshots avulsos) **não valem** como prova.
+- Shell conta: casos de shell (ex.: `OrgSwitcher` com nomes longos) ganham prova própria no card do item (componentes aceitam overrides injetáveis para isso; produção usa os defaults do contexto).
+- Validar = flipar `status` no catálogo **com a prova no ar** (a prova migra sozinha para a Gallery).

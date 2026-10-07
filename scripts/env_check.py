@@ -103,6 +103,16 @@ def _starts_with(*prefixes: str) -> Check:
 
 DEV_DEFAULT_SECRET = "change-me-in-production-min-32-chars"  # noqa: S105 (dev default from settings; compared, never printed)
 
+# Tooling defaults for app-slot ports (RULES.md §13). Not Settings fields:
+# shown as code defaults so the table stays quiet, and used as the expected
+# values in the pairing section.
+TOOL_DEFAULTS: dict[str, str] = {
+    "WEB_PORT": "3001",
+    "API_PORT": "8001",
+    "POSTGRES_PORT": "5401",
+    "REDIS_PORT": "6401",
+}
+
 
 def _secret_key(value: str) -> str | None:
     if value == DEV_DEFAULT_SECRET:
@@ -118,8 +128,14 @@ def _bootstrap_key(value: str) -> str | None:
 
 # Key -> shape checks (names only in output; values never leave this process
 # except into the checks themselves). Mirrors Settings validators.
+# Port vars are tooling keys (not Settings fields): validated + cross-checked
+# in the pairing section below (RULES.md §13 — the pair must stay linked).
 RULES: dict[str, Check] = {
     "APP_VERSION": _non_empty,
+    "WEB_PORT": _int_in(1, 65535),
+    "API_PORT": _int_in(1, 65535),
+    "POSTGRES_PORT": _int_in(1, 65535),
+    "REDIS_PORT": _int_in(1, 65535),
     "SECRET_KEY": _secret_key,
     "JWT_ISSUER": _non_empty,
     "JWT_AUDIENCE": _non_empty,
@@ -156,6 +172,108 @@ RULES: dict[str, Check] = {
     "ARGON2_MEMORY_COST": _int_in(1024, 10**7),
     "ARGON2_PARALLELISM": _int_in(1, 64),
 }
+
+
+def _url_port(value: str) -> int | None:
+    """Port of a URL string; scheme default when absent; None when unparseable."""
+    from urllib.parse import urlsplit
+
+    try:
+        parts = urlsplit(value.strip())
+        if parts.port:
+            return parts.port
+    except ValueError:
+        return None
+    return {"http": 80, "https": 443, "redis": 6379, "postgresql": 5432, "postgres": 5432}.get(parts.scheme)
+
+
+def _cors_origins(value: str) -> list[str]:
+    """CORS_ORIGINS as a list (JSON array like Settings, or comma-separated)."""
+    import json
+
+    text = value.strip()
+    try:
+        parsed = json.loads(text)
+        if isinstance(parsed, list):
+            return [str(item).strip().strip("\"'") for item in parsed]
+    except ValueError:
+        pass
+    return [item.strip().strip("\"'") for item in text.split(",") if item.strip().strip("\"'")]
+
+
+def _pair_lines(env: dict[str, str]) -> tuple[list[str], bool]:
+    """Port pairing (RULES.md §13): every URL/CORS origin must use the app's
+    ports. Returns (lines, failed). Keys with unparseable ports are skipped
+    here (their shape rule already fails)."""
+    from urllib.parse import urlsplit
+
+    lines = ["Port pairing (RULES.md §13):"]
+    failed = False
+
+    def want_int(key: str) -> int | None:
+        try:
+            return int(env[key].strip())
+        except (KeyError, ValueError):
+            return None
+
+    web_port = want_int("WEB_PORT")
+    api_port = want_int("API_PORT")
+    pg_port = want_int("POSTGRES_PORT")
+    redis_port = want_int("REDIS_PORT")
+
+    def check_url(key: str, expected: int | None, what: str) -> None:
+        nonlocal failed
+        if key not in env or expected is None:
+            return
+        got = _url_port(env[key])
+        if got is None:
+            failed = True
+            lines.append(f"  pair {key}: unparseable url — MISMATCH (fix or check manually)")
+        elif got != expected:
+            failed = True
+            lines.append(f"  pair {key}:{got} != {what}:{expected} — MISMATCH")
+        else:
+            lines.append(f"  pair {key}:{got} == {what}:{expected} ok")
+
+    check_url("DATABASE_URL", pg_port, "POSTGRES_PORT")
+    check_url("REDIS_URL", redis_port, "REDIS_PORT")
+    check_url("TASK_BROKER_URL", redis_port, "REDIS_PORT")
+    check_url("FRONTEND_URL", web_port, "WEB_PORT")
+
+    if "CORS_ORIGINS" in env and web_port is not None:
+        checked_any = False
+        cors_bad = False
+        for origin in _cors_origins(env["CORS_ORIGINS"]):
+            try:
+                host = (urlsplit(origin).hostname or "").lower()
+            except ValueError:
+                failed = True
+                cors_bad = True
+                lines.append("  pair CORS_ORIGINS: unparseable origin — MISMATCH")
+                continue
+            if host in ("localhost", "127.0.0.1", "::1"):
+                checked_any = True
+                got = _url_port(origin)
+                if got != web_port:
+                    failed = True
+                    cors_bad = True
+                    lines.append(f"  pair CORS_ORIGINS local origin port {got} != WEB_PORT:{web_port} — MISMATCH")
+        if checked_any and not cors_bad:
+            lines.append("  pair CORS_ORIGINS local origins == WEB_PORT ok")
+
+    client_env = Path("client/.env")
+    if client_env.is_file():
+        client, _ = parse_env(client_env)
+        if "VITE_API_URL" in client and api_port is not None:
+            got = _url_port(client["VITE_API_URL"])
+            if got != api_port:
+                failed = True
+                lines.append(f"  pair client/.env VITE_API_URL port {got} != API_PORT:{api_port} — MISMATCH")
+            else:
+                lines.append(f"  pair client/.env VITE_API_URL:{got} == API_PORT:{api_port} ok")
+    else:
+        lines.append("  pair client/.env: skipped (absent)")
+    return lines, failed
 
 
 def check_env(env_path: Path, example_path: Path) -> tuple[int, str]:
@@ -195,6 +313,10 @@ def check_env(env_path: Path, example_path: Path) -> tuple[int, str]:
             f"{_col(_show_env(key, env.get(key)), 32)} "
             f"{_col(f'{_show_env(key, applied)} [{source}]', 34)} {status}"
         )
+
+    pair_lines, pair_failed = _pair_lines(env)
+    lines.extend(pair_lines)
+    failed = failed or pair_failed
 
     lines.append(f"Result: {'DRIFT' if failed else 'OK'}")
     return (1 if failed else 0), "\n".join(lines) + "\n"
@@ -261,12 +383,14 @@ def _show_default(key: str, default: str | None) -> str:
 
 
 def _code_defaults() -> dict[str, str]:
-    """Code defaults from `Settings` fields (KEY upper). `{}` if unimportable."""
+    """Code defaults from `Settings` fields (KEY upper) + tooling port
+    defaults. `{}` entries only when Settings is unimportable (tool defaults
+    always apply)."""
+    out: dict[str, str] = dict(TOOL_DEFAULTS)
     try:
         from app.core.settings import Settings
     except Exception:
-        return {}
-    out: dict[str, str] = {}
+        return out
     for name, field in Settings.model_fields.items():
         if field.is_required():
             continue

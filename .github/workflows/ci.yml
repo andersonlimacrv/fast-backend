@@ -22,7 +22,7 @@ jobs:
   unit:
     runs-on: ubuntu-latest
     env:
-      FRONTEND_URL: http://localhost:5173
+      FRONTEND_URL: http://localhost:3001
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -32,7 +32,7 @@ jobs:
   integration:
     runs-on: ubuntu-latest
     env:
-      FRONTEND_URL: http://localhost:5173
+      FRONTEND_URL: http://localhost:3001
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -48,7 +48,7 @@ jobs:
   security:
     runs-on: ubuntu-latest
     env:
-      FRONTEND_URL: http://localhost:5173
+      FRONTEND_URL: http://localhost:3001
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -84,18 +84,20 @@ jobs:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/fastbackend
       REDIS_URL: redis://localhost:6379/0
       # Browser origin must be allowed or every SPA fetch fails closed (status 0).
-      CORS_ORIGINS: '["http://localhost:5173"]'
-      FRONTEND_URL: http://localhost:5173
+      CORS_ORIGINS: '["http://localhost:3001"]'
+      FRONTEND_URL: http://localhost:3001
       # Cookie sessions on (dual-read keeps header tests green); Secure off:
       # plain-http preview would silently drop Secure cookies (see DEPLOYMENT).
       AUTH_COOKIE_ENABLED: 'true'
       AUTH_COOKIE_SECURE: 'false'
+      # Bake the API origin into the SPA build (no client/.env in CI).
+      VITE_API_URL: http://127.0.0.1:8001
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --extra dev --frozen
       - run: uv run alembic upgrade head
-      - run: nohup uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 >/tmp/api.log 2>&1 &
+      - run: nohup uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8001 >/tmp/api.log 2>&1 &
       - uses: actions/setup-node@v4
         with:
           node-version: 24

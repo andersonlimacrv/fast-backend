@@ -72,7 +72,7 @@ Two guardrails: `release-check.yml` fails the PR when behavior changes lack an `
 
 ```caddyfile
 api.yourdomain.com {
-    reverse_proxy 127.0.0.1:8000
+    reverse_proxy 127.0.0.1:{$API_PORT:8001}
 }
 ```
 

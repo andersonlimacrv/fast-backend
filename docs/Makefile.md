@@ -13,7 +13,7 @@
 | `UV` | `uv` | Python package runner | `make sync UV=uvx` (never needed normally) |
 | `COMPOSE` | `docker compose` | Container orchestration | `make up COMPOSE="podman compose"` |
 | `ENV_FILE` | `.env` | Env file consumed by `_check-env` | `make up ENV_FILE=.env.staging` |
-| `HOST` / `PORT` | `127.0.0.1` / `8000` | `api` bind address | `make api PORT=9000` |
+| `HOST` / `API_PORT` | `127.0.0.1` / `8001` | `api` bind address (app slot, RULES §13) | `make api API_PORT=9000` |
 | `WORKERS` | `2` | Taskiq `worker` concurrency | `make worker WORKERS=4` |
 | `STACK_SERVICES` | `db redis` | Services `db-reset` recreates | `make db-reset STACK_SERVICES="db redis minio"` |
 | `BUILD_TARGET` | `prod` | Dockerfile stage for `build` | `make build BUILD_TARGET=dev` |
@@ -21,7 +21,7 @@
 | `BACKUP_DIR` | `./var/backups` | `backup` destination | `make backup BACKUP_DIR=/mnt/backups` |
 | `POSTGRES_IMAGE` / `REDIS_IMAGE` | `postgres:17-alpine` / `valkey/valkey:9-alpine` | Pinned data-service images (single source of truth; RULES §10) | `make db-up POSTGRES_IMAGE=postgres:18-alpine` |
 | `DOCKER` | `docker` | Daemon CLI used by test fixtures | `make test-integration DOCKER=podman` (fixtures read `DOCKER_BIN`) |
-| `NPM` / `CLIENT_DIR` / `WEB_PORT` | `npm` / `client` / `5173` | Frontend dev server knobs | `make web WEB_PORT=3000` |
+| `NPM` / `CLIENT_DIR` / `WEB_PORT` | `npm` / `client` / `3001` | Frontend dev server knobs (app slot, RULES §13) | `make web WEB_PORT=3002` |
 | `CONFIRM` | *(empty)* | Acknowledgement for destructive targets | `make db-reset CONFIRM=1` |
 | `msg` / `f` / `rev` | *(empty)* | Required args: migration message, test file, downgrade revision | `make migration msg="..."` |
 | `FILE` | *(empty)* | Restore artifact path | `make restore FILE=... CONFIRM=1` |
@@ -99,7 +99,7 @@ environment, never from Makefile variables or files.
 - **`make up`** — app + worker + db + redis (needs `.env`; `_check-env`
   fails fast telling you to run `make env-template`).
 - **`make db-up`** — db + redis only (data services for local dev: migrate/api/test against them).
-- **`make dev`** — full dev loop: `_check-env` + `_check-web-env` (`client/.env` with `VITE_API_URL`) → `db-up` → `migrate` → `up` (stack detached) → CORS hint if `$(WEB_PORT)` missing from `.env` → `web` in foreground. API at `:8000/docs`, SPA at `:5173`. Ctrl+C stops Vite only; **`make dev-down`** stops the stack (keeps volumes).
+- **`make dev`** — full dev loop: `_check-env` + `_check-web-env` (`client/.env` with `VITE_API_URL`) → `db-up` → `migrate` → `up` (stack detached) → CORS hint if `$(WEB_PORT)` missing from `.env` → `web` in foreground. API at `:8001/docs`, SPA at `:3001` (app slot — `.env` drives `API_PORT`/`WEB_PORT`). Ctrl+C stops Vite only; **`make dev-down`** stops the stack (keeps volumes).
 - **`make down`** — stops everything, keeps volumes. **`make restart`** — `down` + `up`.
 - **`make logs` / `logs-app` / `logs-db`** — follow logs (all / app / postgres).
 - **`make tools`** — mailpit + minio profiles (dev email capture, S3 testing).
@@ -108,11 +108,11 @@ environment, never from Makefile variables or files.
 
 ## Run — dev processes
 
-- **`make api [PORT=]`** — uvicorn with reload + app factory
-  (`http://127.0.0.1:8000/docs`).
+- **`make api [API_PORT=]`** — uvicorn with reload + app factory
+  (`http://127.0.0.1:8001/docs`).
 - **`make worker [WORKERS=]`** — `taskiq worker app.worker:broker`.
 - **`make web-install`** — `npm ci` inside `$(CLIENT_DIR)` (shell-agnostic, works on Windows cmd too).
-- **`make web [WEB_PORT=]`** — Vite dev server (`http://localhost:5173`). Needs `client/.env` (`VITE_API_URL`) and backend CORS allowing the origin.
+- **`make web [WEB_PORT=]`** — Vite dev server (`http://localhost:3001`). Needs `client/.env` (`VITE_API_URL`) and backend CORS allowing the origin.
 - **`make web-lint` / `web-test` / `web-build`** — `oxlint`, `vitest run`, `tsc -b && vite build` inside `$(CLIENT_DIR)`.
 - **`make web-e2e-install`** — Playwright Chromium (version follows `client/package.json` pin).
 - **`make web-e2e`** — browser E2E (axe + snapshots, Chromium) vs `vite preview` — run `web-build` first; authed suites need the API up, otherwise they skip and anonymous coverage still runs. Baselines are per-platform: `linux/` committed (seeded only by `web-e2e-baselines.yml`), local `win32/` gitignored. **Legacy: runs against the DEV api and pollutes the dev DB — prefer `make e2e-full`.**
@@ -148,7 +148,7 @@ environment, never from Makefile variables or files.
 
 ## Customizing (keeping the standard)
 
-1. Prefer overrides (`make api PORT=9000`) over edits.
+1. Prefer overrides (`make api API_PORT=9000`) over edits.
 2. New target: kebab-case, one-line `##` (what it affects + inline example),
    `##@` section above, `.PHONY` entry. Logic >5 lines → `scripts/`.
 3. New section: `##@` emoji header; keep include order = help order

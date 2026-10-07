@@ -2,7 +2,7 @@
 # `make help` lists everything. Logic lives in scripts/, never inline here.
 #
 # FORK GUIDE (reusing this boilerplate): override `?=` variables on the command
-# line or environment instead of editing recipes — e.g. `make api PORT=9000`,
+# line or environment instead of editing recipes — e.g. `make api API_PORT=9000`,
 # `make build IMAGE=myorg/app TAG=abc1234`, `make worker WORKERS=4`.
 # Only edit this file to add/remove targets (skill `makefile-keeper`).
 # Conventions: docs/Makefile.md.
@@ -20,7 +20,14 @@ COMPOSE ?= docker compose
 DOCKER ?= docker
 ENV_FILE ?= .env
 HOST ?= 127.0.0.1
-PORT ?= 8000
+# App-slot ports (docs/RULES.md §13): this app is slot 1. `.env` drives them
+# via scripts/env_ports.py (one `uv run` per make invocation); CLI/env
+# overrides keep precedence through `?=` below. Silent fallback to the
+# baked defaults when the helper cannot run — `make env-check` is the gate
+# that fails on invalid port values (never fail at Make parse time).
+ENV_PORTS := $(shell $(UV) run python scripts/env_ports.py --env-file $(ENV_FILE) --make 2>/dev/null)
+$(eval $(ENV_PORTS))
+API_PORT ?= 8001
 WORKERS ?= 2
 STACK_SERVICES ?= db redis
 BUILD_TARGET ?= prod
@@ -29,19 +36,21 @@ TAG ?= dev
 BACKUP_DIR ?= ./var/backups
 POSTGRES_IMAGE ?= postgres:17-alpine
 REDIS_IMAGE ?= valkey/valkey:9-alpine
-E2E_PG_PORT ?= 5434
-E2E_REDIS_PORT ?= 6380
-E2E_API_PORT ?= 8001
-E2E_WEB_PORT ?= 5174
+POSTGRES_PORT ?= 5401
+REDIS_PORT ?= 6401
+E2E_PG_PORT ?= 5501
+E2E_REDIS_PORT ?= 6501
+E2E_API_PORT ?= 8501
+E2E_WEB_PORT ?= 3501
 E2E_DATABASE_URL ?= postgresql+asyncpg://postgres:postgres@127.0.0.1:$(E2E_PG_PORT)/fastbackend
 E2E_REDIS_URL ?= redis://127.0.0.1:$(E2E_REDIS_PORT)/0
 E2E_TASK_BROKER_URL ?= redis://127.0.0.1:$(E2E_REDIS_PORT)/1
 NPM ?= npm
 CLIENT_DIR ?= client
-WEB_PORT ?= 5173
+WEB_PORT ?= 3001
 # Single source of truth for data-service images: `make up IMAGE=x` flows to
 # compose files (`${VAR:-default}`) and test fixtures alike.
-COMPOSE_ENV = POSTGRES_IMAGE=$(POSTGRES_IMAGE) REDIS_IMAGE=$(REDIS_IMAGE) E2E_PG_PORT=$(E2E_PG_PORT) E2E_REDIS_PORT=$(E2E_REDIS_PORT)
+COMPOSE_ENV = POSTGRES_IMAGE=$(POSTGRES_IMAGE) REDIS_IMAGE=$(REDIS_IMAGE) E2E_PG_PORT=$(E2E_PG_PORT) E2E_REDIS_PORT=$(E2E_REDIS_PORT) API_PORT=$(API_PORT) POSTGRES_PORT=$(POSTGRES_PORT) REDIS_PORT=$(REDIS_PORT)
 
 ##@ 🚀 Setup
 
@@ -70,7 +79,7 @@ _check-env:
 
 _check-web-env:
 	@if [ ! -f $(CLIENT_DIR)/.env ]; then \
-		echo "$(CLIENT_DIR)/.env not found — copy $(CLIENT_DIR)/.env.example (VITE_API_URL=http://localhost:8000)"; exit 1; \
+		echo "$(CLIENT_DIR)/.env not found - copy $(CLIENT_DIR)/.env.example (VITE_API_URL=http://localhost:8001)"; exit 1; \
 	fi
 
 ##@ 🗄️ Database
@@ -164,7 +173,7 @@ dev: _check-env _check-web-env db-up migrate up ## Full dev loop: backend stack 
 	@if ! grep -q "$(WEB_PORT)" $(ENV_FILE); then \
 		echo "hint: $(ENV_FILE) may not allow http://localhost:$(WEB_PORT) — add it to CORS_ORIGINS"; \
 	fi
-	@echo "API: http://127.0.0.1:$(PORT)/docs | SPA: http://localhost:$(WEB_PORT) | stop stack: make dev-down"
+	@echo "API: http://127.0.0.1:$(API_PORT)/docs | SPA: http://localhost:$(WEB_PORT) | stop stack: make dev-down"
 	cd $(CLIENT_DIR) && $(NPM) run dev -- --port $(WEB_PORT) --strictPort
 
 dev-down: ## Stop the dev stack (keeps volumes)
@@ -192,8 +201,8 @@ build: ## Build prod image (IMAGE=... TAG=..., never :latest)
 
 ##@ 🏃 Run
 
-api: ## API with reload (http://127.0.0.1:8000/docs)
-	$(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(PORT) --reload
+api: ## API with reload (http://127.0.0.1:8001/docs)
+	$(UV) run uvicorn app.main:create_app --factory --host $(HOST) --port $(API_PORT) --reload
 
 worker: ## Taskiq worker (WORKERS=2)
 	$(UV) run taskiq worker app.worker:broker --workers $(WORKERS)
@@ -201,7 +210,7 @@ worker: ## Taskiq worker (WORKERS=2)
 web-install: ## Install frontend deps (`npm ci` in client/)
 	cd $(CLIENT_DIR) && $(NPM) ci
 
-web: ## Frontend dev server (http://localhost:5173, WEB_PORT=...)
+web: ## Frontend dev server (http://localhost:3001, WEB_PORT=...)
 	cd $(CLIENT_DIR) && $(NPM) run dev -- --port $(WEB_PORT) --strictPort
 
 web-lint: ## Frontend lint (`oxlint` in client/)
