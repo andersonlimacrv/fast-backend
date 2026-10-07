@@ -170,3 +170,57 @@ def test_code_defaults_masked_like_env(tmp_path) -> None:
     env = _write(tmp_path / ".env", "KEEP=1\n")
     _, report = check_env(env, example)
     assert "postgres:postgres" not in report
+
+
+@pytest.mark.unit
+def test_port_shape_rules(tmp_path) -> None:
+    example = _write(tmp_path / ".env.example", "WEB_PORT=3001\nAPI_PORT=8001\n")
+    code, _ = check_env(_write(tmp_path / ".env", "WEB_PORT=3001\nAPI_PORT=8001\n"), example)
+    assert code == 0
+    code, report = check_env(_write(tmp_path / ".env", "WEB_PORT=many\nAPI_PORT=0\n"), example)
+    assert code == 1
+    assert "WEB_PORT" in report and "API_PORT" in report
+
+
+@pytest.mark.unit
+def test_pairing_fails_on_unlinked_ports(tmp_path) -> None:
+    example = _write(
+        tmp_path / ".env.example",
+        "WEB_PORT=3001\nAPI_PORT=8001\nPOSTGRES_PORT=5401\nREDIS_PORT=6401\n"
+        "DATABASE_URL=x\nREDIS_URL=x\nTASK_BROKER_URL=x\nFRONTEND_URL=x\nCORS_ORIGINS=x\n",
+    )
+    env = _write(
+        tmp_path / ".env",
+        "WEB_PORT=3001\nAPI_PORT=8001\nPOSTGRES_PORT=5401\nREDIS_PORT=6401\n"
+        "DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/fastbackend\n"
+        "REDIS_URL=redis://localhost:6401/0\n"
+        "TASK_BROKER_URL=redis://localhost:6401/1\n"
+        "FRONTEND_URL=http://localhost:3001\n"
+        'CORS_ORIGINS=["http://localhost:5173"]\n',
+    )
+    code, report = check_env(env, example)
+    assert code == 1
+    assert "MISMATCH" in report
+    assert "DATABASE_URL:5432 != POSTGRES_PORT:5401" in report
+    assert "CORS_ORIGINS local origin port 5173 != WEB_PORT:3001" in report
+
+
+@pytest.mark.unit
+def test_pairing_ok_when_linked(tmp_path) -> None:
+    example = _write(
+        tmp_path / ".env.example",
+        "WEB_PORT=3001\nAPI_PORT=8001\nPOSTGRES_PORT=5401\nREDIS_PORT=6401\n"
+        "DATABASE_URL=x\nREDIS_URL=x\nFRONTEND_URL=x\nCORS_ORIGINS=x\n",
+    )
+    env = _write(
+        tmp_path / ".env",
+        "WEB_PORT=3001\nAPI_PORT=8001\nPOSTGRES_PORT=5401\nREDIS_PORT=6401\n"
+        "DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5401/fastbackend\n"
+        "REDIS_URL=redis://localhost:6401/0\n"
+        "FRONTEND_URL=http://localhost:3001\n"
+        'CORS_ORIGINS=["http://localhost:3001", "https://app.example.com"]\n',
+    )
+    code, report = check_env(env, example)
+    assert code == 0
+    assert "MISMATCH" not in report
+    assert "== POSTGRES_PORT:5401 ok" in report
