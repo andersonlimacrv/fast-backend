@@ -14,22 +14,22 @@ logic lives here; the backend in `app/` is consumed purely over HTTP.
 ```bash
 cp .env.example .env
 # add the Vite dev origin so the browser is allowed:
-# CORS_ORIGINS=http://localhost:5173
+# CORS_ORIGINS=http://localhost:3001
 docker compose up -d db redis
 uv sync --extra dev
 uv run alembic upgrade head
-uv run uvicorn app.main:create_app --factory --port 8000 --reload
+uv run uvicorn app.main:create_app --factory --port 8001 --reload
 ```
 
-Health: `GET http://localhost:8000/healthz` → `{"status":"ok"}`.
+Health: `GET http://localhost:8001/healthz` → `{"status":"ok"}`.
 
 ## Run the SPA
 
 ```bash
 cd client
-cp .env.example .env   # VITE_API_URL=http://localhost:8000
+cp .env.example .env   # VITE_API_URL=http://localhost:8001
 npm install
-npm run dev            # http://localhost:5173
+npm run dev            # http://localhost:3001
 ```
 
 Useful flows to eyeball: `/` landing (anonymous, backend on/off) → register/login → `/~` session overview →
@@ -104,7 +104,7 @@ npm run e2e      # playwright (axe + snapshots, Chromium) vs preview build
 
 Browser E2E (`make web-e2e`): anonymous routes always run; member routes need the
 API up (`make db-up && make migrate && make api`) or they skip. The API must allow
-the SPA origin (`CORS_ORIGINS` including `http://localhost:5173`) or every fetch
+the SPA origin (`CORS_ORIGINS` including `http://localhost:3001`) or every fetch
 fails closed and backend-driven assertions fail. `@axe-core/react`
 also audits the console in `vite dev`. Snapshot baselines are per-platform:
 `linux/` is committed (seeded by `web-e2e-baselines.yml`), local `win32/` never is.

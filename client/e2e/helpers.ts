@@ -1,6 +1,6 @@
 /* Shared e2e helpers: API-gated auth (real backend, no session mocks).
  *
- * Authed suites probe `E2E_API_URL` (default http://127.0.0.1:8000, same as
+ * Authed suites probe `E2E_API_URL` (default http://127.0.0.1:8001, same as
  * `scripts/e2e_spa_flow.py`) and SKIP when unreachable, so plain `make web-e2e`
  * stays green offline (anonymous routes). Prefer `make e2e-full` (isolated
  * DB/API on E2E_* ports) — running against the dev API pollutes the dev DB.
@@ -8,7 +8,7 @@
 
 import { test as base, type Page } from "@playwright/test";
 
-export const API_BASE = process.env.E2E_API_URL ?? "http://127.0.0.1:8000";
+export const API_BASE = process.env.E2E_API_URL ?? "http://127.0.0.1:8001";
 
 // Mirrors STORAGE_KEYS in client/src/lib/constants.ts (no @/ alias in e2e).
 const ACCESS_KEY = "fb.access_token";

@@ -1,7 +1,7 @@
 /* Shared constants: single place for magic strings (routes, storage, roles). */
 
 export const API_BASE: string =
-  (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:8000";
+  (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:8001";
 
 export const STORAGE_KEYS = {
   accessToken: "fb.access_token",

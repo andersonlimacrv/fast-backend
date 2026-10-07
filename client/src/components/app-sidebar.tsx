@@ -50,7 +50,7 @@ import { useProjects } from "@/hooks/useProjects";
 import type { ProjectRead } from "@/lib/api";
 import { ROUTES } from "@/lib/constants";
 import { projectCode } from "@/lib/utils";
-import { Avatar } from "@/components/ui/avatar";
+import { AvatarGroup } from "@/components/custom-ui/components/avatar-group/avatar-group";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -151,8 +151,9 @@ function SideNavSubLink({ to, label, end, trackActive = true }: { to: string; la
 }
 
 /** Rail-mode Organizations: the icon opens a dropdown with the child pages
- * (same layout as the Projects rail menu). */
-function OrganizationsRailMenuItem({
+ * (same layout as the Projects rail menu). Exported for the item-17 trials
+ * proof (RULES §12). */
+export function OrganizationsRailMenuItem({
   activeOrgId,
   orgsActive,
 }: {
@@ -239,8 +240,9 @@ function OrganizationsGroup() {
 }
 
 /** Rail-mode Projects: the icon opens the same actions menu as the expanded
- * "+" button (New project, All projects, divider, project list). */
-function ProjectsRailMenuItem({
+ * "+" button (New project, All projects, divider, project list). Exported
+ * for the item-17 trials proof (RULES §12). */
+export function ProjectsRailMenuItem({
   projects,
   loading,
   projectsActive,
@@ -433,28 +435,49 @@ const ADMIN_NAV: NavEntry[] = [
  * Nav menus are better non-modal (Esc/outside-click still dismiss): always false.
  * (Replaces the earlier mobile-only useMenuModal — desktop modal added nothing.) */
 
-/** Org switcher: dropdown in the sidebar header (⌘1-9 shortcuts). */
-function OrgSwitcher() {
-  const { orgs, activeOrgId, switchOrg } = useAuth();
+/** Org switcher: dropdown in the sidebar header (⌘1-9 shortcuts).
+ * Test overrides (RULES §12): trials proofs inject `orgs`/`activeOrgId`/
+ * `onSwitchOrg`; production omits them and reads `useAuth` (unchanged).
+ * Exported for the item-17 trials proof (the shell around the page is the
+ * demo; the long-name case needs injectable data). */
+export function OrgSwitcher({
+  orgs: orgsOverride,
+  activeOrgId: activeOverride,
+  onSwitchOrg,
+}: {
+  orgs?: { id: string; name: string; slug: string }[];
+  activeOrgId?: string | null;
+  onSwitchOrg?: (orgId: string) => void;
+} = {}) {
+  const { orgs: ctxOrgs, activeOrgId: ctxActive, switchOrg } = useAuth();
   const { isMobile } = useSidebar();
+  const orgs = orgsOverride ?? ctxOrgs;
+  const activeOrgId = activeOverride ?? ctxActive;
+  const doSwitch = React.useCallback(
+    (orgId: string) => {
+      if (onSwitchOrg) onSwitchOrg(orgId);
+      else void switchOrg(orgId);
+    },
+    [onSwitchOrg, switchOrg],
+  );
   const activeOrg = orgs.find((o) => o.id === activeOrgId) ?? orgs[0] ?? null;
 
   React.useEffect(() => {
     if (orgs.length < 2) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey) return;
-      const n = Number.parseInt(e.key, 10);
-      if (Number.isInteger(n) && n >= 1 && n <= Math.min(9, orgs.length)) {
-        const target = orgs[n - 1];
-        if (target && target.id !== activeOrgId) {
-          e.preventDefault();
-          void switchOrg(target.id);
+      const onKey = (e: KeyboardEvent) => {
+        if (!(e.metaKey || e.ctrlKey) || e.shiftKey || e.altKey) return;
+        const n = Number.parseInt(e.key, 10);
+        if (Number.isInteger(n) && n >= 1 && n <= Math.min(9, orgs.length)) {
+          const target = orgs[n - 1];
+          if (target && target.id !== activeOrgId) {
+            e.preventDefault();
+            doSwitch(target.id);
+          }
         }
-      }
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [orgs, activeOrgId, switchOrg]);
+      };
+      window.addEventListener("keydown", onKey);
+      return () => window.removeEventListener("keydown", onKey);
+  }, [orgs, activeOrgId, doSwitch]);
 
   if (!activeOrg) {
     return (
@@ -479,9 +502,9 @@ function OrgSwitcher() {
             <span className="flex size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sm font-black text-sidebar-primary-foreground" aria-hidden="true">
               F
             </span>
-            <span className="grid flex-1 text-left leading-tight">
-              <span className="truncate font-semibold">{activeOrg.name}</span>
-              <span className="truncate text-xs text-muted-foreground">{activeOrg.slug}</span>
+            <span className="grid min-w-0 flex-1 text-left leading-tight">
+              <span className="truncate font-semibold" title={activeOrg.name}>{activeOrg.name}</span>
+              <span className="truncate text-xs text-muted-foreground" title={activeOrg.slug}>{activeOrg.slug}</span>
             </span>
           </SidebarMenuButton>
         </SidebarMenuItem>
@@ -503,8 +526,8 @@ function OrgSwitcher() {
                 F
               </span>
               <span className="grid min-w-0 flex-1 text-left leading-tight">
-                <span className="truncate text-sm font-bold tracking-tight">{activeOrg.name}</span>
-<span className="truncate text-xs text-muted-foreground group-data-[state=open]:text-sidebar-accent-foreground">{activeOrg.slug}</span>
+                <span className="truncate text-sm font-bold tracking-tight" title={activeOrg.name}>{activeOrg.name}</span>
+                <span className="truncate text-xs text-muted-foreground group-data-[state=open]:text-sidebar-accent-foreground" title={activeOrg.slug}>{activeOrg.slug}</span>
               </span>
               <ChevronsUpDown className="ml-auto size-4 shrink-0" aria-hidden="true" />
             </SidebarMenuButton>
@@ -518,10 +541,10 @@ function OrgSwitcher() {
         <DropdownMenuLabel>Organizations</DropdownMenuLabel>
         <DropdownMenuGroup>
           {orgs.map((o, i) => (
-            <DropdownMenuItem key={o.id} onSelect={() => void switchOrg(o.id)}>
+            <DropdownMenuItem key={o.id} onSelect={() => doSwitch(o.id)}>
               <span className="grid min-w-0 flex-1 leading-tight">
-                <span className="truncate">{o.name}</span>
-                <span className="truncate text-xs text-muted-foreground">{o.slug}</span>
+                <span className="truncate" title={o.name}>{o.name}</span>
+                <span className="truncate text-xs text-muted-foreground" title={o.slug}>{o.slug}</span>
               </span>
               {o.id === activeOrgId ? (
                 <Check className="size-4 shrink-0" aria-hidden="true" />
@@ -575,7 +598,7 @@ function UserMenu() {
               aria-label={`Account menu for ${user.email}`}
               className="group data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <Avatar name={user.email} />
+              <AvatarGroup mode="single" tooltip={false} user={{ name: user.email }} />
               <span className="grid min-w-0 flex-1 text-left leading-tight">
                 <span className="truncate text-sm font-medium">{user.email}</span>
                 <span className="truncate text-xs text-muted-foreground group-data-[state=open]:text-sidebar-accent-foreground">

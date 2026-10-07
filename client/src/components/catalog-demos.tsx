@@ -10,10 +10,35 @@
 
 import * as React from "react";
 
-import { AvatarGroup } from "@/components/avatar-group";
+import { AvatarGroup } from "@/components/custom-ui/components/avatar-group/avatar-group";
+import { OrgSwitcher, OrganizationsRailMenuItem, ProjectsRailMenuItem } from "@/components/app-sidebar";
+import { Highlight } from "@/components/custom-ui/effects/highlight";
 import { CreditUsageCard } from "@/components/billing/credit-usage-card";
-import { EmptyState, ErrorOne, defaultErrorOneAction } from "@/components/error-state";
+import { UsageActionsMenu, UsagePeriodMenu } from "@/components/billing/credit-usage-card-menus";
+import { ErrorOne, defaultErrorOneAction } from "@/components/error-state";
+import { ExpandDetails } from "@/components/custom-ui/components/expand-details";
+import { SegmentedProgressBar } from "@/components/custom-ui/components/segmented-progress-bar";
+import {
+  SubscriptionCalendar,
+  type SubscriptionDay,
+} from "@/components/custom-ui/components/subscription-calendar";
 import { Switch } from "@/components/custom-ui/components/switch";
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuShortcut,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuTrigger,
+} from "@/components/custom-ui/components/dropdown-menu/dropdown-menu";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button, buttonVariants } from "@/components/ui/button";
 import {
@@ -46,53 +71,75 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/custom-ui/components/dialog";
-import { FileTree, type FileTreeNode } from "@/components/custom-ui/components/file-tree";
+import {
+  FileItem,
+  Files,
+  FolderItem,
+  FolderPanel,
+  FolderTrigger,
+  SubFiles,
+} from "@/components/custom-ui/components/files/files";
 import { FileUploader } from "@/components/custom-ui/components/file-uploader";
 import { FloatingInput } from "@/components/custom-ui/components/floating-input";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioItem } from "@/components/ui/radio";
 import { RunActionButton } from "@/components/custom-ui/components/run-action-button";
-import { Tabs, TabsContent, TabsList, TabsPanels, TabsTrigger } from "@/components/ui/tabs";
-import { ToggleGroup, ToggleItem } from "@/components/ui/toggle-group";
+import {
+  Tabs,
+  TabsHighlight,
+  TabsHighlightItem,
+  TabsList,
+  TabsPanel,
+  TabsPanels,
+  TabsTab,
+} from "@/components/custom-ui/components/tabs/tabs";
+import {
+  ToggleGroup,
+  ToggleGroupHighlight,
+  ToggleGroupHighlightItem,
+  ToggleGroupItem,
+} from "@/components/custom-ui/components/toggle-group/toggle-group";
 import { ROUTES } from "@/lib/constants";
-import { Bold, Check, Italic, Underline, X } from "@/lib/icons";
+import { Bold, Check, FileCode, Italic, Underline, X } from "@/lib/icons";
 
 /* ---------- stateful wrappers (hooks need a component boundary) ---------- */
 
+/* Composed proof for item 12 (Files): same content as the old data-driven
+ * demo (src/app/docs with git statuses), written in the upstream form —
+ * folders expand/collapse, the hover highlight slides, the folder icon swaps
+ * and git states render as U/M/D. No selection: the upstream has none. */
 function FileTreeDemo() {
-  const [note, setNote] = React.useState("Select a file to preview its id.");
   return (
-    <div>
-      <FileTree nodes={TREE} defaultExpanded={["src"]} onSelect={(n) => setNote(`Selected: ${n.id}`)} />
-      <p className="mt-2 text-xs text-muted-foreground" aria-live="polite">
-        {note}
+    <div className="grid gap-3">
+      <Files defaultOpen={["src"]}>
+        <FolderItem value="src">
+          <FolderTrigger>src</FolderTrigger>
+          <FolderPanel>
+            <SubFiles>
+              <FolderItem value="components">
+                <FolderTrigger>components</FolderTrigger>
+                <FolderPanel>
+                  <SubFiles>
+                    <FileItem icon={FileCode} gitStatus="modified">
+                      app-sidebar.tsx
+                    </FileItem>
+                    <FileItem icon={FileCode}>icons.tsx</FileItem>
+                  </SubFiles>
+                </FolderPanel>
+              </FolderItem>
+              <FileItem icon={FileCode}>main.tsx</FileItem>
+              <FileItem gitStatus="untracked">notes.txt</FileItem>
+            </SubFiles>
+          </FolderPanel>
+        </FolderItem>
+      </Files>
+      <p className="text-xs text-muted-foreground">
+        Composed upstream form (`Files/FolderItem/FolderTrigger/FolderPanel/FileItem`): folders toggle on
+        click or keyboard, files are display-only — the old `onSelect` note is gone with the rewrite.
       </p>
     </div>
   );
 }
-
-/* ---------- demos ---------- */
-
-const TREE: FileTreeNode[] = [
-  {
-    id: "src",
-    name: "src",
-    type: "folder",
-    children: [
-      {
-        id: "components",
-        name: "components",
-        type: "folder",
-        children: [
-          { id: "sidebar", name: "app-sidebar.tsx", type: "file", gitStatus: "modified" },
-          { id: "icons", name: "icons.tsx", type: "file" },
-        ],
-      },
-      { id: "main", name: "main.tsx", type: "file" },
-      { id: "readme", name: "notes.txt", type: "file", gitStatus: "untracked" },
-    ],
-  },
-];
 
 function AccordionHover() {
   return (
@@ -336,6 +383,471 @@ function DialogDemo() {
   );
 }
 
+/** Validation harness for the CreditUsageCard (item 07) and its modules: the
+ * slider drives `usedCreditsPercent` (label and bar read the same controlled
+ * value), the switch replays the mount fill, and the section below renders
+ * every module of the block on its own so the map stays visible. Lab-only. */
+function CreditUsageCardDemo() {
+  const [usage, setUsage] = React.useState(56.4);
+  const [animateOnMount, setAnimateOnMount] = React.useState(true);
+  const [period, setPeriod] = React.useState("30 Days");
+  const [sampleSwitch, setSampleSwitch] = React.useState(true);
+  return (
+    <div className="grid gap-6">
+      <div className="grid max-w-135 gap-3">
+        <label htmlFor="credit-usage-validation" className="flex items-center gap-3 text-xs text-muted-foreground">
+          <span className="w-24 shrink-0 font-medium">usage %</span>
+          <input
+            id="credit-usage-validation"
+            type="range"
+            min={0}
+            max={100}
+            step={0.1}
+            value={usage}
+            onChange={(event) => setUsage(Number(event.target.value))}
+            className="lab-range w-full focus-visible:ring-2 focus-visible:ring-ring"
+          />
+          <span className="w-14 shrink-0 text-right font-mono tabular-nums">{usage.toFixed(1)}%</span>
+        </label>
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Switch
+            width={40}
+            height={20}
+            checked={animateOnMount}
+            onCheckedChange={setAnimateOnMount}
+            aria-label="animateOnMount"
+          />
+          animateOnMount — fills the label and the bar from zero on mount
+        </label>
+        {/* Remount on toggle so the fill replays for the owner. */}
+        <CreditUsageCard
+          key={animateOnMount ? "animate" : "static"}
+          usedCreditsPercent={usage}
+          animateOnMount={animateOnMount}
+        />
+      </div>
+
+      <div className="grid gap-3">
+        <h4 className="text-sm font-medium">Modules of this block</h4>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-2 rounded-lg border border-border p-3">
+            <SegmentedProgressBar value={40} label="Standalone sample" className="bg-muted/50" />
+            <code className="text-[10px] text-muted-foreground">
+              SegmentedProgressBar · custom-ui/components/segmented-progress-bar.tsx
+            </code>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3">
+            <UsagePeriodMenu
+              options={["7 Days", "14 Days", "30 Days"]}
+              value={period}
+              onValueChange={setPeriod}
+            />
+            <code className="text-[10px] text-muted-foreground">
+              UsagePeriodMenu · billing/credit-usage-card-menus.tsx
+            </code>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3">
+            <UsageActionsMenu
+              actions={[
+                { label: "Export CSV", onSelect: () => undefined },
+                { label: "Refresh data", onSelect: () => undefined },
+              ]}
+            />
+            <code className="text-[10px] text-muted-foreground">
+              UsageActionsMenu · billing/credit-usage-card-menus.tsx
+            </code>
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-border p-3">
+            <Switch
+              width={40}
+              height={20}
+              checked={sampleSwitch}
+              onCheckedChange={setSampleSwitch}
+              aria-label="Standalone switch sample"
+            />
+            <code className="text-[10px] text-muted-foreground">
+              Switch (item 25) · custom-ui/components/switch.tsx
+            </code>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** Proof for item 10 (DropdownMenu): the doc's demo surface — label, groups
+ * with shortcuts, sub-menu, checkbox and radio items, disabled and destructive
+ * items — plus the sidebar-footer placement (`side="top" align="end"`) the
+ * shell uses. The component is the vendored package in
+ * `custom-ui/components/dropdown-menu` (radix + `Highlight`). Non-modal like
+ * the shell menus, so nothing traps focus over the page. */
+function DropdownMenuDemo() {
+  const [compact, setCompact] = React.useState(false);
+  const [density, setDensity] = React.useState("comfortable");
+  return (
+    <div className="grid gap-3">
+      <div className="flex flex-wrap items-center gap-3">
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">Open</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuItem>
+                Profile
+                <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                Billing
+                <DropdownMenuShortcut>⌘B</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                Settings
+                <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                Keyboard shortcuts
+                <DropdownMenuShortcut>⌘K</DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem>Team</DropdownMenuItem>
+              <DropdownMenuSub>
+                <DropdownMenuSubTrigger>Invite users</DropdownMenuSubTrigger>
+                <DropdownMenuSubContent>
+                  <DropdownMenuItem>Email</DropdownMenuItem>
+                  <DropdownMenuItem>Message</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>More…</DropdownMenuItem>
+                </DropdownMenuSubContent>
+              </DropdownMenuSub>
+              <DropdownMenuItem>
+                New Team
+                <DropdownMenuShortcut>⌘+T</DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem checked={compact} onCheckedChange={setCompact}>
+              Compact rows
+            </DropdownMenuCheckboxItem>
+            <DropdownMenuRadioGroup value={density} onValueChange={setDensity}>
+              <DropdownMenuRadioItem value="comfortable">Comfortable</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="dense">Dense</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>GitHub</DropdownMenuItem>
+            <DropdownMenuItem>Support</DropdownMenuItem>
+            <DropdownMenuItem disabled>API</DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive">
+              Log out
+              <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <DropdownMenu modal={false}>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">Footer placement (side=&quot;top&quot;)</Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent side="top" align="end" className="w-56">
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>
+              Profile
+              <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem variant="destructive">
+              Log out
+              <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Vendored radix package (review-design §11): the highlight slides between items, sub-menus open
+        to the side, and the shell uses the same placements shown above (`side=&quot;right&quot;` in the
+        rail, <code className="font-mono text-[10px]">side=&quot;top&quot; align=&quot;end&quot;</code> in
+        the footer).
+      </p>
+    </div>
+  );
+}
+
+/** Proof for item 11 (ExpandDetails): the default block (open) plus a
+ * data-driven twin (`Run`, three items, collapsed). The card measures its own
+ * content and animates width/height/radius; click the header to toggle. */
+function ExpandDetailsDemo() {
+  return (
+    <div className="grid gap-6 sm:grid-cols-2 sm:items-start">
+      <div className="flex min-h-40 items-center justify-center rounded-lg border border-border p-6">
+        <ExpandDetails />
+      </div>
+      <div className="flex min-h-40 items-center justify-center rounded-lg border border-border p-6">
+        <ExpandDetails
+          title="Run"
+          defaultOpen={false}
+          items={[
+            { label: "Status", value: "Succeeded", wide: true },
+            { label: "Duration", value: "12.4s" },
+            { label: "Retries", value: "0" },
+          ]}
+        />
+      </div>
+    </div>
+  );
+}
+
+/* Item 18 proof data: the doc's demo month (Feb 2026) with the brand logos
+ * replaced by coloured initials — no new icon library. */
+const SUBSCRIPTION_MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const SUBSCRIPTION_DAYS: SubscriptionDay[] = [
+  { date: 29, isMuted: true },
+  { date: 30, isMuted: true },
+  { date: 31, isMuted: true },
+  { date: 1 },
+  {
+    date: 2,
+    indicators: [<span key="dot" className="size-1.5 rounded-full bg-yellow-400" />],
+    isLogo: [<span key="logo" className="text-[10px] font-extrabold text-red-600">N</span>],
+  },
+  { date: 3 },
+  {
+    date: 4,
+    indicators: [<span key="dot" className="size-1.5 rounded-full bg-purple-400" />],
+    isLogo: [<span key="logo" className="text-[10px] font-extrabold text-[#F00A07]">A</span>],
+  },
+  { date: 5 },
+  { date: 6 },
+  { date: 7 },
+  { date: 8 },
+  { date: 9 },
+  {
+    date: 10,
+    indicators: [<span key="dot" className="size-1.5 rounded-full bg-purple-400" />],
+    isLogo: [<span key="logo" className="text-[10px] font-extrabold text-[#827BFF]">C</span>],
+  },
+  { date: 11 },
+  { date: 12 },
+  { date: 13 },
+  { date: 14 },
+  { date: 15 },
+  { date: 16 },
+  { date: 17 },
+  { date: 18 },
+  { date: 19 },
+  { date: 20 },
+  { date: 21 },
+  { date: 22 },
+  { date: 23 },
+  { date: 24 },
+  {
+    date: 25,
+    indicators: [<span key="dot" className="size-1.5 rounded-full bg-yellow-400" />],
+    isLogo: [<span key="logo" className="text-foreground text-[10px] font-extrabold">A</span>],
+  },
+  { date: 26 },
+  { date: 27 },
+  { date: 28 },
+  { date: 29 },
+  { date: 30 },
+  { date: 31 },
+  { date: 1, isMuted: true },
+];
+
+/** Proof for item 18 (SubscriptionCalendar): the doc's demo month, navigable —
+ * arrows change the month, "+" opens quick add, the lupa opens search and the
+ * cube opens the monthly summary; clicking a day moves the glow. */
+function SubscriptionCalendarDemo() {
+  const [monthIndex, setMonthIndex] = React.useState(1);
+  return (
+    <div className="grid gap-3">
+      <SubscriptionCalendar
+        month={SUBSCRIPTION_MONTHS[monthIndex]}
+        year={2026}
+        onPrevMonth={() => setMonthIndex((prev) => (prev === 0 ? 11 : prev - 1))}
+        onNextMonth={() => setMonthIndex((prev) => (prev === 11 ? 0 : prev + 1))}
+        days={SUBSCRIPTION_DAYS}
+        monthlyTotal={156.23}
+        subscriptionsCount={9}
+        newCount={3}
+      />
+      <p className="text-xs text-muted-foreground">
+        Ported block (tokens): month navigation, quick add, search and the monthly summary overlays; the selected
+        day carries the animated glow (`layoutId` scoped per instance).
+      </p>
+    </div>
+  );
+}
+
+/** Proof for item 21 (ToggleGroup): the doc's single + multiple forms — one
+ * value at a time with the pill sliding, several at once with per-item
+ * overlays. Non-modal like the shell menus; the highlight carries selection. */
+function ToggleGroupDemo() {
+  return (
+    <div className="grid gap-4">
+      <div className="flex flex-wrap items-center gap-6">
+        <ToggleGroup type="single" defaultValue="bold" aria-label="text style">
+          <ToggleGroupHighlight>
+            <ToggleGroupHighlightItem value="bold">
+              <ToggleGroupItem value="bold" aria-label="bold">
+                <Bold aria-hidden="true" />
+              </ToggleGroupItem>
+            </ToggleGroupHighlightItem>
+            <ToggleGroupHighlightItem value="italic">
+              <ToggleGroupItem value="italic" aria-label="italic">
+                <Italic aria-hidden="true" />
+              </ToggleGroupItem>
+            </ToggleGroupHighlightItem>
+            <ToggleGroupHighlightItem value="underline">
+              <ToggleGroupItem value="underline" aria-label="underline">
+                <Underline aria-hidden="true" />
+              </ToggleGroupItem>
+            </ToggleGroupHighlightItem>
+          </ToggleGroupHighlight>
+        </ToggleGroup>
+        <ToggleGroup type="multiple" defaultValue={["bold"]} aria-label="text decorations">
+          <ToggleGroupHighlightItem value="bold" className="bg-accent rounded-md">
+            <ToggleGroupItem value="bold" aria-label="multiple bold">
+              <Bold aria-hidden="true" />
+            </ToggleGroupItem>
+          </ToggleGroupHighlightItem>
+          <ToggleGroupHighlightItem value="italic" className="bg-accent rounded-md">
+            <ToggleGroupItem value="italic" aria-label="multiple italic">
+              <Italic aria-hidden="true" />
+            </ToggleGroupItem>
+          </ToggleGroupHighlightItem>
+        </ToggleGroup>
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Single slides one pill between items; multiple fades one overlay per active item — both over the
+        vendored Radix primitive (`custom-ui/components/toggle-group`), non-modal like the shell menus.
+      </p>
+    </div>
+  );
+}
+
+/** Proof for item 20 (Tabs): the doc demo — account/password forms with the
+ * sliding Highlight pill, panels fading with blur, auto-height wrapper; plus
+ * a labelled `mode="layout"` twin. */
+function TabsDemo() {
+  return (
+    <div className="grid gap-4">
+      <Tabs defaultValue="account" className="max-w-100">
+        <TabsHighlight>
+          <TabsList>
+            <TabsHighlightItem value="account">
+              <TabsTab value="account">Account</TabsTab>
+            </TabsHighlightItem>
+            <TabsHighlightItem value="password">
+              <TabsTab value="password">Password</TabsTab>
+            </TabsHighlightItem>
+          </TabsList>
+        </TabsHighlight>
+        <TabsPanels>
+          <TabsPanel value="account" className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Make changes to your account here. Click save when you&apos;re done.
+            </p>
+            <div className="space-y-3">
+              <div className="flex flex-col space-y-1">
+                <label htmlFor="tabs-demo-name" className="text-sm">
+                  Name
+                </label>
+                <Input id="tabs-demo-name" defaultValue="Pedro Duarte" />
+              </div>
+              <div className="flex flex-col space-y-1">
+                <label htmlFor="tabs-demo-username" className="text-sm">
+                  Username
+                </label>
+                <Input id="tabs-demo-username" defaultValue="@peduarte" />
+              </div>
+            </div>
+            <button type="button" className={buttonVariants({ variant: "default" })}>
+              Save changes
+            </button>
+          </TabsPanel>
+          <TabsPanel value="password" className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Change your password here. After saving, you&apos;ll be logged out.
+            </p>
+            <div className="flex flex-col space-y-1">
+              <label htmlFor="tabs-demo-current" className="text-sm">
+                Current password
+              </label>
+              <Input id="tabs-demo-current" type="password" />
+            </div>
+            <button type="button" className={buttonVariants({ variant: "default" })}>
+              Save password
+            </button>
+          </TabsPanel>
+        </TabsPanels>
+      </Tabs>
+      <Tabs defaultValue="account" className="max-w-100" aria-label='mode="layout" twin'>
+        <TabsHighlight>
+          <TabsList>
+            <TabsHighlightItem value="account">
+              <TabsTab value="account">Account</TabsTab>
+            </TabsHighlightItem>
+            <TabsHighlightItem value="password">
+              <TabsTab value="password">Password</TabsTab>
+            </TabsHighlightItem>
+          </TabsList>
+        </TabsHighlight>
+        <TabsPanels mode="layout">
+          <TabsPanel value="account">
+            <p className="text-sm text-muted-foreground">Variant: mode=&quot;layout&quot;.</p>
+          </TabsPanel>
+          <TabsPanel value="password">
+            <p className="text-sm text-muted-foreground">Variant: mode=&quot;layout&quot;.</p>
+          </TabsPanel>
+        </TabsPanels>
+      </Tabs>
+      <p className="text-xs text-muted-foreground">
+        Pill slides via the Highlight (spring 200/25); panels fade with blur; the wrapper animates height in
+        auto-height mode.
+      </p>
+    </div>
+  );
+}
+
+/** Proof for item 23 (UserAvatar): every variation — sizes, overflow, overlap
+ * direction. Hover shifts the avatar forward with the name tooltip (the same
+ * pill the sidebar uses). */
+const AVATAR_USERS = [
+  { name: "Ada Lovelace", presence: "online" },
+  { name: "Alan Turing", presence: "online" },
+  { name: "Grace Hopper", presence: "offline" },
+  { name: "Edsger Dijkstra", presence: "offline" },
+  { name: "Barbara Liskov", presence: "online" },
+] as const;
+
+function AvatarVariant({ label, ...props }: { label: string } & React.ComponentProps<typeof AvatarGroup>) {
+  return (
+    <div className="flex flex-col gap-2">
+      <AvatarGroup {...props} />
+      <p className="text-xs text-muted-foreground">{label}</p>
+    </div>
+  );
+}
+
 export const DEMOS: Record<string, React.ReactNode> = {
   "404-page-not-found": (
     <div className="rounded-md border border-border">
@@ -456,19 +968,31 @@ export const DEMOS: Record<string, React.ReactNode> = {
     </div>
   ),
 
-  "credit-usage-card": <CreditUsageCard />,
+  "credit-usage-card": <CreditUsageCardDemo />,
 
   dialog: <DialogDemo />,
+
+  "dropdown-menu": <DropdownMenuDemo />,
+
+  "expand-details": <ExpandDetailsDemo />,
 
   "file-tree": <FileTreeDemo />,
 
   "file-upload": <FileUploader />,
 
   inputs: (
-    <div className="grid max-w-sm gap-4">
-      <FloatingInput label="Project name" />
-      <FloatingInput label="Disabled" disabled />
-      <Input placeholder="Plain input (ui/input)" />
+    <div className="grid gap-6">
+      <div className="grid max-w-sm gap-4">
+        <FloatingInput label="Email Address" type="email" />
+        <FloatingInput label="Password" type="password" />
+        <p className="text-xs text-muted-foreground">default · email + password (doc demo)</p>
+      </div>
+      <div className="grid max-w-sm gap-4">
+        <FloatingInput label="Project name" defaultValue="Apollo" />
+        <FloatingInput label="Disabled" disabled />
+        <Input placeholder="Plain input (ui/input)" />
+        <p className="text-xs text-muted-foreground">prefilled (opens floated) · disabled · plain</p>
+      </div>
     </div>
   ),
 
@@ -489,59 +1013,73 @@ export const DEMOS: Record<string, React.ReactNode> = {
   "run-action-button": <RunActionButton />,
 
   sidebar: (
-    <EmptyState
-      title="The shell around this page is the demo"
-      description="Drawer below md, icon rail md–xl, expanded above xl, preference in a cookie."
-    />
+    <div className="grid gap-6">
+      <div className="grid max-w-64 gap-2">
+        <Highlight>
+          <OrgSwitcher
+            orgs={[
+              {
+                id: "o-long",
+                name: "Acme Incorporated International Holdings Ltd Division",
+                slug: "acme-incorporated-international-holdings-ltd",
+              },
+              { id: "o-short", name: "Evil Corp", slug: "evil-corp" },
+            ]}
+            activeOrgId="o-long"
+            onSwitchOrg={() => {}}
+          />
+        </Highlight>
+        <p className="text-xs text-muted-foreground">
+          S7.2 proof (RULES §12): long names truncate with full titles; open the menu for the full rows.
+        </p>
+      </div>
+      <div className="grid gap-2">
+        <Highlight>
+          <div className="flex gap-2">
+            <OrganizationsRailMenuItem activeOrgId="o1" orgsActive={false} />
+            <ProjectsRailMenuItem
+              projects={[
+                { id: "p1", org_id: "o1", name: "Apollo Program Landing Initiative" },
+                { id: "p2", org_id: "o1", name: "Zephyr" },
+              ]}
+              loading={false}
+              projectsActive={false}
+            />
+          </div>
+        </Highlight>
+        <p className="text-xs text-muted-foreground">
+          S7.3 proof (RULES §12): rail icons with tooltips; menus anchor right with truncated rows.
+        </p>
+      </div>
+    </div>
   ),
 
   "switch-mode-toggle": <ThemeToggle />,
 
-  tabs: (
-    <Tabs defaultValue="account">
-      <TabsList>
-        <TabsTrigger value="account">Account</TabsTrigger>
-        <TabsTrigger value="quota">Quota</TabsTrigger>
-      </TabsList>
-      <TabsPanels>
-        <TabsContent value="account">
-          <p className="text-sm text-muted-foreground">Profile fields live here.</p>
-        </TabsContent>
-        <TabsContent value="quota">
-          <div className="flex items-center gap-4">
-            <CircularProgress value={62} size={96} />
-            <p className="text-sm text-muted-foreground">Taller panel — the wrapper animates height.</p>
-          </div>
-        </TabsContent>
-      </TabsPanels>
-    </Tabs>
-  ),
+  "subsription-calendar": <SubscriptionCalendarDemo />,
 
-  "toggle-group": (
-    <ToggleGroup defaultValue={["bold"]} aria-label="text style">
-      <ToggleItem value="bold" aria-label="bold">
-        <Bold aria-hidden="true" />
-      </ToggleItem>
-      <ToggleItem value="italic" aria-label="italic">
-        <Italic aria-hidden="true" />
-      </ToggleItem>
-      <ToggleItem value="underline" aria-label="underline">
-        <Underline aria-hidden="true" />
-      </ToggleItem>
-    </ToggleGroup>
-  ),
+  tabs: <TabsDemo />,
+
+  "toggle-group": <ToggleGroupDemo />,
 
   "user-avatar": (
-    <AvatarGroup
-      users={[
-        { name: "Ada Lovelace", presence: "online" },
-        { name: "Alan Turing", presence: "online" },
-        { name: "Grace Hopper", presence: "offline" },
-        { name: "Edsger Dijkstra", presence: "offline" },
-        { name: "Barbara Liskov", presence: "online" },
-      ]}
-      max={4}
-    />
+    <div className="grid gap-6">
+      <AvatarVariant label="multiple · md · overflow +1 · invertOverlap" invertOverlap users={[...AVATAR_USERS]} max={4} />
+      <AvatarVariant label="single · tooltip" mode="single" user={{ name: "Ada Lovelace", presence: "online" }} />
+      <AvatarVariant label="single · no tooltip" mode="single" tooltip={false} user={{ name: "Ada Lovelace" }} />
+      <AvatarVariant
+        label="multiple · presence on (online/offline/inactive)"
+        showPresence
+        users={[
+          { name: "Ada Lovelace", presence: "online" },
+          { name: "Grace Hopper", presence: "offline" },
+          { name: "Alan Turing", presence: "inactive" },
+        ]}
+        max={3}
+      />
+      <AvatarVariant label="multiple · sm · overflow +2" size="sm" users={[...AVATAR_USERS]} max={3} />
+      <AvatarVariant label="multiple · onHover off" onHover={false} users={[...AVATAR_USERS]} max={4} />
+    </div>
   ),
 };
 

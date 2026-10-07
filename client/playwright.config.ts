@@ -1,6 +1,6 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const WEB_PORT = Number(process.env.WEB_PORT ?? "5173");
+const WEB_PORT = Number(process.env.WEB_PORT ?? "3001");
 
 /* Browser harness for design-auditor: axe + snapshots, Chromium-first.
  * - baseURL follows WEB_PORT (same knob as `make web`).

@@ -37,9 +37,11 @@ export {
   Copy,
   Database,
   Download,
+  File,
   FileCode,
   FileText,
   FlaskConical,
+  Folder,
   FolderOpen,
   Globe,
   House,
@@ -96,7 +98,7 @@ export {
 export { HiBadgeCheck } from "react-icons/hi";
 export { IoCloseSharp, IoMoon, IoMoonOutline, IoSunny, IoSunnyOutline } from "react-icons/io5";
 export { RiBubbleChartFill, RiHome5Fill } from "react-icons/ri";
-export { TbClockHour12Filled } from "react-icons/tb";
+export { TbClockHour12Filled, TbCube } from "react-icons/tb";
 
 export type { IconType } from "react-icons";
 

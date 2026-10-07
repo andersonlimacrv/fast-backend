@@ -441,6 +441,21 @@ function HighlightItem<T extends React.ElementType>({
   const reduceMotion = useReducedMotion();
   const effectiveItemTransition = reduceMotion ? { duration: 0 } : itemTransition;
   const itemInitial = reduceMotion ? false : { opacity: 0 };
+  // Local delta (menu-flicker fix, owner 2026-10-01): a shared-`layoutId`
+  // pill must hand off instantly — a fading exit stacks translucent pills on
+  // the same item (measured 12/12 ghost frames). Consumers opt in with
+  // `exitDelay={0}` (dropdown menus); everyone else keeps the fade.
+  const resolvedExitDelay = exitDelay ?? contextExitDelay ?? 200;
+  const instantExit = resolvedExitDelay === 0;
+  const itemExit = {
+    opacity: 0,
+    transition: instantExit
+      ? { duration: 0 }
+      : {
+          ...effectiveItemTransition,
+          delay: (itemTransition?.delay ?? 0) + resolvedExitDelay / 1000,
+        },
+  };
 
   const refCallback = React.useCallback((node: HTMLElement | null) => {
     localRef.current = node as HTMLDivElement;
@@ -570,15 +585,7 @@ function HighlightItem<T extends React.ElementType>({
                 transition={effectiveItemTransition}
                 initial={itemInitial}
                 animate={{ opacity: 1 }}
-                exit={{
-                  opacity: 0,
-                  transition: {
-                    ...effectiveItemTransition,
-                    delay:
-                      (itemTransition?.delay ?? 0) +
-                      (exitDelay ?? contextExitDelay ?? 0) / 1000,
-                  },
-                }}
+                exit={itemExit}
                 {...dataAttributes}
               />
             )}
@@ -632,15 +639,7 @@ function HighlightItem<T extends React.ElementType>({
               transition={effectiveItemTransition}
               initial={itemInitial}
               animate={{ opacity: 1 }}
-              exit={{
-                opacity: 0,
-                transition: {
-                  ...effectiveItemTransition,
-                  delay:
-                    (itemTransition?.delay ?? 0) +
-                    (exitDelay ?? contextExitDelay ?? 0) / 1000,
-                },
-              }}
+              exit={itemExit}
               {...dataAttributes}
             />
           )}

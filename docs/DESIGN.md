@@ -196,10 +196,14 @@ Desde a v4, o Tailwind expõe todos os design tokens como variáveis CSS nativas
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
+  --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 16px);
+  --radius-3xl: calc(var(--radius) + 24px);
+  --radius-4xl: calc(var(--radius) + 32px);
 }
 
 @layer base {
@@ -269,6 +273,8 @@ Tokens do light (change `design-contrast-borders`):
 | `--ring` | `--primary` | `oklch(0.5351 0.1432 133.8754)` (= `--chart-3`) | 1.51:1 → **4.92:1** |
 
 O dark fica intacto (`--border` 0.3195; o ring já fica a 11:1). Foco continua `ring-2` (§8) e o par `primary-foreground`-sobre-`primary` (9.11:1) segue sendo o único uso aceito da lima como superfície no light.
+
+**Padrão de presença** (dono, 2026-09-30, change `custom-ui-avatar-group`, revisado na mesma sessão): borda sólida na cor do status + fill da mesma cor a 60% com `backdrop-blur-sm` (vocabulário do dia selecionado do calendário 18) — `online` chart-2, `offline` destructive, `inactive` muted com borda `muted-foreground` (o `muted` puro some como borda no light, 1.40:1 — lição do card 07). Geometria `size-2` (8px — dono 2026-09-30) recuada 2px da borda direita (`right-0.5`) para não invadir o avatar vizinho no hover. O dot mora **fora** do wrapper com `overflow-hidden` (foto/iniciais); dot dentro de área cortada some (foi o bug achado na revisão). Exibição opt-in via `showPresence` (default off).
 
 ---
 
@@ -668,4 +674,6 @@ Cada ficha segue o formato: nome · descrição · auditoria/segurança · adoç
 - **2026-09-23 (F13):** contraste no light — `--border`/`--input` de 0.7309 para 0.66 (**3.12:1**) e `--ring` para `--chart-3` (**4.92:1**, era 1.51:1); preenchimentos coloridos ganham contorno no tom do conteúdo (`*-foreground/80`) — regra §4.5, change `design-contrast-borders`. O `--primary` segue como superfície (nunca como texto/indicador fino no light).
 - **2026-09-23 (F13):** bordas do `Switch` calibradas pelo dono na validação (item 25 validado): fundo cheio (`bg-primary`, sem atenuar o fill), trilho e knob iguais por estado — `primary-foreground/30` no ON e `border-border/50` no OFF, mais suaves que o 3:1 geral por decisão estética; fora do Switch a base `/80` (checkbox/card). Regra §4.5.
 - **2026-09-23 (F13):** o theme-toggle da topbar mantém **implementação própria** (escolha de estado sun|moon, não on/off, sem cores primary); o `25 Switch` é base somente para controles on/off.
+- **2026-09-23 (F13):** escala de raio completa no `--radius` (dono: "bordas sempre das variáveis do `index.css`") — `xs/2xl/3xl/4xl` passam a derivar do mesmo knob (`-6/+16/+24/+32px`, com `max(0px, …)` nos menores); resolvidos hoje: xs/sm/md/lg = 0px, xl = 4px, 2xl = 16px, 3xl = 24px, 4xl = 32px — **nenhuma mudança visual**, só o acoplamento futuro. Regra §4.5.
+- **2026-09-23 (F13):** acentos do calendário 18 seguem a regra do fill cheio (dono: é transparência, não cor) — Total e badge do add em `bg-primary` cheio com `text-primary-foreground` (9.11:1, o par validado do Checkbox/Switch), em vez de tints; o token `--accent-strong` chegou a ser criado e foi removido na mesma sessão. Regra §4.5.
 

@@ -256,6 +256,11 @@ type DropdownMenuHighlightProps = Omit<
 
 function DropdownMenuHighlight({
   transition = { type: 'spring', stiffness: 350, damping: 35 },
+  // Local delta (menu-flicker fix, owner 2026-10-01): the upstream default
+  // `exitDelay: 200` keeps the old per-item pill fully opaque while the new
+  // one fades in — 2-3 pills stacked on the same item, measured 12/12 samples
+  // (the "blink"). With 0 the old pill hands off immediately (crossfade).
+  exitDelay = 0,
   ...props
 }: DropdownMenuHighlightProps) {
   const { highlightedValue } = useDropdownMenu();
@@ -266,6 +271,7 @@ function DropdownMenuHighlight({
       click={false}
       controlledItems
       transition={transition}
+      exitDelay={exitDelay}
       value={highlightedValue}
       {...props}
     />
