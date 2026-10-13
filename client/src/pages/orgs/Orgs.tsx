@@ -30,10 +30,9 @@ export function OrgsPage() {
       return created;
     });
     if (org) {
-      notify.confirm("Organization created", value, {
-        label: "Switch",
-        onClick: () => void switchOrg(org.id),
-      });
+      /* Non-blocking convenience (change `notify-standard`): the created org
+       * is switchable per-row in the Context column, so no toast action. */
+      notify.success("Organization created", value);
     }
   };
 

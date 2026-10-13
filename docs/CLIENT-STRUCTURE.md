@@ -46,3 +46,26 @@ Páginas staff usam ainda `RequireStaff` por dentro.
    `toggle-group`, `avatar`, `switch`). Convergem 1-a-1: ao validar o item no
    Lab, cria-se a versão `custom-ui` e o catálogo passa a apontar para ela —
    nenhum deles é editado fora de `/custom-ui`.
+
+## Notificações — push vs blocks (change `notify-standard`)
+
+> Guia do agente (contrato, variações do site, onde mora cada coisa, proibido,
+> testes): `docs/guides/notify.md`.
+
+
+1. **Push = mutação + global/sessão, sempre via `notify.*`**
+   (`services/notify`, contrato estável). Transiente e auto-dispensável.
+   Nunca validação de form (fica inline) nem falha de carga (é do block).
+   Mesma falha nunca nos dois canais.
+2. **Blocks = contextual persistente**: falha de carga → `ErrorBox` (com
+   `actionLabel`/`onAction` para retry); vazio → `EmptyState`; rota →
+   `ErrorOne`; escolha bloqueante → `AlertDialog` (nunca toast com ação).
+   Todos falam a mesma língua via `friendlyError`.
+3. **Lugar**: block específico de página mora em `pages/{page}/blocks/`
+   (ex.: `pages/admin/blocks/`); primitivo compartilhado mora em
+   `components/` (`feedback.tsx`, `error-state.tsx`) — nada compartilhado
+   em `pages/`, nada específico em `components/`.
+4. **Costura**: páginas/hooks importam só o contrato (`services/notify` +,
+   no JSX, o `AlertDialog`/`ErrorBox`); o provider push mora em
+   `services/notify.provider` + visuais do toaster. Trocar a lib de push =
+   adapter + visuais, zero página.

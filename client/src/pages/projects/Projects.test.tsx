@@ -12,7 +12,15 @@ vi.mock("@/services/projects", () => ({
 }));
 
 vi.mock("@/services/notify", () => ({
-  notify: { success: vi.fn(), confirm: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() },
+  notify: {
+    success: vi.fn(),
+    error: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+    fromError: vi.fn(),
+    promise: vi.fn(),
+    close: vi.fn(),
+  },
 }));
 
 import { createNewProject } from "@/services/projects";
