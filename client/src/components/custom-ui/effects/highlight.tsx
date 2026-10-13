@@ -447,15 +447,23 @@ function HighlightItem<T extends React.ElementType>({
   // `exitDelay={0}` (dropdown menus); everyone else keeps the fade.
   const resolvedExitDelay = exitDelay ?? contextExitDelay ?? 200;
   const instantExit = resolvedExitDelay === 0;
+  const HANDOFF_TRANSITION = { duration: 0.12 };
   const itemExit = {
     opacity: 0,
     transition: instantExit
-      ? { duration: 0 }
+      ? HANDOFF_TRANSITION
       : {
           ...effectiveItemTransition,
           delay: (itemTransition?.delay ?? 0) + resolvedExitDelay / 1000,
         },
   };
+  // With instant handoffs the entering pill must not fade in from zero: the
+  // old pill unmounts in an earlier commit than the new one mounts, leaving a
+  // fully-dark gap (measured ~40ms + spontaneous remount dips). Matched
+  // ~120ms crossfades on both ends keep the brightness sum near 1 throughout
+  // the handoff instead (measured). Native menus highlight instantly anyway.
+  const enterInitial = instantExit ? { opacity: 0 } : itemInitial;
+  const enterTransition = instantExit ? HANDOFF_TRANSITION : effectiveItemTransition;
 
   const refCallback = React.useCallback((node: HTMLElement | null) => {
     localRef.current = node as HTMLDivElement;
@@ -582,8 +590,8 @@ function HighlightItem<T extends React.ElementType>({
                   ...style,
                 }}
                 className={cn(contextClassName, activeClassName)}
-                transition={effectiveItemTransition}
-                initial={itemInitial}
+                transition={instantExit ? enterTransition : effectiveItemTransition}
+                initial={enterInitial}
                 animate={{ opacity: 1 }}
                 exit={itemExit}
                 {...dataAttributes}
@@ -636,8 +644,8 @@ function HighlightItem<T extends React.ElementType>({
                 ...style,
               }}
               className={cn(contextClassName, activeClassName)}
-              transition={effectiveItemTransition}
-              initial={itemInitial}
+              transition={instantExit ? enterTransition : effectiveItemTransition}
+              initial={enterInitial}
               animate={{ opacity: 1 }}
               exit={itemExit}
               {...dataAttributes}

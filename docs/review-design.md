@@ -1,5 +1,10 @@
 # review-design — contrastes `references/components_to_use` × `docs/DESIGN.md` × tema atual
 
+> Nota 2026-10-13 (change `references-cleanup`): `references/components_to_use/`
+> foi removida pelo dono após a fila de porte zerar (26 itens, todos `validated`).
+> Este documento permanece como registro histórico do debate — os caminhos
+> `references/…` abaixo são trilha de origem, não paths vivos.
+
 > Debate da change `client/openspec/changes/design-unification/` (2026-09-16).
 > Hierarquia: `DESIGN.md` vence; tema atual (lima, `radius: 0`) é preservado.
 > Decisões do dono marcadas com ✅ (2026-09-16).
@@ -48,7 +53,9 @@
   Tooltip real continua `ui/tooltip.tsx` (Base-UI, existente).
 - `DeplymentCard.md` **não é card de deploy** — é duplicata do `RunActionButton`.
 - **Decisão:** `GooeyMenu` entra restrito a debug overlay (portado p/ lucide);
-  `DeplymentCard` **descartado**.
+  `DeplymentCard` **descartado**. Atualização (dono, 2026-10-09): virou o
+  **item 26** na Gallery (efeito goo mantido p/ uso futuro; trigger = ícone
+  `Info` da casa, a arte "N" saiu — change `gooey-menu-gallery`).
 
 ## 7. Dependências fantasma
 
@@ -119,6 +126,9 @@ Dropdown radix (dono colou o doc + pediu adoção, 2026-09-16): vendored
 `variant="destructive"` no logout, hover via `Highlight`. Correções no caminho:
 crash `Menu.GroupLabel` fora de `Group`, `aria-selected` inválido do `HighlightItem`,
 hooks incondicionais no `Slot`, radix abre com sequência pointer (só jsdom).
+`menu-highlight-flicker` (dono, 2026-10-01, validado): o pill dos menus usa
+`exitDelay={0}` + crossfade casado de ~120ms (delta local, opt-in) — um pill por
+vez, sem fantasma nem gap; os demais consumidores mantêm o fade.
 
 Notas do code-review (2026-09-16, working tree): `RequireStaff` lê flags da sessão
 (emitidas pelo backend) e os fetches das páginas seguem com 403 real — autoridade
@@ -175,11 +185,14 @@ próximo `n`.
 | 15 | Radio | component | base | ✅ validated | Validado como está (dono, 2026-09-23): a prova usa o porte em `/ui/radio.tsx` direto (`RadioGroup` com owner/admin/member, `defaultValue="member"`). A linha de dívida do §14 segue aberta — convergência para `custom-ui` pode acontecer depois, como no 03/09. |
 | 21 | ToggleGroup | component | buttons | ✅ validated | **Convergido** do porte Base-UI em `/ui` (dívida §14 quitada nessa linha) para o **`primitives/radix/toggle-group`** pedido pelo dono (change `custom-ui-toggle-group`, 2026-09-23 — `https://animate-ui.com/docs/primitives/radix/toggle-group`): pacote Radix vendored (`primitive.tsx`: single\|multiple controlado, motion.button + `whileTap` com guard de reduced-motion, `Highlight` deslizante spring 200/25 + overlays por item no multiple) + camada composta (`toggle-group.tsx`, **nosso layout**): linha `inline-flex gap-1`, item `h-9 min-w-9 rounded-md text-sm` + `ring-2` de foco (§8) + `disabled:` + `svg:size-4`, seleção pintada **só** pelo pill `bg-accent` (sem `data-[pressed]:bg-*` duplicado **e sem hover próprio** — fix 2026-09-30: o `hover:bg-accent` fazia o não-selecionado imitar o selecionado; o demo deixa os itens nus), nomes do upstream (`ToggleGroupItem`, sem alias; cva do `/ui` descartado — sem consumidores). Prova reescrita (single + multiple, como no doc; multiple com `bg-accent rounded-md` por item como no demo). **Validado pelo dono em 2026-09-30.** |
 | 06–23 | (demais) | — | — | pending | `DeplymentCard` (08) `dropped` (duplicata do RunActionButton, §6); **nenhum doc resta não portado** (fila zerada em 2026-09-23). Todo o resto será revisto 1-a-1. |
+| 17 | Sidebar | block | shell | ✅ validated | Shell reconstruído sobre Base UI (change `sidebar-demo` + `root-mode`):OrgSwitcher com nomes longos (`title` + `min-w-0`), rail com tooltips e menus à direita, drawer com foco/`⌘B`/cookie, card Modo Root no footer (root) + ações root, coroas sutis (`muted-foreground/20`) nos itens gated. Provas S7.2/S7.3 no card (RULES §12) + e2e 4/4. **Validado pelo dono em 2026-10-01.** |
 | 14 | Inputs | component | base | ✅ validated | **Porte fiel** do doc (`custom-ui/components/floating-input.tsx`, change `custom-ui-inputs`, 2026-09-30 — referência Watermelon): campo `bg-transparent` (o `bg-input` virava patch sob o chip da label), **notch medido estilo MDC** (stub + gap da largura da label + segmento final, `ResizeObserver`) no lugar do chip de fundo — sem linha sobre o texto em nenhuma superfície — com abertura em 100ms (pronta antes dos 150ms da label) e fechamento espelhado (`delay-75`), `hasValue` inicial de `value`/`defaultValue` (pré-preenchido abre flutuado), `disabled:` da casa; autofill global com repaint do UA congelado + tinta `muted/60` (regra fora de `@layer`). Prova com todas as variações (email, password, pré-preenchido, disabled, plain). **Validado pelo dono em 2026-09-30.** |
 | 23 | UserAvatar | component | identity | ✅ validated | **Convergido** do `avatar-group.tsx` raiz (dívida §14 quitada nessa linha) para o **`primitives/animate/avatar-group`** pedido pelo dono (change `custom-ui-avatar-group`, 2026-09-30 — exatamente o upstream): pacote vendored (`primitive.tsx`: `Tooltip` por avatar com shift `y: -30%`, spring 300/17) sobre o **nosso tooltip** (nada vendorizado de novo) + camada composta (**nosso molde**): cada filho é o nosso `ui/avatar` (foto + iniciais + dot), tooltip só com o nome, `max`/`+N` + `"N online"` mantidos, anel `ring-background`, overlap `-space-x`. **`components/avatar-group.tsx` deletado por completo** (dono: sem dualidade); `ui/avatar.tsx` fica (sidebar em produção — follow-up pós-validação). **Revisão 2026-09-30**: API explícita (`mode` multiple|single, `user`/`users`, `onHover`, `tooltip`, `showPresence` — defaults multiple/true/true/false) e padrão de presença em `ui/avatar` (3 estados por token, dot fora do corte, `DESIGN.md` §4.5). Prova com todas as variações (single ± tooltip, presença nos 3 estados, `onHover` off, sizes/overflow). **Validado pelo dono em 2026-09-30** — primeiro consumo em produção no footer da sidebar (`mode="single"`, sem tooltip). |
 | 20 | Tabs | component | base | ✅ validated | **Convergido** do porte `/ui` (dívida §14 quitada nessa linha) para o **`primitives/base/tabs`** pedido pelo dono (change `custom-ui-tabs`, 2026-09-30 — exatamente o upstream): pacote Base UI vendored (`primitive.tsx`: controlado + contexto, `Highlight` deslizante spring 200/25 com `click={false}`, painéis com blur via `AnimatePresence`, `TabsPanels` auto-height com nosso ResizeObserver keyado pelo value + modo `layout`) + camada composta (**nosso layout**): lista `bg-muted rounded-lg`, tabs nus com `ring-2` (§8, sem fill/hover próprio — só o Highlight pinta), pill `bg-background` + sombra, nomes upstream (`TabsTab`, sem alias; `TabsIndicator` morto). **`/ui/tabs.tsx` deletado por completo** (dono: sem dualidade). Prova = demo do doc (account/password com `ui/input` + `buttonVariants`) + gêmeo `layout` rotulado. **Validado pelo dono em 2026-09-30** (duas variações do mesmo componente — `auto-height` + `layout`; fix do clique morto verificado no browser). |
-| 24 | Collapsible | component | base | pending | Vendored radix + AnimatePresence; é o padrão de disclosure da sidebar (e a base do item 02). Sem doc próprio — entrou com o porte do Sidebar (`ref: AnimateUi/Sidebar.md`). |
+| 22 | Tooltip | component | base | ✅ validated | O doc-fonte e o GooeyMenu (restrito a debug overlay, §6; virou o item 26); o tooltip real (Base UI) e anterior. Validado pelo dono em 2026-10-01 as-is (pilula + seta, dois temas). Prova viva na Gallery (change `gallery-proof-gaps`): 3 direções (top/right-rail/bottom). |
+| 24 | Collapsible | component | base | ✅ validated | Vendored radix + AnimatePresence; é o padrão de disclosure da sidebar (e a base do item 02). Sem doc próprio — entrou com o porte do Sidebar (`ref: AnimateUi/Sidebar.md`). Validado pelo dono em 2026-10-01 as-is (em producao). |
 | 25 | Switch | component | base | ✅ validated | Base extraído do `SwitchModeToggle` (19) para reuso: trilho pill, knob com spring (`layout`), `startContent`/`endContent` onde o lado do knob lê como ativo, controlado ou não, `width`/`height`. **Cores pela linguagem do Checkbox validado** (dono, 2026-09-19) + **camada de contorno** (`design-contrast-borders`, 2026-09-23): ativo = trilho `bg-primary` (**fundo cheio** — dono, 2026-09-23: "a suavidade fica nas bordas", o fill nunca é atenuado) com **as duas bordas iguais por estado** (calibradas pelo próprio dono na validação): ON trilho e knob em `border-primary-foreground/30` (2.06:1 vs branco; 1.36:1 vs o verde — mais suave que o 3:1 geral, decisão estética), conteúdo colorido pelo que está embaixo (ícone ativo sobre o knob = `text-foreground`; inativo sobre o verde = `text-primary-foreground`, 9.11:1); OFF = `bg-background` + `border-border/50` e knob `bg-muted` + `border-border/50` (1.51:1 vs branco); `transition-colors duration-500` como o Checkbox. **`theme-toggle` (19) NÃO consome este base** (dono, 2026-09-23): é escolha de estado (sun|moon), não on/off, e não usa primary — volta à implementação própria. Prova: default/off/disabled/small/large + controlado. **Validado pelo dono em 2026-09-23** (ele mesmo calibrou os alphas das bordas: 30% ON / 50% OFF). |
+| 26 | GooeyMenu | component | feedback | ✅ validated | O doc enganoso `Tooltip.md` (change `gooey-menu-gallery`, 2026-10-09): botão debug-overlay cujo painel cresce com filtro SVG `goo`, em uso no Runtime inspector do `/health`; efeito mantido p/ uso futuro (dono), trigger trocado do "N" de referência pelo ícone `Info` da casa (`GooGlyph` removido do `lib/icons`) e 2 camadas (superfície nítida com borda/tokens; silhueta filtrada). O uso `Health (debug overlay)` migrou do item 22 para cá. Cor do efeito finalizada no Lab: trial de 4 tons `--chart-*`, depois **`primary` a 60%** (`opacity` pós-filtro). **Validado pelo dono em 2026-10-09** — movido para a Gallery. |
 
 ## 14. Dívida declarada: customização em `/ui` (change `custom-ui-accordion`, 2026-09-19)Regra (dono, 2026-09-19; em `CLIENT-STRUCTURE.md` §Componentes): **`/ui` é a base shadcn intocada**;
 o componente visual que a página usa mora em `/custom-ui` e pode compor a base por baixo.
@@ -229,3 +242,7 @@ Verdes já adequados no tema: `--chart-3` (4.92:1 no branco), `--chart-5` (6.09:
 - Segue valendo "`--primary` é cor de superfície" (com `primary-foreground` por cima, 9.11:1) — preenchimento
   fino em fundo claro usa `--chart-2…5` quando não houver contorno.
 - Follow-up registrado: convergir `Grants` (`ui/switch`) e o toggle do `CreditUsageCard` para o `25 Switch` já com as cores corrigidas.
+
+
+
+

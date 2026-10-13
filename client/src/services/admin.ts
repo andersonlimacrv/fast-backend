@@ -65,6 +65,46 @@ export function isStaff(user: { is_staff?: boolean; is_superuser: boolean } | nu
   return user?.is_staff === true || isRoot(user);
 }
 
+export type AccessLevel = "root" | "staff" | "member";
+
+export function accessLevelOf(user: { is_staff?: boolean; is_superuser: boolean } | null | undefined): AccessLevel {
+  if (isRoot(user)) return "root";
+  if (isStaff(user)) return "staff";
+  return "member";
+}
+
+export interface CapabilityRow {
+  key: string;
+  label: string;
+  root: boolean;
+  staff: boolean;
+  member: boolean;
+}
+
+/* Effective capabilities per global level — mirrors
+ * `app/modules/admin/policies.py` (root > staff > none; superuser implies
+ * staff). The admin UI renders this matrix; the backend stays authoritative.
+ * `member` here means "authenticated, no global flag" (org roles are
+ * orthogonal and untouched by admin). */
+export const CAPABILITY_MATRIX: CapabilityRow[] = [
+  { key: "users-view", label: "View users", root: true, staff: true, member: false },
+  { key: "users-manage", label: "Create, disable, enable, reset, revoke sessions", root: true, staff: true, member: false },
+  { key: "staff-grant", label: "Grant/revoke staff (root only)", root: true, staff: false, member: false },
+  { key: "orgs-view", label: "View organizations and members", root: true, staff: true, member: false },
+  { key: "audit-view", label: "View global audit", root: true, staff: true, member: false },
+];
+
+/** Effective (allowed) capabilities of one level (for per-user display). */
+export function capabilitiesFor(level: AccessLevel): CapabilityRow[] {
+  return CAPABILITY_MATRIX.filter((row) => row[level]).map((row) => ({ ...row }));
+}
+
+export function canDo(level: AccessLevel, key: string): boolean {
+  const row = CAPABILITY_MATRIX.find((r) => r.key === key);
+  if (!row) return false;
+  return row[level];
+}
+
 export async function fetchAdminOverview(): Promise<AdminOverview> {
   return getAdminOverview();
 }

@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  accessLevelOf,
   adminMembershipSchema,
+  canDo,
+  CAPABILITY_MATRIX,
+  capabilitiesFor,
   createUserSchema,
   isRoot,
   isStaff,
@@ -44,6 +48,40 @@ describe("isStaff / isRoot", () => {
     expect(isStaff(null)).toBe(false);
     expect(isStaff(undefined)).toBe(false);
     expect(isRoot(null)).toBe(false);
+  });
+});
+
+describe("access levels (mirror of policies.py)", () => {
+  it("resolves root > staff > member", () => {
+    expect(accessLevelOf({ is_superuser: true })).toBe("root");
+    expect(accessLevelOf({ is_superuser: true, is_staff: false })).toBe("root");
+    expect(accessLevelOf({ is_superuser: false, is_staff: true })).toBe("staff");
+    expect(accessLevelOf({ is_superuser: false })).toBe("member");
+    expect(accessLevelOf(null)).toBe("member");
+  });
+
+  it("only root manages staff", () => {
+    expect(canDo("root", "staff-grant")).toBe(true);
+    expect(canDo("staff", "staff-grant")).toBe(false);
+    expect(canDo("member", "staff-grant")).toBe(false);
+    expect(canDo("root", "nope")).toBe(false);
+  });
+
+  it("staff shares everything else with root", () => {
+    for (const row of CAPABILITY_MATRIX) {
+      if (row.key === "staff-grant") continue;
+      expect(row.staff).toBe(true);
+      expect(row.root).toBe(true);
+    }
+    expect(CAPABILITY_MATRIX.every((r) => !r.member)).toBe(true);
+  });
+
+  it("capabilitiesFor returns only the allowed rows", () => {
+    expect(capabilitiesFor("root").map((r) => r.key)).toHaveLength(5);
+    expect(capabilitiesFor("staff").map((r) => r.key)).toEqual(
+      expect.not.arrayContaining(["staff-grant"]),
+    );
+    expect(capabilitiesFor("member")).toEqual([]);
   });
 });
 

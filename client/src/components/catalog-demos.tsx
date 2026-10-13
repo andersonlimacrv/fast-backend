@@ -48,6 +48,12 @@ import {
   AccordionTrigger,
 } from "@/components/custom-ui/components/accordion";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+  type CollapsibleReveal,
+} from "@/components/custom-ui/components/collapsible";
+import {
   Checkbox,
 } from "@/components/custom-ui/components/checkbox";
 import {
@@ -80,6 +86,7 @@ import {
   SubFiles,
 } from "@/components/custom-ui/components/files/files";
 import { FileUploader } from "@/components/custom-ui/components/file-uploader";
+import { GooeyMenu, type GooeyMenuData } from "@/components/custom-ui/components/gooey-menu";
 import { FloatingInput } from "@/components/custom-ui/components/floating-input";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioItem } from "@/components/ui/radio";
@@ -99,8 +106,14 @@ import {
   ToggleGroupHighlightItem,
   ToggleGroupItem,
 } from "@/components/custom-ui/components/toggle-group/toggle-group";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/custom-ui/components/tooltip/tooltip";
 import { ROUTES } from "@/lib/constants";
-import { Bold, Check, FileCode, Italic, Underline, X } from "@/lib/icons";
+import { Bold, Check, ChevronDown, FileCode, Italic, Underline, X } from "@/lib/icons";
 
 /* ---------- stateful wrappers (hooks need a component boundary) ---------- */
 
@@ -169,6 +182,102 @@ function AccordionDepthForComparison() {
           </AccordionItem>
         ))}
       </Accordion>
+    </div>
+  );
+}
+
+/** House panel spring (the Accordion's), used by the `mask` reveal proof. */
+const DISCLOSURE_SPRING = { type: "spring", stiffness: 150, damping: 22 } as const;
+
+function CollapsibleVariant({ reveal, label, body }: { reveal: CollapsibleReveal; label: string; body: string }) {
+  return (
+    <Collapsible className="rounded-lg border border-border px-3">
+      <CollapsibleTrigger className="flex w-full items-center justify-between gap-2 py-3 text-left text-sm font-medium outline-none hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring [&[data-state=open]>svg]:rotate-180">
+        {label}
+        <ChevronDown
+          className="size-4 shrink-0 text-muted-foreground transition-transform duration-150"
+          aria-hidden="true"
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent
+        reveal={reveal}
+        transition={reveal === "mask" ? DISCLOSURE_SPRING : undefined}
+        className="text-sm"
+      >
+        <div className="pb-3 text-muted-foreground">{body}</div>
+      </CollapsibleContent>
+    </Collapsible>
+  );
+}
+
+/* Proof for item 24: the three reveals of the disclosure the Accordion and
+ * the sidebar groups are built on (change `gallery-proof-gaps`). */
+function CollapsibleDemo() {
+  return (
+    <div className="grid gap-4">
+      <div className="grid gap-4 md:grid-cols-3">
+        <CollapsibleVariant
+          reveal="slide"
+          label="slide — sidebar default"
+          body="Panel rises 20px while opening (the vendored registry transition)."
+        />
+        <CollapsibleVariant
+          reveal="depth"
+          label="depth — alternative"
+          body="Top-hinged rotateX + slight scale: reads as coming from a plane behind."
+        />
+        <CollapsibleVariant
+          reveal="mask"
+          label="mask — Accordion base"
+          body="Curtain reveal by CSS mask with the house spring (150/22): the Accordion panel."
+        />
+      </div>
+      <p className="text-xs text-muted-foreground">
+        Open and close both animate (AnimatePresence over the vendored radix disclosure): the Accordion (02) is
+        built on this component — sidebar groups use slide, the Accordion uses mask.
+      </p>
+    </div>
+  );
+}
+
+/* Proof for item 22 (change `gallery-proof-gaps`): the real tooltip (pill +
+ * arrow), not the source doc's GooeyMenu — the three sides the product
+ * uses/picks from, with the shell's openDelay. */
+function TooltipDemo() {
+  return (
+    <div className="grid gap-4">
+      <TooltipProvider openDelay={0}>
+        <div className="flex flex-wrap items-center gap-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm">
+                Hover — top (default)
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Pill + arrow — kit default</TooltipContent>
+          </Tooltip>
+          <Tooltip side="right" align="center">
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm">
+                Rail style — side right
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Side right — app shell rail</TooltipContent>
+          </Tooltip>
+          <Tooltip side="bottom">
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm">
+                Side bottom
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Bottom side</TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
+      <p className="text-xs text-muted-foreground">
+        Pill + arrow over the primary token (both themes); `openDelay={0}` like the sidebar. Hover or focus any
+        trigger — the right side matches the shell rail usage.
+      </p>
     </div>
   );
 }
@@ -848,6 +957,39 @@ function AvatarVariant({ label, ...props }: { label: string } & React.ComponentP
   );
 }
 
+/* Health inspector rows (item 26 proof): the production data of /health. */
+const GOOEY_INSPECTOR: GooeyMenuData[] = [
+  {
+    key: "client",
+    label: "Client",
+    value: "design-unification",
+    labelClass: "text-sm font-medium text-muted-foreground",
+    valueClass: "text-sm text-muted-foreground",
+  },
+  {
+    key: "api",
+    label: "API",
+    value: "/api",
+    labelClass: "text-sm font-medium",
+    valueClass: "font-mono text-sm text-muted-foreground",
+  },
+  {
+    key: "ready",
+    label: "Ready",
+    value: "ready",
+    labelClass: "text-sm font-medium",
+    valueClass: "font-mono text-sm text-muted-foreground",
+  },
+  {
+    key: "errors",
+    label: "Errors",
+    value: "0",
+    labelClass: "text-sm font-medium",
+    valueClass:
+      "flex items-center justify-center rounded-md border border-destructive/20 bg-destructive/10 px-2 py-0.5 font-mono text-sm text-destructive",
+  },
+];
+
 export const DEMOS: Record<string, React.ReactNode> = {
   "404-page-not-found": (
     <div className="rounded-md border border-border">
@@ -942,6 +1084,8 @@ export const DEMOS: Record<string, React.ReactNode> = {
     </div>
   ),
 
+  collapsible: <CollapsibleDemo />,
+
   "copy-button": (
     <div className="grid gap-4">
       <div className="flex flex-wrap items-center gap-2">
@@ -979,6 +1123,17 @@ export const DEMOS: Record<string, React.ReactNode> = {
   "file-tree": <FileTreeDemo />,
 
   "file-upload": <FileUploader />,
+
+  "gooey-menu": (
+    <div className="grid gap-4">
+      <GooeyMenu data={GOOEY_INSPECTOR} />
+      <p className="text-xs text-muted-foreground">
+        Color settled (change `gooey-menu-gallery`): `primary` silhouette at 60% opacity — identical in light
+        and dark (0.8487), reading subtle in light and bold in dark; the opacity sits after the filter (inside
+        it the goo matrix saturates alpha). Hover or focus to expand. Validated by the owner on 2026-10-09.
+      </p>
+    </div>
+  ),
 
   inputs: (
     <div className="grid gap-6">
@@ -1061,6 +1216,8 @@ export const DEMOS: Record<string, React.ReactNode> = {
   tabs: <TabsDemo />,
 
   "toggle-group": <ToggleGroupDemo />,
+
+  tooltip: <TooltipDemo />,
 
   "user-avatar": (
     <div className="grid gap-6">

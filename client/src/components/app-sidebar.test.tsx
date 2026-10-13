@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
@@ -17,11 +17,12 @@ const mocks = vi.hoisted(() => ({
     { id: "o1", name: "Acme Inc", slug: "acme-inc" },
     { id: "o2", name: "Evil Corp", slug: "evil-corp" },
   ],
+  user: { email: "verylongemailaddress@example.com", is_staff: false, is_superuser: false },
 }));
 
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({
-    user: { email: "verylongemailaddress@example.com", is_staff: false, is_superuser: false },
+    user: mocks.user,
     orgs: mocks.orgs,
     activeOrgId: "o1",
     ready: true,
@@ -91,6 +92,44 @@ describe("sidebar user menu", () => {
     renderSidebar();
     openMenu(await screen.findByRole("button", { name: /switch organization/i }));
     expect(await screen.findByRole("menuitem", { name: /evil corp/i })).toBeTruthy();
+  });
+
+  it("root menu shows the Modo Root card and root actions; others see none", async () => {
+    const prev = mocks.user;
+    mocks.user = { email: "root@example.com", is_staff: true, is_superuser: true };
+    try {
+      renderSidebar();
+      // Full card stacked above the (unchanged) user button.
+      expect(await screen.findByText("Root Mode")).toBeTruthy();
+      expect(screen.getByText("Full system access")).toBeTruthy();
+      openMenu(screen.getByRole("button", { name: /account menu/i }));
+      expect(screen.getByRole("menuitem", { name: /grant staff/i })).toBeTruthy();
+      expect(screen.getByRole("menuitem", { name: /revoke staff/i })).toBeTruthy();
+      // Single dividers throughout (no doubled separator after the root group).
+      const menu = screen.getByRole("menu");
+      expect(within(menu).getAllByRole("separator")).toHaveLength(3);
+    } finally {
+      mocks.user = prev;
+    }
+    cleanup();
+    renderSidebar();
+    openMenu(await screen.findByRole("button", { name: /account menu/i }));
+    expect(screen.queryByText("Root Mode")).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: /grant staff/i })).toBeNull();
+  });
+
+  it("marks staff-gated nav items with a subtle crown", async () => {
+    const prev = mocks.user;
+    mocks.user = { email: "root@example.com", is_staff: true, is_superuser: true };
+    try {
+      renderSidebar();
+      const users = await screen.findByRole("link", { name: "Users" });
+      expect(users.querySelector('svg[aria-label="visible for your access level"]')).toBeTruthy();
+      const overview = await screen.findByRole("link", { name: "Overview" });
+      expect(overview.querySelector('svg[aria-label="visible for your access level"]')).toBeNull();
+    } finally {
+      mocks.user = prev;
+    }
   });
 
   it("RULES §12: injected overrides drive the switcher without auth", async () => {

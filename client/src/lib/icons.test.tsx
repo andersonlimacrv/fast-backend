@@ -7,7 +7,6 @@ import {
   ChevronDown,
   Copy,
   FaInbox,
-  GooGlyph,
   GradientCode,
   House,
   Moon,
@@ -34,8 +33,6 @@ describe("lib/icons surface", () => {
   });
 
   it("renders decorative SVGs hidden from assistive tech", () => {
-    const { container } = render(<GooGlyph />);
-    expect(container.querySelector("svg")).toBeTruthy();
     render(<GradientCode code="404" />);
     expect(screen.getByText("404")).toBeTruthy();
   });

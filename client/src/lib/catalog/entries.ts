@@ -1,7 +1,10 @@
-/* The catalog itself: 23 entries seeded from `references/components_to_use/`
- * (one per source doc), in the stable alphabetical enumeration. Only
+/* The catalog itself: 26 entries, all validated. Seeded 1-per-doc from the
+ * former `references/components_to_use/` (removed by the owner 2026-10-13
+ * after the porting queue hit zero — `ref` strings below are now historical
+ * origin trail, not live paths), in the stable alphabetical enumeration. Only
  * `status`/`source`/`usedIn` change as items get ported and validated 1-by-1;
- * `n` and `class` are frozen. New reference docs append n24, n25, ...
+ * `n` and `class` are frozen. Replacement inbox rule for future reference
+ * docs: pending owner decision (see `references-cleanup` change).
  *
  * Owner decisions (2026-09-19): only `404PageNotFound` is validated; every
  * other item is re-reviewed. Blocks: 404PageNotFound, CreditUsageCard,
@@ -175,12 +178,12 @@ export const CATALOG: CatalogEntry[] = [
     name: "FileUpload",
     class: "component",
     kind: "media",
-    status: "pending",
+    status: "validated",
     ref: "ExempleLayours.md/FileUpload.md",
     refGroup: "exemple-layours",
     source: "custom-ui/components/file-uploader.tsx",
     usedIn: [],
-    note: "Implemented but unused so far.",
+    note: "Size transition (change `custom-ui-file-upload`, DESIGN.md §7 rule): the file list + summary expand/collapse with the Accordion spring (150/22) instead of snapping; exits run a ~180ms tween with border + margin zeroed (S5: dry snap at the removal end + last-row `mb` flip fixed). Validated by the owner on 2026-10-09.",
   },
   {
     n: 14,
@@ -214,12 +217,12 @@ export const CATALOG: CatalogEntry[] = [
     name: "RunActionButton",
     class: "component",
     kind: "buttons",
-    status: "pending",
+    status: "validated",
     ref: "RunActionButton.md",
     refGroup: "standalone",
     source: "custom-ui/components/run-action-button.tsx",
     usedIn: [],
-    note: "Implemented but unused so far; restricted to jobs/pipelines, never CRUD.",
+    note: "Restricted to jobs/pipelines, never CRUD. Type scaled to the app (change `run-action-button-type`): `text-sm font-medium` in all states, icons `h-5`, running width 320, idle + done content centered (states with no close affordance). Tokens confirmed house-only (no hardcode); icons via `lib/icons`. Validated by the owner on 2026-10-09.",
   },
   {
     n: 17,
@@ -227,12 +230,12 @@ export const CATALOG: CatalogEntry[] = [
     name: "Sidebar",
     class: "block",
     kind: "shell",
-    status: "pending",
+    status: "validated",
     ref: "AnimateUi/Sidebar.md",
     refGroup: "animate-ui",
     source: "custom-ui/components/sidebar/",
     usedIn: [{ label: "App shell (drawer / rail / expanded)", scope: "shell" }],
-    note: "Upstream radix Sidebar was not adopted; rebuilt over Base UI (review-design §11). S7.2 proof (RULES §12): the card renders the real `OrgSwitcher` with long names (injectable `orgs`/`activeOrgId`/`onSwitchOrg`; production reads `useAuth`).",
+    note: "Upstream radix Sidebar was not adopted; rebuilt over Base UI (review-design §11). S7.2 proof (RULES §12): the card renders the real `OrgSwitcher` with long names (injectable `orgs`/`activeOrgId`/`onSwitchOrg`; production reads `useAuth`). S7.3 proof: rail icons with tooltips and right-anchored menus. Validated by the owner on 2026-10-01 (drawer/rail/expanded + root-mode footer).",
   },
   {
     n: 18,
@@ -292,15 +295,12 @@ export const CATALOG: CatalogEntry[] = [
     name: "Tooltip",
     class: "component",
     kind: "base",
-    status: "pending",
+    status: "validated",
     ref: "Tooltip.md",
     refGroup: "standalone",
-    source: "custom-ui/components/tooltip/ (+ custom-ui/components/gooey-menu.tsx)",
-    usedIn: [
-      { label: "Health (debug overlay)", to: "/health", scope: "app" },
-      { label: "App shell (rail tooltips)", scope: "shell" },
-    ],
-    note: "The source doc is actually the GooeyMenu; the real tooltip (Base UI) predates it (review-design §6/§11).",
+    source: "custom-ui/components/tooltip/",
+    usedIn: [{ label: "App shell (rail tooltips)", scope: "shell" }],
+    note: "The `Tooltip.md` doc actually describes the GooeyMenu — now its own item (26); the real tooltip (Base UI) predates the doc (review-design §6/§11). Validated by the owner on 2026-10-01 as-is (pill + arrow, both themes). Gallery live proof (change `gallery-proof-gaps`): the three sides — top (kit default), right + center (shell rail style) and bottom — over `TooltipProvider openDelay={0}`.",
   },
   {
     n: 23,
@@ -321,12 +321,12 @@ export const CATALOG: CatalogEntry[] = [
     name: "Collapsible",
     class: "component",
     kind: "base",
-    status: "pending",
+    status: "validated",
     ref: "AnimateUi/Sidebar.md",
     refGroup: "animate-ui",
     source: "custom-ui/components/collapsible.tsx",
     usedIn: [{ label: "App shell (sidebar groups)", scope: "shell" }],
-    note: "Vendored radix + AnimatePresence (open AND close animate); the accordion (02) is built on it. No own reference doc — came in with the sidebar port.",
+    note: "Vendored radix + AnimatePresence (open AND close animate); the accordion (02) is built on it. No own reference doc — came in with the sidebar port. Validated by the owner on 2026-10-01 as-is (in production in the shell). Gallery live proof (change `gallery-proof-gaps`): the three reveals — slide (sidebar default), depth and mask (Accordion base, house spring 150/22).",
   },
   {
     n: 25,
@@ -340,5 +340,18 @@ export const CATALOG: CatalogEntry[] = [
     source: "custom-ui/components/switch.tsx",
     usedIn: [],
     note: "Base extracted from SwitchModeToggle (item 19) so it can be reused: pill track, knob sliding with a spring, start/end content where the knob side reads as active, controlled or uncontrolled. Colours follow the validated Checkbox language + contrast rim (`design-contrast-borders`): ACTIVE = solid `bg-primary` track (the fill is never dimmed — the softness lives in the borders) with both rims at `border-primary-foreground/30` (track + knob), contents coloured by what sits beneath them (active icon over the knob = `text-foreground`, inactive icon over the green = `text-primary-foreground`, 9.11:1); INACTIVE = `bg-background` + `border-border/50`, knob `bg-muted` + `border-border/50`; `transition-colors duration-500` like the Checkbox. The border alphas were calibrated by the owner himself while validating (2026-09-23) — deliberately softer than the 3:1 general guideline. Validated by the owner on 2026-09-23. First consumer: the `CreditUsageCard` block (07) auto-switch toggle (lab); the theme toggle (19) keeps its own implementation (state choice, not on/off) and production consumers are still pending (Grants, §14).",
+  },
+  {
+    n: 26,
+    slug: "gooey-menu",
+    name: "GooeyMenu",
+    class: "component",
+    kind: "feedback",
+    status: "validated",
+    ref: "Tooltip.md",
+    refGroup: "standalone",
+    source: "custom-ui/components/gooey-menu.tsx",
+    usedIn: [{ label: "Health (debug overlay)", to: "/health", scope: "app" }],
+    note: "The mislabeled `Tooltip.md` doc is actually this GooeyMenu (review-design §6): a debug-overlay-only button whose panel grows with an SVG goo filter. Kept for future use; reference \"N\" artwork replaced by the house Info icon; two-layer split so the crisp surface wears the house border/tokens (strokes inside the goo filter smear). Effect color finalized in the Lab (change `gooey-menu-gallery`): `bg-muted` vanished in dark (ΔL 0.05 vs 0.19 in light), so after the four-fill `--chart-*` trial the silhouette settled on `primary` at 60% opacity (post-filter — the goo matrix saturates alpha). Gallery live proof: Health-style rows. Validated by the owner on 2026-10-09.",
   },
 ];

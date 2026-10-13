@@ -12,30 +12,29 @@
  *   (file-uploader, run-action-button, gooey-menu, error-one) that were
  *   designed against them. New code uses lucide names.
  * - Re-export by name (never `export *`) so the surface stays auditable.
+ *
+ * Audited 2026-10-09 (change `icons-audit`): zero direct library imports
+ * outside this file (custom-ui checked), 11 dead re-exports removed
+ * (BadgeCheck, Bell, ChartColumn, ChevronsLeft/Right, Clock, Database,
+ * Globe, Inbox, Send, Tag) — keep it that way.
  */
 
 export {
   Activity,
   ArrowDownRight,
   ArrowUpRight,
-  BadgeCheck,
-  Bell,
-  Bold,
   Building2,
-  ChartColumn,
+  Bold,
   Check,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
   ChevronsUpDown,
   CircleCheck,
   CircleDot,
   CircleX,
-  Clock,
   Copy,
-  Database,
+  Crown,
   Download,
   File,
   FileCode,
@@ -43,9 +42,7 @@ export {
   FlaskConical,
   Folder,
   FolderOpen,
-  Globe,
   House,
-  Inbox,
   Info,
   Italic,
   KeyRound,
@@ -54,6 +51,7 @@ export {
   LoaderCircle,
   LogOut,
   Menu,
+  Minus,
   Moon,
   MoreHorizontal,
   MoreVertical,
@@ -62,12 +60,10 @@ export {
   Printer,
   RefreshCw,
   Search,
-  Send,
   Settings,
   Share2,
   ShieldCheck,
   Sun,
-  Tag,
   TriangleAlert,
   Underline,
   Upload,
@@ -101,20 +97,6 @@ export { RiBubbleChartFill, RiHome5Fill } from "react-icons/ri";
 export { TbClockHour12Filled, TbCube } from "react-icons/tb";
 
 export type { IconType } from "react-icons";
-
-/* Gooey-menu trigger glyph (decorative SVG, previously inline in the reference).
- * Kept here so no page/component carries its own copy of the artwork. */
-export function GooGlyph({ className }: { className?: string }) {
-  return (
-    <svg width="32" height="32" viewBox="0 0 180 180" fill="none" className={className} aria-hidden="true">
-      <path
-        d="M149.508 157.52L69.142 54H54V125.97H66.1136V69.356L137.352 160.6Z"
-        className="fill-foreground"
-      />
-      <path d="M115.352 54H127.466V125.97H115.352V54Z" className="fill-foreground" />
-    </svg>
-  );
-}
 
 /* Gradient 404 code (decorative SVG from the ErrorOne reference).
  * Single copy: pages import this instead of inlining the artwork. */

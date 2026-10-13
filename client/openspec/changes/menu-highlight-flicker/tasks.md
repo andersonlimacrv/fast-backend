@@ -13,7 +13,7 @@
 ## S2 — Verificação
 
 - [x] 2.1 Browser re-measurement: 1 visible pill/frame, smooth opacity sum (screenshot `menu-fixed`)
-- [ ] 2.2 Owner visual ok on org + Projects menus (both themes)
+- [x] 2.2 Owner visual ok on org + Projects menus (both themes) — **validado em 2026-10-01**
 - [x] 2.3 Gates: `tsc -b`, `oxlint`, vitest, build — **verdes em 2026-10-01** (`tsc -b` limpo, oxlint só warnings pré-existentes do vendored, 86/86, `vite build` ok)
 - [ ] 2.4 Sem commit sem pedido
 

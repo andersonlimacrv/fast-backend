@@ -32,6 +32,7 @@ import {
   Check,
   ChevronRight,
   ChevronsUpDown,
+  Crown,
   FileText,
   FlaskConical,
   FolderOpen,
@@ -51,6 +52,7 @@ import type { ProjectRead } from "@/lib/api";
 import { ROUTES } from "@/lib/constants";
 import { projectCode } from "@/lib/utils";
 import { AvatarGroup } from "@/components/custom-ui/components/avatar-group/avatar-group";
+import { RootBadge } from "@/components/admin/root-badge";
 import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
@@ -104,9 +106,11 @@ interface NavEntry {
   label: string;
   icon: React.ReactNode;
   end?: boolean;
+  /** Item só visível por login especial (staff+): coroa sutil ao lado. */
+  gated?: boolean;
 }
 
-function SideNavLink({ to, label, icon, end }: NavEntry) {
+function SideNavLink({ to, label, icon, end, gated }: NavEntry) {
   const match = useMatch({ path: to, end: end ?? false });
   return (
     <SidebarMenuItem>
@@ -118,6 +122,12 @@ function SideNavLink({ to, label, icon, end }: NavEntry) {
             upstream span:last-child selector no longer matches with a
             trailing chevron). */}
           <span className="truncate">{label}</span>
+          {gated && (
+            <Crown
+              className="ml-auto size-3.5 shrink-0 text-muted-foreground/20 group-data-[collapsible=icon]:hidden"
+              aria-label="visible for your access level"
+            />
+          )}
         </NavLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -422,12 +432,12 @@ function ProjectsGroup() {
 }
 
 const ADMIN_NAV: NavEntry[] = [
-  { to: ROUTES.admin, label: "Admin", icon: <ShieldCheck aria-hidden="true" />, end: true },
-  { to: ROUTES.adminUsers, label: "Users", icon: <Users aria-hidden="true" /> },
-  { to: ROUTES.adminOrgs, label: "Organizations", icon: <Building2 aria-hidden="true" /> },
-  { to: ROUTES.adminAudit, label: "Global audit", icon: <FileText aria-hidden="true" /> },
-  { to: ROUTES.adminGallery, label: "Gallery", icon: <Layers aria-hidden="true" /> },
-  { to: ROUTES.adminLab, label: "Lab", icon: <FlaskConical aria-hidden="true" /> },
+  { to: ROUTES.admin, label: "Admin", icon: <ShieldCheck aria-hidden="true" />, end: true, gated: true },
+  { to: ROUTES.adminUsers, label: "Users", icon: <Users aria-hidden="true" />, gated: true },
+  { to: ROUTES.adminOrgs, label: "Organizations", icon: <Building2 aria-hidden="true" />, gated: true },
+  { to: ROUTES.adminAudit, label: "Global audit", icon: <FileText aria-hidden="true" />, gated: true },
+  { to: ROUTES.adminGallery, label: "Gallery", icon: <Layers aria-hidden="true" />, gated: true },
+  { to: ROUTES.adminLab, label: "Lab", icon: <FlaskConical aria-hidden="true" />, gated: true },
 ];
 
 /** Radix dropdowns are modal by default (background aria-hidden + focus trap),
@@ -620,6 +630,23 @@ function UserMenu() {
             <span className="truncate text-xs font-normal text-muted-foreground">Signed in</span>
           </span>
         </DropdownMenuLabel>
+        {user.is_superuser && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuGroup>
+              <DropdownMenuItem onSelect={() => undefined}>
+                <Link to={ROUTES.adminUsers} className="flex w-full items-center gap-2">
+                  <Crown className="size-4" aria-hidden="true" /> Grant staff
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => undefined}>
+                <Link to={ROUTES.adminUsers} className="flex w-full items-center gap-2">
+                  <Crown className="size-4" aria-hidden="true" /> Revoke staff
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuGroup>
+          </>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
           <DropdownMenuItem onSelect={() => undefined}>
@@ -690,11 +717,15 @@ export function AppSidebar() {
         )}
       </SidebarContent>
       <SidebarFooter>
+        {user?.is_superuser && (
+          <div className="pb-1 group-data-[collapsible=icon]:hidden">
+            <RootBadge />
+          </div>
+        )}
         <UserMenu />
-        {user && (
+        {user && !user.is_superuser && (
           <p className="flex items-center gap-1.5 truncate px-2 pb-1 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-            {user.is_superuser && <Badge variant="secondary">root</Badge>}
-            {user.is_staff && !user.is_superuser && <Badge variant="secondary">staff</Badge>}
+            {user.is_staff && <Badge variant="secondary">staff</Badge>}
           </p>
         )}
       </SidebarFooter>

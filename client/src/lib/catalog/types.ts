@@ -1,8 +1,9 @@
 /* Catalog types: the single taxonomy shared by /admin/lab and /admin/gallery.
  * Numbering (`n`) is stable and immutable — new entries are appended, never
  * renumbered, so Lab ↔ Gallery always talk about the same item by the same
- * number. Entries are seeded from `references/components_to_use/` (the source
- * docs) and grow as new reference docs land. */
+ * number. Entries were seeded from the former `references/components_to_use/`
+ * (removed 2026-10-13 after the porting queue hit zero); `ref` strings below
+ * are historical origin trail. */
 
 /** Shape of the item: atom vs composed section. */
 export type CatalogClass = "component" | "block";
@@ -13,7 +14,7 @@ export type CatalogStatus = "pending" | "validated" | "dropped";
 /** Domain type (classification, orthogonal to `class`). */
 export type CatalogKind = "base" | "buttons" | "data" | "media" | "shell" | "identity" | "feedback";
 
-/** Origin folder inside `references/components_to_use/`. */
+/** Origin folder inside the former `references/components_to_use/` (historical). */
 export type RefGroup = "animate-ui" | "exemple-layours" | "standalone";
 
 /** Where the item is used for real (the identification the owner asked for). */
@@ -36,7 +37,7 @@ export interface CatalogEntry {
   class: CatalogClass;
   kind: CatalogKind;
   status: CatalogStatus;
-  /** Source doc under `references/components_to_use/`. */
+  /** Source doc path at seed time (historical — folder removed 2026-10-13). */
   ref: string;
   refGroup: RefGroup;
   /** Implementation file (or null while not ported). */

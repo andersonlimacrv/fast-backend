@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import {
@@ -43,6 +43,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { FloatingInput } from "@/components/custom-ui/components/floating-input";
+import { FileUploader } from "@/components/custom-ui/components/file-uploader";
 import { RadioGroup, RadioItem } from "@/components/ui/radio";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -88,6 +89,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/custom-ui/components/dropdown-menu/dropdown-menu";
 import { MemoryRouter } from "react-router-dom";
+import { DEMOS, hasDemo } from "@/components/catalog-demos";
+import { CATALOG } from "@/lib/catalog";
 
 afterEach(() => {
   cleanup();
@@ -830,6 +833,34 @@ describe("files", () => {
   });
 });
 
+describe("file-upload", () => {
+  const pdf = () =>
+    new File(["%PDF-1.4 fake"], "report.pdf", { type: "application/pdf" });
+
+  it("lists added files with badge, summary and animated section", async () => {
+    render(<FileUploader maxFiles={6} />);
+    expect(screen.queryByText("report.pdf")).toBeNull();
+    const input = document.getElementById("file-upload-input") as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [pdf()] } });
+    expect(await screen.findByText("report.pdf")).toBeTruthy();
+    /* Badge counts, summary totals, section carries the size transition. */
+    expect(screen.getByText("1 / 6")).toBeTruthy();
+    expect(screen.getByText(/1 file ·/)).toBeTruthy();
+    expect(document.querySelector('[data-slot="file-list-section"]')).toBeTruthy();
+  });
+
+  it("removes a file and collapses the section when empty", async () => {
+    render(<FileUploader maxFiles={6} />);
+    const input = document.getElementById("file-upload-input") as HTMLInputElement;
+    fireEvent.change(input, { target: { files: [pdf()] } });
+    expect(await screen.findByText("report.pdf")).toBeTruthy();
+    fireEvent.click(screen.getByLabelText("Remove report.pdf"));
+    /* Exit animations keep clones mounted briefly — wait for the collapse. */
+    await waitFor(() => expect(screen.queryByText("report.pdf")).toBeNull());
+    await waitFor(() => expect(screen.queryByText(/1 file ·/)).toBeNull());
+  });
+});
+
 describe("tabs", () => {
   const renderTabs = (mode?: "auto-height" | "layout") => {
     const panels =
@@ -1078,5 +1109,29 @@ describe("avatar image", () => {
   it("falls back to initials without src", () => {
     render(<Avatar name="Ada Lovelace" />);
     expect(screen.getByText("AL")).toBeTruthy();
+  });
+});
+
+describe("catalog proofs", () => {
+  /* The Gallery renders `DEMOS[slug]` and falls back to the source path when
+   * a demo is missing — validated items must never hit that fallback. */
+  it("every validated item ships a live proof", () => {
+    const missing = CATALOG.filter((e) => e.status === "validated" && !hasDemo(e.slug)).map((e) => e.slug);
+    expect(missing).toEqual([]);
+  });
+
+  it("tooltip proof reveals the pill on hover", async () => {
+    render(<>{DEMOS["tooltip"]}</>);
+    fireEvent.mouseEnter(screen.getByRole("button", { name: /Hover — top/ }));
+    expect(await screen.findByText("Pill + arrow — kit default")).toBeTruthy();
+  });
+
+  it("gooey-menu proof reveals the inspector rows on hover", async () => {
+    render(<>{DEMOS["gooey-menu"]}</>);
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "Open debug overlay" }));
+    /* Two layers render the rows (filtered blob clone + crisp surface): scope
+       to the accessible panel so the duplicate text node doesn't trip. */
+    const panel = await screen.findByRole("status");
+    expect(within(panel).getByText("design-unification")).toBeTruthy();
   });
 });

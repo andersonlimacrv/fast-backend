@@ -11,9 +11,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CopyButton } from "@/components/custom-ui/components/copy-button";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChevronRight } from "@/lib/icons";
+import { Check, ChevronRight, Crown, Minus } from "@/lib/icons";
 import { useAdminUsers } from "@/hooks/useAdmin";
 import {
+  accessLevelOf,
+  CAPABILITY_MATRIX,
   createUser,
   createUserSchema,
   disableUser,
@@ -126,26 +128,28 @@ export function AdminUsersPage() {
             size="sm"
             variant="outline"
             disabled={busy}
+            aria-label={`Revoke staff (root only) for ${u.email}`}
             onClick={() =>
               confirmRun("Revoke staff", `${u.email} loses global admin.`, "Staff revoked", u.id, (r) =>
                 revokeUserStaff(u.id, r),
               )
             }
           >
-            Revoke staff
+            <Crown className="size-4" aria-hidden="true" /> Revoke staff
           </Button>
         ) : (
           <Button
             size="sm"
             variant="outline"
             disabled={busy}
+            aria-label={`Grant staff (root only) for ${u.email}`}
             onClick={() =>
               confirmRun("Grant staff", `${u.email} gains global admin.`, "Staff granted", u.id, (r) =>
                 grantUserStaff(u.id, r),
               )
             }
           >
-            Grant staff
+            <Crown className="size-4" aria-hidden="true" /> Grant staff
           </Button>
         ))}
     </div>
@@ -203,6 +207,46 @@ export function AdminUsersPage() {
         </CardContent>
       </Card>
       <ErrorBox error={error} className="mb-4" />
+      <Card className="mb-4">
+        <CardContent className="pt-6">
+          <h2 className="mb-2 text-sm font-semibold">Access levels</h2>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Effective by global level (org roles are orthogonal). Viewing as{" "}
+            <strong>{accessLevelOf(me)}</strong>.
+          </p>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Capability</TableHead>
+                <TableHead className="w-16 text-center">root</TableHead>
+                <TableHead className="w-16 text-center">staff</TableHead>
+                <TableHead className="w-16 text-center">member</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {CAPABILITY_MATRIX.map((row) => (
+                <TableRow key={row.key}>
+                  <TableCell className="text-sm">
+                    {row.label}
+                    {row.key === "staff-grant" && (
+                      <Crown className="ml-1.5 inline size-3.5 text-chart-3" aria-label="root only" />
+                    )}
+                  </TableCell>
+                  {([row.root, row.staff, row.member] as const).map((allowed, i) => (
+                    <TableCell key={i} className="text-center">
+                      {allowed ? (
+                        <Check className="mx-auto size-4 text-chart-3" aria-label="allowed" />
+                      ) : (
+                        <Minus className="mx-auto size-4 text-muted-foreground" aria-label="denied" />
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
       <div className="mb-4 flex max-w-md flex-col gap-2">
         <Field label="Reason for row actions (audited)">
           <Input
