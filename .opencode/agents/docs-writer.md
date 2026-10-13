@@ -14,8 +14,8 @@ Você é o redator do fast-backend. Escopo: `README.md`, `AGENTS.md`, `docs/`, `
 
 Regras:
 - PT-BR claro, sem emoji. README executivo; detalhe em `docs/ROADMAP.md`, `docs/RULES.md`, `docs/adr/`.
-- Nomenclatura congelada: `CORE_MODULES` (nunca `PLATFORM_MODULES`).
+- Nomenclatura congelada: `CORE_MODULES` como lista conceitual (nunca `PLATFORM_MODULES`); sem registry em runtime.
 - Toda afirmação sobre upstream verificada em `/home/anderson/dev/copy/benavlabs_FastAPI-boilerplate` e `/home/anderson/dev/copy/benavlabs_crudauth` com `path:linha`.
-- Decisão estrutural nova vira ADR (nunca reescreve `references/implementation_v2.md`).
+- Decisão estrutural nova vira ADR (histórico não se reescreve: ADRs, changes arquivadas e o mapa `v2-coverage-audit`).
 - Skills: nenhuma instalação sem entrada em `docs/SKILLS-REGISTRY.md` (nome, origem URL+SHA, escopo, motivo, status, risco, dono).
 - Após editar: `git status --short`.

@@ -1,18 +1,18 @@
 # RULES — fast-backend (regras de implementação)
 
-> Fonte normativa após `AGENTS.md`. `references/` nunca é norma.
+> Fonte normativa após `AGENTS.md`. `copy/` nunca é norma (só evidência upstream).
 
 ## 1. Hierarquia de decisão
 
 Conflito resolve sempre nesta ordem (topo vence):
 
 ```text
-AGENTS.md > docs/RULES.md (este arquivo) > docs/ROADMAP.md > docs/adr/* > references/* > copy/*
+AGENTS.md > docs/RULES.md (este arquivo) > docs/ROADMAP.md > docs/adr/* > copy/*
 ```
 
-- `references/implementation_v2.md` é a **única referência congelada**. Serve para entender "como/porquê pensar", nunca "o que fazer".
+- A antiga `references/implementation_v2.md` (única referência congelada até 2026-10-13) foi auditada seção-por-seção e absorvida (`openspec/changes/v2-coverage-audit/design.md`) antes da remoção pelo dono. Ela servia para entender "como/porquê pensar", nunca "o que fazer" — esse papel agora é da tabela do audit + ADRs.
 - `copy/` (`benavlabs_crudauth`, `benavlabs_FastAPI-boilerplate`) é evidência do que o upstream faz, não obrigação.
-- **Nunca editar `references/`.** Se a v2 estiver errada, registrar ADR novo, não reescrever a referência.
+- **Sem pasta de referências intocáveis.** Divergência de decisão registrada vira ADR novo, nunca reescrita silenciosa de doc congelado.
 
 ## 2. Nomenclatura congelada (decisão do usuário)
 

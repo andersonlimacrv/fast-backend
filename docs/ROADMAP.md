@@ -1,6 +1,6 @@
 # ROADMAP — fast-backend (fonte da verdade, v3)
 
-> Alinhado à referência congelada `references/implementation_v2.md` + `docs/RULES.md` + `docs/adr/*`.
+> Alinhado a `docs/RULES.md` + `docs/adr/*` (a antiga referência v2 foi auditada e absorvida — change `v2-coverage-audit` — antes da remoção em 2026-10-13).
 > Nomenclatura congelada: `CORE_MODULES`. Dir da aplicação: `app/` flat (ADR 0004). Estado: **v1.0.0 entregue** (tag `0.1.0`), Fases 0–11 concluídas, Fase 12 com merge `#12` (WIP residual: ok visual da sidebar + `lab`), 179 testes backend coletados (90 unit + 89 integration, Postgres/Redis reais) + 102 vitest e 14 Playwright em `client/`, 37 capabilities, 13 ADRs (medido 2026-09-17). Novas fases exigem nova change OpenSpec.
 
 ## Fase 0 — Baseline repo (concluída)
