@@ -9,7 +9,7 @@ Language: entries are written in **English** (see `docs/RULES.md` §9).
 > Version convention: tags and sections use the `v` prefix from here on (`v1.1.0`, …).
 > The `0.1.0` section below is historical (tag `0.1.0` without prefix) and stays as is.
 
-## [Unreleased]
+## [v0.3.3] — 2026-10-14
 
 - **`deps-security-bump`**: CI `security` falhava determinístico (`pip-audit`: 18 CVEs em `multidict`/`pyjwt`/`urllib3`) — `PyJWT>=2.8`→`>=2.15` + `uv lock --upgrade-package` (6.9.1 / 2.15.1 / 2.8.0). Gates: `pip-audit` limpo, bandit limpo, unit 140/140, refresh+auth integration 12/12 (Postgres real). Adjacente: `test_bootstrap_tree` falhava por bug latente (`new_project.py` copiava `.git`-arquivo de worktree) — fix documentado, coberto pelo próprio teste.
 
@@ -99,6 +99,8 @@ Language: entries are written in **English** (see `docs/RULES.md` §9).
 - **`scope`**: what changed + affected spec/endpoint.
   Behavior PRs must add one entry here; docs-only PRs pass without it.
 -->
+
+## [Unreleased]
 
 ## [v0.3.2] — 2026-09-19
 
