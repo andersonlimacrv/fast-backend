@@ -48,6 +48,10 @@ def new_project(name: str, dest: Path, *, source: Path) -> Path:
         for filename in files:
             if filename in EXCLUDE_FILES:
                 continue
+            if filename == ".git":
+                # Worktree checkouts carry `.git` as a *file* (gitdir pointer),
+                # which os.walk lists under files — EXCLUDE_DIRS never sees it.
+                continue
             src = Path(root) / filename
             if ".venv" in src.parts or "__pycache__" in src.parts:
                 continue
