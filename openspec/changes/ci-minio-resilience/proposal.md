@@ -3,32 +3,34 @@
 ## Why
 
 CI `integration` fails on `test_storage_s3.py::test_minio_roundtrip` at
-fixture setup: `quay.io/minio/minio` is persistently unreachable from CI
-runners (500 "unauthorized" on every pull attempt — retry alone can't fix a
-hard registry block; confirmed over two runs). 106/107 pass. Unrelated to
-any feature diff; main-branch CI already showed the same intermittency
-(fail 09-17, pass 09-19).
+fixture setup: MinIO image pulls are blocked from CI runners on BOTH
+registries (quay.io 500 "unauthorized" on every attempt; Docker Hub "pull
+access denied" — MinIO restricted anonymous pulls). Retry and mirror can't
+fix a hard registry block. 106/107 pass. Unrelated to any feature diff.
 
 ## What Changes
 
-- `MINIO_IMAGE` → Docker Hub mirror (`minio/minio`, same pinned tag
-  `RELEASE.2025-04-22T22-12-26Z`), with `MINIO_IMAGE` env override + hermetic
-  allowlist entry (house pattern, like `POSTGRES_IMAGE`/`REDIS_IMAGE`).
-  Evidence: Hub pulls demonstrably work on these runners (postgres/redis
-  green); MinIO publishes every release mirrored quay.io↔docker.io.
-  Worst case = same red as today; likely case = green.
-- Bounded pull retry kept as belt-and-suspenders (transient blips on any
-  registry): 3 attempts, exponential backoff, loud failure — no silent skip.
+- Fixture accepts a pre-started MinIO via `MINIO_ENDPOINT_URL` (no
+  container, no pull): extracted `_settings_for`/`_storage_at` helpers, same
+  bucket setup and roundtrip assertions. Proven locally against the release
+  binary (1 passed, docker daemon irrelevant to this path).
+- CI workflow `integration` job: downloads the pinned MinIO binary from
+  GitHub Releases (same `RELEASE.2025-04-22T22-12-26Z` tag, sha256-verified —
+  github.com egress already proven by the gitleaks step), starts it on
+  `:9000`, exports `MINIO_ENDPOINT_URL`. Allowlist entry added (hermetic).
+- Kept as fallback paths (not removed): Hub `MINIO_IMAGE` default for local
+  dev with docker, bounded pull retry (3×, backoff) for transient blips,
+  loud failure otherwise — no silent skip anywhere.
 - Unit test for the retry (mocked docker client: fail twice, succeed third;
   fail always → raises).
 
 ## Non-goals
 
-Image mirror swap (same failure class on Docker Hub rate limits); silent
-`pytest.skip` on pull failure (would hide S3 coverage loss); touching the
-S3 test itself.
+Silent `pytest.skip` on pull failure (would hide S3 coverage loss); touching
+the roundtrip assertions; S3Mock/JVM doubles (real MinIO preserved).
 
 ## Acceptance criteria
 
 1. Retry logic unit-tested (transient pass + persistent raise).
-2. `test_storage_s3.py` passes locally with cached image; full unit suite green.
+2. `test_storage_s3.py` green via the endpoint path (proven locally against
+   the binary; CI proves it on runners); full unit suite green.

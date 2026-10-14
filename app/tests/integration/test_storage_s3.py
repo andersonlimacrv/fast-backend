@@ -15,11 +15,44 @@ from app.tests.conftest import ServiceContainer, wait_http
 # can't fix that), while Hub pulls (postgres/redis) work fine there. Same
 # pinned tag, only the registry changes.
 MINIO_IMAGE = os.environ.get("MINIO_IMAGE", "minio/minio:RELEASE.2025-04-22T22-12-26Z")
+# Pre-started MinIO (CI path): when set, the fixture uses this endpoint
+# instead of pulling any image — covers registries fully blocked (both quay
+# and Hub deny minio pulls). The CI workflow starts the pinned MinIO binary
+# from GitHub Releases (same tag, sha256-verified).
+MINIO_ENDPOINT_URL = os.environ.get("MINIO_ENDPOINT_URL")
 BUCKET = "fastbackend-test"
+
+
+def _settings_for(endpoint: str) -> Settings:
+    return Settings(
+        secret_key="x" * 32,
+        storage_backend="s3",
+        s3_endpoint_url=endpoint,
+        s3_bucket=BUCKET,
+        s3_access_key="minioadmin",
+        s3_secret_key="minioadmin123",
+        s3_region="us-east-1",
+        frontend_url="https://app.example.com",
+    )
+
+
+def _create_bucket_sync(storage: S3CompatibleStorage) -> None:
+    async def make_bucket() -> None:
+        async with storage._client() as s3:
+            try:
+                await s3.create_bucket(Bucket=BUCKET)
+            except Exception as exc:
+                if "BucketAlreadyOwnedByYou" not in str(exc):
+                    raise
+
+    asyncio.run(make_bucket())
 
 
 @pytest.fixture()
 def minio_storage():
+    if MINIO_ENDPOINT_URL:
+        yield _storage_at(MINIO_ENDPOINT_URL)
+        return
     if shutil.which("docker") is None:
         pytest.skip("docker unavailable")
     container = ServiceContainer(
@@ -32,30 +65,16 @@ def minio_storage():
     try:
         port = container.ports[9000]
         wait_http(f"http://localhost:{port}/minio/health/live")
-        settings = Settings(
-            secret_key="x" * 32,
-            storage_backend="s3",
-            s3_endpoint_url=f"http://localhost:{port}",
-            s3_bucket=BUCKET,
-            s3_access_key="minioadmin",
-            s3_secret_key="minioadmin123",
-            s3_region="us-east-1",
-            frontend_url="https://app.example.com",
-        )
-        storage = S3CompatibleStorage(settings)
-
-        async def make_bucket() -> None:
-            async with storage._client() as s3:
-                try:
-                    await s3.create_bucket(Bucket=BUCKET)
-                except Exception as exc:
-                    if "BucketAlreadyOwnedByYou" not in str(exc):
-                        raise
-
-        asyncio.run(make_bucket())
+        storage = _storage_at(f"http://localhost:{port}")
         yield storage
     finally:
         container.stop()
+
+
+def _storage_at(endpoint: str) -> S3CompatibleStorage:
+    storage = S3CompatibleStorage(_settings_for(endpoint))
+    _create_bucket_sync(storage)
+    return storage
 
 
 @pytest.mark.integration
