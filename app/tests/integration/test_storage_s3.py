@@ -1,6 +1,7 @@
 """Integration: S3-compatible storage vs MinIO (slow, skipped without docker)."""
 
 import asyncio
+import os
 import shutil
 
 import pytest
@@ -9,7 +10,11 @@ from app.core.settings import Settings
 from app.infrastructure.storage.s3 import S3CompatibleStorage
 from app.tests.conftest import ServiceContainer, wait_http
 
-MINIO_IMAGE = "quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z"
+# Docker Hub mirror (change ci-minio-resilience): quay.io is persistently
+# unreachable from CI runners (500 "unauthorized" on every attempt — retry
+# can't fix that), while Hub pulls (postgres/redis) work fine there. Same
+# pinned tag, only the registry changes.
+MINIO_IMAGE = os.environ.get("MINIO_IMAGE", "minio/minio:RELEASE.2025-04-22T22-12-26Z")
 BUCKET = "fastbackend-test"
 
 

@@ -41,6 +41,7 @@ _HERMETIC_KEEP_EXACT = frozenset(
     {
         "POSTGRES_IMAGE",
         "REDIS_IMAGE",
+        "MINIO_IMAGE",
         "DOCKER_BIN",
         "FB_TEST_NETWORK",
         "CI",
