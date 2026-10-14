@@ -185,6 +185,31 @@ def wait_http(url: str, timeout: int = 90) -> None:
     raise RuntimeError(f"http {url} not ready")
 
 
+PULL_ATTEMPTS = 3
+PULL_BACKOFF_S = (5.0, 15.0)
+
+
+def _pull_with_retry(
+    client: Any, image: str, *, attempts: int = PULL_ATTEMPTS, backoff: tuple[float, ...] = PULL_BACKOFF_S
+) -> None:
+    """Pull with bounded retry for transient registry blips (change
+    ci-minio-resilience: quay.io 500s killed CI on a single attempt).
+    Persistent failure still raises the last error — never a silent skip."""
+    import time
+
+    last: Exception | None = None
+    for attempt in range(attempts):
+        try:
+            client.images.pull(image)
+            return
+        except Exception as exc:  # noqa: BLE001 — any registry/daemon blip retries
+            last = exc
+            if attempt < attempts - 1:
+                time.sleep(backoff[min(attempt, len(backoff) - 1)])
+    assert last is not None
+    raise last
+
+
 class ServiceContainer:
     """One docker container in both network modes, with stderr on failure.
 
@@ -212,7 +237,7 @@ class ServiceContainer:
         except Exception:
             # Missing locally (or daemon quirk): pull explicitly so the
             # failure below — if any — is the real one, with its message.
-            client.images.pull(image)
+            _pull_with_retry(client, image)
         if HOST_NET:
             self._container = client.containers.run(
                 image,
