@@ -196,10 +196,14 @@ Desde a v4, o Tailwind expõe todos os design tokens como variáveis CSS nativas
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
 
+  --radius-xs: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 16px);
+  --radius-3xl: calc(var(--radius) + 24px);
+  --radius-4xl: calc(var(--radius) + 32px);
 }
 
 @layer base {
@@ -252,6 +256,27 @@ Use a escala padrão do Tailwind (múltiplos de `0.25rem`) e exponha dois preset
 ```
 
 Respeite também uma distância mínima de toque (~24–44px) para alvos interativos em telas menores/touch, mesmo em dashboards "desktop-first" — cada vez mais são acessados em tablets no chão de fábrica ou em campo.
+
+### 4.5 Contorno de preenchimentos coloridos (light-first)
+
+O `--primary` do tema é lima clara (`oklch(0.8487 0.2181 127.8)`): como **preenchimento** sobre fundo claro ela fica a **1.51:1** contra branco (a `/60` cai para ~1.25:1). Passa como *superfície* com conteúdo escuro por cima (`primary-foreground` = 9.11:1), mas **desaparece como forma**. Regra: **todo preenchimento colorido ganha uma camada de contorno no tom do conteúdo** — `border-*-foreground/80` — principalmente no light mode; no dark o fundo já dá a aresta. O `/80` foi medido, não chutado: `/40` dava **1.59:1** contra branco (não entrega aresta nenhuma); `/80` dá **3.87:1** contra branco e **3.66:1** contra o próprio fill — o primeiro degrau que passa nos 3:1 de contorno de UI.
+
+Aplicado em: `custom-ui/components/switch.tsx` (bordas calibradas pelo dono na validação — ver abaixo), `custom-ui/components/checkbox.tsx` (marcado/indeterminado) e `billing/credit-usage-card.tsx` (**segmentos finos usam `/60`**, não a base `/80`: com ~5px de largura uma borda pesada engole o preenchimento e sobra só o contorno — valor seco escolhido pelo dono na validação, 2.15:1 contra o fill de propósito, porque a leitura da barra vem do preenchimento e dos gaps; regra: quanto mais fino o elemento, mais leve o contorno; a barra subiu para `h-3.5` com `gap-px` e as **barras vazias** usam `muted-foreground/70` nos **dois temas** — o `muted` puro ficava a **1.01:1** contra o trilho no dark e **1.40:1** no light, sumindo; o tom de `muted-foreground` dá 3.19:1 (dark) e 2.32:1 (light)).
+
+**Calibração de bordas no Switch** (dono, 2026-09-23, validado visualmente): o **fundo fica cheio** (`bg-primary` — a suavidade mora nas bordas, nunca no fill) e cada estado usa o **mesmo alpha no trilho e no knob**: ON `border-primary-foreground/30` (2.06:1 vs branco; 1.36:1 vs o próprio verde) e OFF `border-border/50` (1.51:1 vs branco). São **mais suaves que o 3:1 geral** de propósito — decisão estética do dono na validação, não um descuido; a base `/80` (≥3:1) segue valendo no checkbox e no card.
+
+Tokens do light (change `design-contrast-borders`):
+
+| Token | Antes | Depois | Contraste vs branco |
+| --- | --- | --- | --- |
+| `--border` / `--input` | `oklch(0.7309 0.0114 286.1138)` | `oklch(0.66 0.0114 286.1138)` | 2.39:1 → **3.12:1** |
+| `--ring` | `--primary` | `oklch(0.5351 0.1432 133.8754)` (= `--chart-3`) | 1.51:1 → **4.92:1** |
+
+O dark fica intacto (`--border` 0.3195; o ring já fica a 11:1). Foco continua `ring-2` (§8) e o par `primary-foreground`-sobre-`primary` (9.11:1) segue sendo o único uso aceito da lima como superfície no light.
+
+**Padrão de presença** (dono, 2026-09-30, change `custom-ui-avatar-group`, revisado na mesma sessão): borda sólida na cor do status + fill da mesma cor a 60% com `backdrop-blur-sm` (vocabulário do dia selecionado do calendário 18) — `online` chart-2, `offline` destructive, `inactive` muted com borda `muted-foreground` (o `muted` puro some como borda no light, 1.40:1 — lição do card 07). Geometria `size-2` (8px — dono 2026-09-30) recuada 2px da borda direita (`right-0.5`) para não invadir o avatar vizinho no hover.
+
+**Root Mode** (dono, 2026-10-01, change `root-mode`): card com borda lateral de destaque (`border-l-4 border-l-chart-3`), coroa `text-chart-3`, título + subtítulo objetivo, chevron; pílula compacta `bg-primary` + `text-primary-foreground` para espaços apertados. Coroa marca exclusivamente o root-only (nunca o grupo Administration, que é staff). O dot mora **fora** do wrapper com `overflow-hidden` (foto/iniciais); dot dentro de área cortada some (foi o bug achado na revisão). Exibição opt-in via `showPresence` (default off).
 
 ---
 
@@ -442,6 +467,8 @@ Diretrizes:
 3. **Anime propriedades compostas pelo GPU** (`transform`, `opacity`) e evite animar `width`/`height`/`top`/`left` diretamente — layout thrashing é a causa mais comum de scroll travado em dashboards com muitos cards.
 4. **Durações curtas para UI, mais longas para storytelling.** Micro-interações: 120–250ms. Transições de página/hero: 400–800ms. Qualquer coisa acima de ~1s deve ter uma razão de storytelling explícita, não ser o padrão de um card.
 5. **Bibliotecas de scroll-reveal antigas (AOS, ScrollReveal.js, Locomotive Scroll) não entram no catálogo principal** deste guia (seção 9) — a primeira e a segunda estão com manutenção baixa/inativa, e a função de todas as três hoje é melhor coberta por Lenis (scroll suave) + CSS `animation-timeline` nativo (reveal) ou GSAP ScrollTrigger (quando precisa de precisão). Se herdar um projeto que já usa uma delas, não é motivo de pânico, mas evite adicionar em projetos novos.
+6. **Overlays entram por baixo (`from="bottom"`) — padrão do produto.** Diálogos, alertas e popups flips a partir da borda inferior (`rotateX` positivo, `scale 0.8→1`); a leitura "surgindo de baixo" ficou melhor que a entrada por cima na avaliação do dono (2026-09-19). `from="top" | "left" | "right"` continuam disponíveis para casos específicos, mas o **default é `bottom`** em todo o app. Implementação de referência: `custom-ui/components/alert-dialog.tsx` (prop `from`); ao criar um overlay novo, siga a mesma direção e o mesmo spring (`500/32`, ~0.25s) antes de inventar outra.
+7. **Mudança de tamanho anima, nunca snap seco.** Quando conteúdo entrando/saindo muda a altura de um bloco (lista que cresce, painel que recolhe), a altura transiciona com o spring da casa (`150/22`, o do Accordion) nos dois sentidos via `AnimatePresence` — é a exceção sancionada à diretriz 3, como no Accordion. Implementação de referência: `custom-ui/components/file-uploader.tsx` (lista + resumo, decisão do dono 2026-10-01). `motion-reduce` cai para aparecer/sumir seco.
 
 Exemplo — reveal de card com Motion, respeitando o padrão de "responde a uma mudança de estado" (aqui, o carregamento de dados):
 
@@ -483,6 +510,7 @@ export function KpiGrid({ loading, items }: { loading: boolean; items: Kpi[] }) 
 - **Não codifique estado só por cor.** Um valor "negativo" em vermelho também deve ter o ícone de seta para baixo (ver `KpiCard` acima) — daltonismo afeta cerca de 8% dos homens.
 - `aria-live` **para dados que atualizam sozinhos.** Se um KPI muda em tempo real (websocket/polling), marque a região com `aria-live="polite"` para leitores de tela, mas sem re-anunciar a cada tick — debounce a atualização.
 - **Gráficos precisam de alternativa textual.** Um `<AreaChart>` SVG não é acessível por padrão; forneça um resumo textual (`aria-label` com o insight principal, ex. "Receita subiu 12% nos últimos 30 dias") ou uma tabela de dados alternável.
+- **Contorno de formas coloridas:** além do contraste do texto, toda forma/indicador colorido precisa de uma aresta visível no light (regra §4.5, tokens `--border`/`--ring` corrigidos) — o `--primary` lima só é aceitável como superfície com `primary-foreground` por cima.
 - **Auditoria contínua:** rode Lighthouse/axe no CI (ver MCP de Chrome DevTools na seção 10) a cada PR que toca componentes visuais, não apenas antes do lançamento. Em desenvolvimento local, `@axe-core/react` roda apenas em modo dev e já alerta no console sobre violações WCAG em tempo real.
 
 ---
@@ -646,4 +674,9 @@ Cada ficha segue o formato: nome · descrição · auditoria/segurança · adoç
 - **2026-09 (PR2):** sem `tw-animate-css` — animação via `motion` (PR3) + keyframes de toast existentes; nada duplicado.
 - **2026-09 (PR2):** densidade via `--row-gap` (confortável default, `[data-density="compact"]` opt-in); alvos touch `h-9` (36px) dentro da faixa §4.4.
 - **2026-09 (PR6):** links de texto usam `text-foreground` + `decoration-primary` (lima `text-primary` sobre fundo claro reprova AA — pego pelo axe); avatar usa `text-foreground` sobre `bg-muted` pelo mesmo motivo. Baselines visuais por plataforma (`{platform}`) por divergência de fontes.
+- **2026-09-23 (F13):** contraste no light — `--border`/`--input` de 0.7309 para 0.66 (**3.12:1**) e `--ring` para `--chart-3` (**4.92:1**, era 1.51:1); preenchimentos coloridos ganham contorno no tom do conteúdo (`*-foreground/80`) — regra §4.5, change `design-contrast-borders`. O `--primary` segue como superfície (nunca como texto/indicador fino no light).
+- **2026-09-23 (F13):** bordas do `Switch` calibradas pelo dono na validação (item 25 validado): fundo cheio (`bg-primary`, sem atenuar o fill), trilho e knob iguais por estado — `primary-foreground/30` no ON e `border-border/50` no OFF, mais suaves que o 3:1 geral por decisão estética; fora do Switch a base `/80` (checkbox/card). Regra §4.5.
+- **2026-09-23 (F13):** o theme-toggle da topbar mantém **implementação própria** (escolha de estado sun|moon, não on/off, sem cores primary); o `25 Switch` é base somente para controles on/off.
+- **2026-09-23 (F13):** escala de raio completa no `--radius` (dono: "bordas sempre das variáveis do `index.css`") — `xs/2xl/3xl/4xl` passam a derivar do mesmo knob (`-6/+16/+24/+32px`, com `max(0px, …)` nos menores); resolvidos hoje: xs/sm/md/lg = 0px, xl = 4px, 2xl = 16px, 3xl = 24px, 4xl = 32px — **nenhuma mudança visual**, só o acoplamento futuro. Regra §4.5.
+- **2026-09-23 (F13):** acentos do calendário 18 seguem a regra do fill cheio (dono: é transparência, não cor) — Total e badge do add em `bg-primary` cheio com `text-primary-foreground` (9.11:1, o par validado do Checkbox/Switch), em vez de tints; o token `--accent-strong` chegou a ser criado e foi removido na mesma sessão. Regra §4.5.
 

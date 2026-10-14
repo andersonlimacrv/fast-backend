@@ -6,8 +6,8 @@ Requires the API up (`make api`) with a migrated database (`make db-up`
 + `make migrate`).
 
 Usage: python scripts/e2e_spa_flow.py [--base-url URL]
-Env: E2E_BASE_URL (default http://127.0.0.1:8000),
-     E2E_SPA_ORIGIN (default http://localhost:5173).
+Env: E2E_BASE_URL (default http://127.0.0.1:8001),
+     E2E_SPA_ORIGIN (default http://localhost:3001).
 """
 
 from __future__ import annotations
@@ -19,8 +19,8 @@ import os
 import urllib.parse
 import uuid
 
-BASE = os.environ.get("E2E_BASE_URL", "http://127.0.0.1:8000")
-SPA_ORIGIN = os.environ.get("E2E_SPA_ORIGIN", "http://localhost:5173")
+BASE = os.environ.get("E2E_BASE_URL", "http://127.0.0.1:8001")
+SPA_ORIGIN = os.environ.get("E2E_SPA_ORIGIN", "http://localhost:3001")
 EMAIL = f"e2e-{uuid.uuid4().hex[:8]}@example.com"
 PASSWORD = "Str0ng!Passw0rd"  # noqa: S105 (throwaway local-dev account)
 

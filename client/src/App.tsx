@@ -12,16 +12,15 @@ import { LoginPage } from "@/pages/auth/Login";
 import { RegisterPage } from "@/pages/auth/Register";
 import { AuditPage } from "@/pages/audit/Audit";
 import { DashboardPage } from "@/pages/overview/Dashboard";
+import { GalleryPage } from "@/pages/admin/gallery/Gallery";
 import { GrantsPage } from "@/pages/grants/Grants";
-import { GalleryPage } from "@/pages/admin/Gallery";
 import { HealthPage } from "@/pages/health/Health";
+import { LabPage } from "@/pages/admin/lab/Lab";
+import { LabTrialsPage } from "@/pages/admin/lab/Trials";
 import { MembersPage } from "@/pages/orgs/[orgId]/Members";
 import { NotFoundPage } from "@/pages/not-found/NotFound";
 import { OrgsPage } from "@/pages/orgs/Orgs";
 import { NewProjectPage, ProjectsPage } from "@/pages/projects/Projects";
-import { PlaygroundBlocksPage } from "@/pages/playground/Blocks";
-import { PlaygroundComponentsPage } from "@/pages/playground/Components";
-import { PlaygroundPage } from "@/pages/playground/Playground";
 import { SettingsPage } from "@/pages/settings/Settings";
 
 export default function App() {
@@ -47,9 +46,8 @@ export default function App() {
         <Route path="admin/orgs" element={<AdminOrgsPage />} />
         <Route path="admin/audit" element={<AdminAuditPage />} />
         <Route path="admin/gallery" element={<GalleryPage />} />
-        <Route path="playground" element={<PlaygroundPage />} />
-        <Route path="playground/components" element={<PlaygroundComponentsPage />} />
-        <Route path="playground/blocks" element={<PlaygroundBlocksPage />} />
+        <Route path="admin/lab" element={<LabPage />} />
+        <Route path="admin/lab/trials" element={<LabTrialsPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
       </Routes>

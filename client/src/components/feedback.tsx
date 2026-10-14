@@ -1,15 +1,30 @@
 import { cn } from "@/lib/utils";
 import { friendlyError } from "@/services/notify";
+import { Button } from "@/components/ui/button";
 
-export { friendlyError };
-
-export function ErrorBox({ error, className }: { error: unknown; className?: string }) {
+export function ErrorBox({
+  error,
+  className,
+  actionLabel,
+  onAction,
+}: {
+  error: unknown;
+  className?: string;
+  /** Optional retry/recovery action (mirrors EmptyState) */
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
   if (!error) return null;
   const { title, detail } = friendlyError(error);
   return (
     <div className={cn("rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm", className)}>
       <p className="font-semibold text-destructive">{title}</p>
       <p className="mt-1 break-words text-muted-foreground">{detail}</p>
+      {actionLabel && (
+        <Button variant="outline" size="sm" onClick={onAction} className="mt-3">
+          {actionLabel}
+        </Button>
+      )}
     </div>
   );
 }

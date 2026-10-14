@@ -155,7 +155,7 @@ export function AdminOrgsPage() {
                   <Badge variant="secondary">{o.slug}</Badge>
                 </TableCell>
                 <TableCell className="hidden font-mono text-xs sm:table-cell">
-                  {o.id} <CopyButton content={o.id} />
+                  {o.id} <CopyButton content={o.id} variant="ghost" />
                 </TableCell>
                 <TableCell className="sm:hidden">
                   <Button
@@ -182,7 +182,7 @@ export function AdminOrgsPage() {
                       <div className="flex gap-2">
                         <dt className="shrink-0 text-muted-foreground">Id</dt>
                         <dd className="break-all font-mono">
-                          {o.id} <CopyButton content={o.id} />
+                          {o.id} <CopyButton content={o.id} variant="ghost" />
                         </dd>
                       </div>
                     </dl>

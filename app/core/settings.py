@@ -160,7 +160,7 @@ class Settings(BaseSettings):
         if not self.app_version or not self.app_version.strip():
             raise ValueError("APP_VERSION must be non-empty")
         if not self.frontend_url or not self.frontend_url.strip():
-            raise ValueError("FRONTEND_URL must be set (e.g. http://localhost:5173 for local dev)")
+            raise ValueError("FRONTEND_URL must be set (e.g. http://localhost:3001 for local dev)")
         if self.auth_cookie_samesite.lower() not in ("lax", "strict"):
             raise ValueError("AUTH_COOKIE_SAMESITE must be lax or strict (never none: same-eTLD design)")
         if self.environment == "production":

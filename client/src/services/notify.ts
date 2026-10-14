@@ -1,30 +1,19 @@
-/* Typed toast facade over the Base-UI global toast manager.
+/* Typed push-notification facade. Contract only — the push provider lives
+ * behind `services/notify.provider` (change `notify-standard` S2), so
+ * swapping the toast library touches the provider, never the pages.
  *
  * Callable from inside React (via useNotify) and outside it (services,
- * utilities): the manager is created once here and consumed by <AppToaster/>.
- * Kinds: success | info | warning | error. `confirm` adds an action button.
- * Form validation errors stay inline (ErrorBox) — toasts are for transient,
- * global feedback only.
+ * utilities). Kinds: success | info | warning | error.
+ * `notify.error`/`fromError` share `friendlyError` with ErrorBox (single
+ * language). Blocking choices use AlertDialog, never toasts. Form validation
+ * errors stay inline (ErrorBox) — toasts are for transient, global feedback
+ * only.
  */
 
-import { Toast } from "@base-ui/react/toast";
-
 import { ApiError } from "@/lib/api";
-import { TOAST_LIMIT, TOAST_TIMEOUT_MS } from "@/lib/constants";
+import { providerClose, providerPromise, providerPush, type ProviderPromiseLabels } from "@/services/notify.provider";
 
 export type ToastKind = "success" | "info" | "warning" | "error";
-
-export interface ConfirmAction {
-  label: string;
-  onClick: () => void;
-}
-
-export const toastManager = Toast.createToastManager();
-
-export const TOAST_PROVIDER = {
-  limit: TOAST_LIMIT,
-  timeout: TOAST_TIMEOUT_MS,
-} as const;
 
 const ERROR_TIMEOUT_MS = 7000;
 
@@ -48,11 +37,13 @@ export interface NotifyInput {
   timeout?: number;
 }
 
+export type { ProviderPromiseLabels as NotifyPromiseLabels };
+
 function push({ title, description, kind = "info", timeout }: NotifyInput): string {
-  return toastManager.add({
+  return providerPush({
     title,
     description,
-    type: kind,
+    kind,
     timeout: timeout ?? (kind === "error" ? ERROR_TIMEOUT_MS : undefined),
   });
 }
@@ -63,28 +54,29 @@ export const notify = {
   warning: (title: string, description?: string): string => push({ title, description, kind: "warning" }),
   error: (title: string, description?: string): string =>
     push({ title, description, kind: "error", timeout: ERROR_TIMEOUT_MS }),
-  confirm: (title: string, description: string, action: ConfirmAction): string => {
-    const id = toastManager.add({
-      title,
-      description,
-      type: "info",
-      timeout: 0,
-      actionProps: {
-        children: action.label,
-        onClick: () => {
-          action.onClick();
-          toastManager.close(id);
-        },
-      },
-    });
-    return id;
-  },
   /** Map any failure to an error toast with the same language as ErrorBox. */
   fromError: (err: unknown): string => {
     const { title, detail } = friendlyError(err);
     return notify.error(title, detail);
   },
+  /** Lifecycle toast for an async task (loading → success/error). A string
+   * `error` title keeps the rejection detail mapped through `friendlyError`
+   * as the body (single language with ErrorBox). */
+  promise: <T,>(task: Promise<T> | (() => Promise<T>), labels: ProviderPromiseLabels<T>): Promise<T> =>
+    providerPromise(task, {
+      loading: labels.loading,
+      success: labels.success,
+      error: labels.error,
+      description: {
+        success: labels.description?.success,
+        error: (err: unknown) => {
+          const custom = labels.description?.error;
+          if (typeof custom === "function") return custom(err);
+          return custom ?? friendlyError(err).detail;
+        },
+      },
+    }),
   close: (id: string): void => {
-    toastManager.close(id);
+    providerClose(id);
   },
 };

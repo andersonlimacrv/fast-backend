@@ -5,15 +5,15 @@
 ## 1. Contexto
 
 - Repo: `fast-backend` — Modular Monolith Async FastAPI SaaS Kernel (v2 congelada).
-- Referência congelada (somente leitura, **nunca editar**): `references/implementation_v2.md`.
+- Referência de arquitetura: auditada e absorvida em `docs/` (change `v2-coverage-audit`, 2026-10-13) — `references/` foi removida pelo dono em 2026-10-13; ver `openspec/changes/references-cleanup/`.
 - Evidência upstream (somente leitura): `/home/anderson/dev/copy/benavlabs_FastAPI-boilerplate@0.19.0`, `/home/anderson/dev/copy/benavlabs_crudauth@0.6.0`.
 - Estado: **v1.0.0 entregue** (tag `0.1.0`) — `app/` implementado (Fases 1–8), Fases 9–11 concluídas (admin/recovery, landing/login/LGPD, dev-loop/env-check/reformulação client), 179 testes backend coletados (90 unit + 89 integration) + 102 vitest e 14 Playwright em `client/`, 37 capabilities, 13 ADRs (medido 2026-09-17; regra anti-drift em `docs/RULES.md`). Decisões congeladas: Auth própria (sem crudauth), Argon2id (pwdlib), JWT HS256 10-15min, refresh opaco Postgres com rotation+reuse+atomicidade, `tokens_valid_after`, `TENANCY_MODE=single|row` sem RLS no v1, `active_org_id` contexto (autoridade = membership Postgres), idempotência lógica.
-- Nomenclatura congelada: `CORE_MODULES` (nunca `PLATFORM_MODULES`); opcionais por flag (ex.: `BILLING_ENABLED`).
+- Nomenclatura congelada: `CORE_MODULES` como lista conceitual (nunca `PLATFORM_MODULES`); sem `module_registry.py`/`ENABLED_MODULES` em runtime — composição por flags em `app/main.py` (ex.: `BILLING_ENABLED`); ver `docs/RULES.md` §2 e change `v2-coverage-audit` §2.3.
 - Stack: FastAPI async + SQLAlchemy 2.0 + Pydantic v2 + Postgres + Redis + Alembic + Taskiq + Docker + `uv`.
 
 ## 2. Hierarquia (topo vence)
 
-`AGENTS.md > docs/RULES.md > docs/ROADMAP.md > docs/adr/* > references/* > copy/*`
+`AGENTS.md > docs/RULES.md > docs/ROADMAP.md > docs/adr/* > copy/*`
 
 ## 3. Regra de ouro (fluxo normal)
 
@@ -60,8 +60,7 @@ fast-backend/
 ├── .opencode/agents/ (9 agentes: 6 núcleo + ui-designer/frontend-implementer/design-auditor)
 ├── scripts/ backup.py, deploy.py, new_project.py
 ├── docs/ RULES.md, ROADMAP.md, DEPLOYMENT.md, BOILERPLATE-ANALYSIS.md, SKILLS-REGISTRY.md, adr/0001-0004
-├── openspec/ (specs + changes)
-├── references/implementation_v2.md (congelada, nunca editar)
+├── openspec/ (specs + changes; `v2-coverage-audit` = mapa da antiga referência)
 └── .github/ (ci, deploy, rollback)
 ```
 

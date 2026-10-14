@@ -1,7 +1,7 @@
 /* Shared constants: single place for magic strings (routes, storage, roles). */
 
 export const API_BASE: string =
-  (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:8000";
+  (import.meta.env.VITE_API_URL as string | undefined) ?? "http://localhost:8001";
 
 export const STORAGE_KEYS = {
   accessToken: "fb.access_token",
@@ -29,10 +29,9 @@ export const ROUTES = {
   adminUsers: "/admin/users",
   adminOrgs: "/admin/orgs",
   adminAudit: "/admin/audit",
-  gallery: "/admin/gallery",
-  playground: "/playground",
-  playgroundComponents: "/playground/components",
-  playgroundBlocks: "/playground/blocks",
+  adminGallery: "/admin/gallery",
+  adminLab: "/admin/lab",
+  adminLabTrials: "/admin/lab/trials",
 } as const;
 
 export const ROLES = ["owner", "admin", "member"] as const;

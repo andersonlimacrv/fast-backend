@@ -95,11 +95,10 @@ function DropdownMenuItem({
 }: DropdownMenuItemProps) {
   return (
     <DropdownMenuHighlightItemPrimitive
-      activeClassName={
-        variant === 'destructive'
-          ? 'bg-destructive/10 dark:bg-destructive/20'
-          : ''
-      }
+      // No tint: destructive hover uses the standard accent pill like every
+      // other item (owner 2026-10-01) — the destructive color lives only in
+      // the text/icons, which already carry it in both themes.
+      activeClassName=""
       disabled={disabled}
     >
       <DropdownMenuItemPrimitive

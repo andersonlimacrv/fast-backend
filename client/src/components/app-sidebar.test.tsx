@@ -1,22 +1,29 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
 
-import { AppSidebar, AppSidebarProvider } from "@/components/app-sidebar";
+import { AppSidebar, AppSidebarProvider, OrgSwitcher } from "@/components/app-sidebar";
+import { DEMOS } from "@/components/catalog-demos";
+import { Highlight } from "@/components/custom-ui/effects/highlight";
 
 /* Regression: footer UserMenu / header OrgSwitcher must open without throwing
  * (Base-UI Menu.GroupLabel outside <Menu.Group> used to unmount the tree). */
 
-const ORGS = [
-  { id: "o1", name: "Acme Inc", slug: "acme-inc" },
-  { id: "o2", name: "Evil Corp", slug: "evil-corp" },
-];
+// Mutable org list for long-name cases (vi.hoisted: the factory cannot see
+// module-scope consts, so the default rows live inline here too).
+const mocks = vi.hoisted(() => ({
+  orgs: [
+    { id: "o1", name: "Acme Inc", slug: "acme-inc" },
+    { id: "o2", name: "Evil Corp", slug: "evil-corp" },
+  ],
+  user: { email: "verylongemailaddress@example.com", is_staff: false, is_superuser: false },
+}));
 
 vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({
-    user: { email: "verylongemailaddress@example.com", is_staff: false, is_superuser: false },
-    orgs: ORGS,
+    user: mocks.user,
+    orgs: mocks.orgs,
     activeOrgId: "o1",
     ready: true,
     switchOrg: vi.fn(async () => {}),
@@ -85,6 +92,123 @@ describe("sidebar user menu", () => {
     renderSidebar();
     openMenu(await screen.findByRole("button", { name: /switch organization/i }));
     expect(await screen.findByRole("menuitem", { name: /evil corp/i })).toBeTruthy();
+  });
+
+  it("root menu shows the Modo Root card and root actions; others see none", async () => {
+    const prev = mocks.user;
+    mocks.user = { email: "root@example.com", is_staff: true, is_superuser: true };
+    try {
+      renderSidebar();
+      // Full card stacked above the (unchanged) user button.
+      expect(await screen.findByText("Root Mode")).toBeTruthy();
+      expect(screen.getByText("Full system access")).toBeTruthy();
+      openMenu(screen.getByRole("button", { name: /account menu/i }));
+      expect(screen.getByRole("menuitem", { name: /grant staff/i })).toBeTruthy();
+      expect(screen.getByRole("menuitem", { name: /revoke staff/i })).toBeTruthy();
+      // Single dividers throughout (no doubled separator after the root group).
+      const menu = screen.getByRole("menu");
+      expect(within(menu).getAllByRole("separator")).toHaveLength(3);
+    } finally {
+      mocks.user = prev;
+    }
+    cleanup();
+    renderSidebar();
+    openMenu(await screen.findByRole("button", { name: /account menu/i }));
+    expect(screen.queryByText("Root Mode")).toBeNull();
+    expect(screen.queryByRole("menuitem", { name: /grant staff/i })).toBeNull();
+  });
+
+  it("marks staff-gated nav items with a subtle crown", async () => {
+    const prev = mocks.user;
+    mocks.user = { email: "root@example.com", is_staff: true, is_superuser: true };
+    try {
+      renderSidebar();
+      const users = await screen.findByRole("link", { name: "Users" });
+      expect(users.querySelector('svg[aria-label="visible for your access level"]')).toBeTruthy();
+      const overview = await screen.findByRole("link", { name: "Overview" });
+      expect(overview.querySelector('svg[aria-label="visible for your access level"]')).toBeNull();
+    } finally {
+      mocks.user = prev;
+    }
+  });
+
+  it("RULES §12: injected overrides drive the switcher without auth", async () => {
+    const onSwitchOrg = vi.fn();
+    render(
+      <MemoryRouter>
+        <AppSidebarProvider>
+          <Highlight>
+            <OrgSwitcher
+              orgs={[
+                {
+                  name: "Acme Incorporated International Holdings Ltd Division",
+                  slug: "acme-inc",
+                  id: "o-long",
+                },
+                { id: "o2", name: "Evil Corp", slug: "evil-corp" },
+              ]}
+              activeOrgId="o-long"
+              onSwitchOrg={onSwitchOrg}
+            />
+          </Highlight>
+        </AppSidebarProvider>
+      </MemoryRouter>,
+    );
+    openMenu(await screen.findByRole("button", { name: /switch organization/i }));
+    fireEvent.click(await screen.findByRole("menuitem", { name: /evil corp/i }));
+    expect(onSwitchOrg).toHaveBeenCalledWith("o2");
+  });
+
+  it("RULES §12: the item-17 trials proof renders the long-name switcher", async () => {    render(
+      <MemoryRouter>
+        <AppSidebarProvider>
+          {DEMOS["sidebar"]}
+        </AppSidebarProvider>
+      </MemoryRouter>,
+    );
+    const trigger = await screen.findByRole("button", { name: /switch organization/i });
+    expect(trigger.querySelector(".truncate")?.getAttribute("title")).toContain("Holdings");
+    openMenu(trigger);
+    expect(await screen.findByRole("menuitem", { name: /acme incorporated/i })).toBeTruthy();
+  });
+
+  it("RULES §12: the item-17 rail proof opens right-anchored menus", async () => {
+    render(
+      <MemoryRouter>
+        <AppSidebarProvider>
+          {DEMOS["sidebar"]}
+        </AppSidebarProvider>
+      </MemoryRouter>,
+    );
+    // Rail row exists in the proof (Organizations + Projects icons).
+    openMenu(await screen.findByRole("button", { name: "Organizations" }));
+    expect(await screen.findByRole("menuitem", { name: /all organizations/i })).toBeTruthy();
+  });
+
+  it("S7.2: long org names truncate with full titles and keep the tree mounted", async () => {
+    const longName = "Acme Incorporated International Holdings Ltd Division";
+    const longSlug = "acme-incorporated-international-holdings";
+    const prev = mocks.orgs;
+    mocks.orgs = [
+      { id: "o1", name: longName, slug: longSlug },
+      { id: "o2", name: "Evil Corp", slug: "evil-corp" },
+    ];
+    try {
+      renderSidebar();
+      const trigger = await screen.findByRole("button", { name: /switch organization/i });
+      // Header truncates but exposes the full name/slug natively.
+      const titles = [...trigger.querySelectorAll(".truncate")].map((el) =>
+        el.getAttribute("title"),
+      );
+      expect(titles).toContain(longName);
+      expect(titles).toContain(longSlug);
+      // Menu opens (tree intact) with the same treatment per item.
+      openMenu(trigger);
+      const item = await screen.findByRole("menuitem", { name: /acme incorporated/i });
+      expect(item.querySelector(".truncate")?.getAttribute("title")).toBe(longName);
+    } finally {
+      mocks.orgs = prev;
+    }
   });
 
   it("keeps the projects list minimized with a count badge until opened", async () => {

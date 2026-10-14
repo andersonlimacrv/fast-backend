@@ -441,6 +441,29 @@ function HighlightItem<T extends React.ElementType>({
   const reduceMotion = useReducedMotion();
   const effectiveItemTransition = reduceMotion ? { duration: 0 } : itemTransition;
   const itemInitial = reduceMotion ? false : { opacity: 0 };
+  // Local delta (menu-flicker fix, owner 2026-10-01): a shared-`layoutId`
+  // pill must hand off instantly — a fading exit stacks translucent pills on
+  // the same item (measured 12/12 ghost frames). Consumers opt in with
+  // `exitDelay={0}` (dropdown menus); everyone else keeps the fade.
+  const resolvedExitDelay = exitDelay ?? contextExitDelay ?? 200;
+  const instantExit = resolvedExitDelay === 0;
+  const HANDOFF_TRANSITION = { duration: 0.12 };
+  const itemExit = {
+    opacity: 0,
+    transition: instantExit
+      ? HANDOFF_TRANSITION
+      : {
+          ...effectiveItemTransition,
+          delay: (itemTransition?.delay ?? 0) + resolvedExitDelay / 1000,
+        },
+  };
+  // With instant handoffs the entering pill must not fade in from zero: the
+  // old pill unmounts in an earlier commit than the new one mounts, leaving a
+  // fully-dark gap (measured ~40ms + spontaneous remount dips). Matched
+  // ~120ms crossfades on both ends keep the brightness sum near 1 throughout
+  // the handoff instead (measured). Native menus highlight instantly anyway.
+  const enterInitial = instantExit ? { opacity: 0 } : itemInitial;
+  const enterTransition = instantExit ? HANDOFF_TRANSITION : effectiveItemTransition;
 
   const refCallback = React.useCallback((node: HTMLElement | null) => {
     localRef.current = node as HTMLDivElement;
@@ -567,18 +590,10 @@ function HighlightItem<T extends React.ElementType>({
                   ...style,
                 }}
                 className={cn(contextClassName, activeClassName)}
-                transition={effectiveItemTransition}
-                initial={itemInitial}
+                transition={instantExit ? enterTransition : effectiveItemTransition}
+                initial={enterInitial}
                 animate={{ opacity: 1 }}
-                exit={{
-                  opacity: 0,
-                  transition: {
-                    ...effectiveItemTransition,
-                    delay:
-                      (itemTransition?.delay ?? 0) +
-                      (exitDelay ?? contextExitDelay ?? 0) / 1000,
-                  },
-                }}
+                exit={itemExit}
                 {...dataAttributes}
               />
             )}
@@ -629,18 +644,10 @@ function HighlightItem<T extends React.ElementType>({
                 ...style,
               }}
               className={cn(contextClassName, activeClassName)}
-              transition={effectiveItemTransition}
-              initial={itemInitial}
+              transition={instantExit ? enterTransition : effectiveItemTransition}
+              initial={enterInitial}
               animate={{ opacity: 1 }}
-              exit={{
-                opacity: 0,
-                transition: {
-                  ...effectiveItemTransition,
-                  delay:
-                    (itemTransition?.delay ?? 0) +
-                    (exitDelay ?? contextExitDelay ?? 0) / 1000,
-                },
-              }}
+              exit={itemExit}
               {...dataAttributes}
             />
           )}

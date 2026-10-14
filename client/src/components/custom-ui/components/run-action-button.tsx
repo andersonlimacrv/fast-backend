@@ -16,7 +16,11 @@ import type { IconType } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
 /* Run action button: staged runner for jobs/pipelines only (imports, analysis,
- * reports). NOT for CRUD — use plain buttons + toasts there. */
+ * reports). NOT for CRUD — use plain buttons + toasts there.
+ *
+ * Type scale (change `run-action-button-type`, owner 2026-10-09): app-scale
+ * `text-sm font-medium` in all three states (the doc's 18px read oversized
+ * next to our buttons/sidebar); icons step down with the type. */
 
 export interface RunActionStep {
   id: number;
@@ -109,7 +113,7 @@ export function RunActionButton({ steps = DEFAULT_STEPS }: RunActionButtonProps)
     setCurrentStep(0);
   }
 
-  const widths = { idle: 180, running: 360, done: 200 };
+  const widths = { idle: 180, running: 320, done: 200 };
   const fade = reduceMotion ? instant : tween;
 
   return (
@@ -134,10 +138,12 @@ export function RunActionButton({ steps = DEFAULT_STEPS }: RunActionButtonProps)
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={fade}
-              className="flex flex-1 items-center gap-2 rounded-lg bg-muted px-5 py-3 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              /* Centered content (change `run-action-button-type`, owner):
+               * states without a close affordance center icon + text. */
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-muted px-5 py-3 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
-              <Zap className="h-6 w-6 text-foreground" aria-hidden="true" />
-              <AnimatedText text="Run Action" className="text-[18px] font-medium text-foreground" />
+              <Zap className="h-5 w-5 text-foreground" aria-hidden="true" />
+              <AnimatedText text="Run Action" className="text-sm font-medium text-foreground" />
             </motion.button>
           )}
 
@@ -159,12 +165,12 @@ export function RunActionButton({ steps = DEFAULT_STEPS }: RunActionButtonProps)
                     exit={{ opacity: 0, scale: 0 }}
                     transition={fade}
                   >
-                    <StepIcon className="h-6 w-6 text-foreground" aria-hidden="true" />
+                    <StepIcon className="h-5 w-5 text-foreground" aria-hidden="true" />
                   </motion.div>
                 </AnimatePresence>
                 <AnimatedText
                   text={active.label}
-                  className="text-[18px] font-bold text-foreground"
+                  className="text-sm font-medium text-foreground"
                 />
               </div>
               <motion.button
@@ -192,10 +198,10 @@ export function RunActionButton({ steps = DEFAULT_STEPS }: RunActionButtonProps)
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               transition={fade}
-              className="flex flex-1 items-center gap-2 rounded-lg bg-accent px-5 py-3 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-accent px-5 py-3 whitespace-nowrap focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
-              <HiBadgeCheck className="h-6 w-6 text-accent-foreground" aria-hidden="true" />
-              <AnimatedText text="Action Done" className="text-[18px] font-bold text-accent-foreground" />
+              <HiBadgeCheck className="h-5 w-5 text-accent-foreground" aria-hidden="true" />
+              <AnimatedText text="Action Done" className="text-sm font-medium text-accent-foreground" />
             </motion.button>
           )}
         </AnimatePresence>

@@ -9,11 +9,21 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CopyButton } from "@/components/custom-ui/components/copy-button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogTitle,
+} from "@/components/custom-ui/components/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ChevronRight } from "@/lib/icons";
+import { Check, ChevronRight, Crown, Minus } from "@/lib/icons";
 import { useAdminUsers } from "@/hooks/useAdmin";
 import {
+  accessLevelOf,
+  CAPABILITY_MATRIX,
   createUser,
   createUserSchema,
   disableUser,
@@ -64,10 +74,22 @@ export function AdminUsersPage() {
     if (done !== null) notify.success(label, userId.slice(0, 8));
   };
 
-  const confirmRun = (title: string, description: string, label: string, userId: string, fn: (r: string) => Promise<unknown>) => {
+  /* Blocking choice (change `notify-standard`): destructive row actions go
+   * through one page-level AlertDialog instead of `notify.confirm` toasts —
+   * a toast action is too easy to miss for irreversible admin operations. */
+  interface PendingAction {
+    title: string;
+    description: string;
+    label: string;
+    userId: string;
+    fn: (r: string) => Promise<unknown>;
+  }
+  const [pending, setPending] = useState<PendingAction | null>(null);
+
+  const askRun = (title: string, description: string, label: string, userId: string, fn: (r: string) => Promise<unknown>) => {
     const ok = takeReason();
     if (!ok) return;
-    notify.confirm(title, description, { label: "Confirm", onClick: () => void run(label, userId, fn) });
+    setPending({ title, description, label, userId, fn });
   };
 
   /* Row actions shared by the desktop Actions cell and the mobile detail
@@ -80,7 +102,7 @@ export function AdminUsersPage() {
           variant="destructive"
           disabled={busy}
           onClick={() =>
-            confirmRun("Disable user", `${u.email} will not be able to log in.`, "User disabled", u.id, (r) =>
+            askRun("Disable user", `${u.email} will not be able to log in.`, "User disabled", u.id, (r) =>
               disableUser(u.id, r),
             )
           }
@@ -97,7 +119,7 @@ export function AdminUsersPage() {
         variant="outline"
         disabled={busy}
         onClick={() =>
-          confirmRun("Revoke sessions", `All refresh families of ${u.email} die now.`, "Sessions revoked", u.id, (r) =>
+          askRun("Revoke sessions", `All refresh families of ${u.email} die now.`, "Sessions revoked", u.id, (r) =>
             revokeUserSessions(u.id, r),
           )
         }
@@ -109,7 +131,7 @@ export function AdminUsersPage() {
         variant="outline"
         disabled={busy}
         onClick={() =>
-          confirmRun(
+          askRun(
             "Force password reset",
             `A reset email is queued for ${u.email}. No secret is shown here.`,
             "Reset queued",
@@ -126,26 +148,28 @@ export function AdminUsersPage() {
             size="sm"
             variant="outline"
             disabled={busy}
+            aria-label={`Revoke staff (root only) for ${u.email}`}
             onClick={() =>
-              confirmRun("Revoke staff", `${u.email} loses global admin.`, "Staff revoked", u.id, (r) =>
+              askRun("Revoke staff", `${u.email} loses global admin.`, "Staff revoked", u.id, (r) =>
                 revokeUserStaff(u.id, r),
               )
             }
           >
-            Revoke staff
+            <Crown className="size-4" aria-hidden="true" /> Revoke staff
           </Button>
         ) : (
           <Button
             size="sm"
             variant="outline"
             disabled={busy}
+            aria-label={`Grant staff (root only) for ${u.email}`}
             onClick={() =>
-              confirmRun("Grant staff", `${u.email} gains global admin.`, "Staff granted", u.id, (r) =>
+              askRun("Grant staff", `${u.email} gains global admin.`, "Staff granted", u.id, (r) =>
                 grantUserStaff(u.id, r),
               )
             }
           >
-            Grant staff
+            <Crown className="size-4" aria-hidden="true" /> Grant staff
           </Button>
         ))}
     </div>
@@ -203,6 +227,46 @@ export function AdminUsersPage() {
         </CardContent>
       </Card>
       <ErrorBox error={error} className="mb-4" />
+      <Card className="mb-4">
+        <CardContent className="pt-6">
+          <h2 className="mb-2 text-sm font-semibold">Access levels</h2>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Effective by global level (org roles are orthogonal). Viewing as{" "}
+            <strong>{accessLevelOf(me)}</strong>.
+          </p>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Capability</TableHead>
+                <TableHead className="w-16 text-center">root</TableHead>
+                <TableHead className="w-16 text-center">staff</TableHead>
+                <TableHead className="w-16 text-center">member</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {CAPABILITY_MATRIX.map((row) => (
+                <TableRow key={row.key}>
+                  <TableCell className="text-sm">
+                    {row.label}
+                    {row.key === "staff-grant" && (
+                      <Crown className="ml-1.5 inline size-3.5 text-chart-3" aria-label="root only" />
+                    )}
+                  </TableCell>
+                  {([row.root, row.staff, row.member] as const).map((allowed, i) => (
+                    <TableCell key={i} className="text-center">
+                      {allowed ? (
+                        <Check className="mx-auto size-4 text-chart-3" aria-label="allowed" />
+                      ) : (
+                        <Minus className="mx-auto size-4 text-muted-foreground" aria-label="denied" />
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
       <div className="mb-4 flex max-w-md flex-col gap-2">
         <Field label="Reason for row actions (audited)">
           <Input
@@ -233,7 +297,7 @@ export function AdminUsersPage() {
                 <TableCell>
                   <span className="text-sm">{u.email}</span>{" "}
                   <span className="font-mono text-xs text-muted-foreground">{u.id.slice(0, 8)}</span>{" "}
-                  <CopyButton content={u.id} />
+                  <CopyButton content={u.id} variant="ghost" />
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <div className="flex flex-wrap gap-1">
@@ -277,6 +341,26 @@ export function AdminUsersPage() {
           </TableBody>
         </Table>
       )}
+      <AlertDialog open={pending !== null} onOpenChange={(open) => !open && setPending(null)}>
+        <AlertDialogContent>
+          <AlertDialogTitle>{pending?.title}</AlertDialogTitle>
+          <AlertDialogDescription>{pending?.description}</AlertDialogDescription>
+          <div className="mt-5 flex justify-end gap-2">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={() => {
+                const action = pending;
+                setPending(null);
+                if (action) void run(action.label, action.userId, action.fn);
+              }}
+            >
+              Confirm
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </RequireStaff>
   );
 }
+

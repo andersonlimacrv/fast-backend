@@ -58,10 +58,14 @@
   --shadow-xl: var(--shadow-xl);
   --shadow-2xl: var(--shadow-2xl);
 
+  --radius-xs: max(0px, calc(var(--radius) - 6px));
   --radius-sm: max(0px, calc(var(--radius) - 4px));
   --radius-md: max(0px, calc(var(--radius) - 2px));
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 16px);
+  --radius-3xl: calc(var(--radius) + 24px);
+  --radius-4xl: calc(var(--radius) + 32px);
 }
 
 /* tweakcn theme "opencode_AC_VARIATION" (https://tweakcn.com/r/themes/cmu2bvf43000004jq3wm13trk).
@@ -83,9 +87,9 @@
   --accent-foreground: oklch(0.2103 0.0059 285.8852);
   --destructive: oklch(0.4547 0.1845 25.2824);
   --destructive-foreground: oklch(0.8452 0 0);
-  --border: oklch(0.7309 0.0114 286.1138);
-  --input: oklch(0.7309 0.0114 286.1138);
-  --ring: oklch(0.8487 0.2181 127.8027);
+  --border: oklch(0.66 0.0114 286.1138);
+  --input: oklch(0.66 0.0114 286.1138);
+  --ring: oklch(0.5351 0.1432 133.8754);
   --chart-1: oklch(0.8487 0.2181 127.8027);
   --chart-2: oklch(0.6326 0.1511 129.8405);
   --chart-3: oklch(0.5351 0.1432 133.8754);
@@ -189,6 +193,80 @@
     @apply bg-background text-foreground antialiased;
     font-family: var(--font-sans);
     letter-spacing: var(--tracking-normal);
+  }
+}
+
+/* Autofill (change `custom-ui-inputs`, owner 2026-09-30): Chrome paints its
+ * olive/yellow background on autofilled inputs, which clashes with the
+ * transparent fields. The long transition freezes that repaint (the standard
+ * hack — transitions win over UA `!important` while running) and the inset
+ * shadow lays the settlement tint on top — `muted` at 60% (owner), token-based
+ * like every other fill in the app. Text/caret follow the theme; functional
+ * autofill is untouched. Unlayered on purpose: layered author styles lose to
+ * Tailwind utilities (e.g. `shadow-sm` on `ui/input`), which would drop the
+ * tint. */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:autofill {
+  -webkit-text-fill-color: var(--foreground);
+  caret-color: var(--foreground);
+  transition:
+    background-color 600000s 0s,
+    color 600000s 0s;
+  box-shadow: inset 0 0 0 1000px color-mix(in oklab, var(--muted) 60%, transparent);
+}
+
+/* Lab validation slider (the SegmentedProgressBar harness in the item 07
+ * proof). Native range inputs paint a two-tone thumb and clip it inside the
+ * input box, so the thumb/track are themed here — solid `--primary` knob with
+ * the content-tone rim, `--muted` track — instead of via inline utilities
+ * (`::-webkit-slider-thumb` et al. are not Tailwind-addressable). */
+@layer components {
+  .lab-range {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 1.25rem;
+    background: transparent;
+    cursor: pointer;
+  }
+  .lab-range:focus-visible {
+    outline: none;
+  }
+  .lab-range::-webkit-slider-runnable-track {
+    box-sizing: border-box;
+    height: 0.375rem;
+    border-radius: 999px;
+    background: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .lab-range::-moz-range-track {
+    box-sizing: border-box;
+    height: 0.375rem;
+    border-radius: 999px;
+    background: var(--muted);
+    border: 1px solid var(--border);
+  }
+  .lab-range::-webkit-slider-thumb {
+    box-sizing: border-box;
+    appearance: none;
+    -webkit-appearance: none;
+    width: 1rem;
+    height: 1rem;
+    /* Center the 16px knob on the 6px track: (6 - 16) / 2 */
+    margin-top: -0.3125rem;
+    border-radius: 999px;
+    background: var(--primary);
+    border: 1px solid var(--primary-foreground);
+  }
+  .lab-range::-moz-range-thumb {
+    box-sizing: border-box;
+    width: 1rem;
+    height: 1rem;
+    border-radius: 999px;
+    background: var(--primary);
+    border: 1px solid var(--primary-foreground);
   }
 }
 

@@ -9,7 +9,7 @@ permission:
 
 Você é o responsável por testes do fast-backend.
 
-Doutrina (`references/implementation_v2.md` §6 + `docs/RULES.md` §5):
+Doutrina (mapa da antiga v2 em `openspec/changes/v2-coverage-audit/design.md` §6 + `docs/RULES.md` §5):
 - Pirâmide ~70/25/5; `app/tests/{unit,integration,e2e,fixtures}` + `conftest.py`; markers `unit,integration,e2e,slow,security`; Testcontainers Postgres+Redis quando o comportamento depender deles; cobertura ≥80% com rigor em auth/tenancy/RBAC/billing/webhooks/idempotency/security.
 - Suite atual como baseline (medido 2026-09-17: 179 coletados — 90 unit + 89 integration; client: 102 vitest + 14 Playwright; suite hermética — `.env` do dev não vaza): `FB_TEST_NETWORK=host` onde bridge Docker é bloqueada (neste Windows, bridge é o modo correto).
 - Pós-change: implementar nesta ordem — (1) `test_refresh_reuse_revokes_entire_family` + teste de concorrência A/B (só 1 rotação de R1 vence, outra falha; reuse revoga family), (2) `test_tenant_never_sees_data_from_another_tenant` cobrindo list/get/update/delete + IDOR (`403/404`) com Postgres real, (3) webhook `provider_event_id` unique (3 deliveries → 1 efeito), (4) `tokens_valid_after` invalida access antigo, (5) throttling login → 429.

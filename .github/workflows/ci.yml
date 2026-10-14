@@ -22,7 +22,7 @@ jobs:
   unit:
     runs-on: ubuntu-latest
     env:
-      FRONTEND_URL: http://localhost:5173
+      FRONTEND_URL: http://localhost:3001
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -32,7 +32,8 @@ jobs:
   integration:
     runs-on: ubuntu-latest
     env:
-      FRONTEND_URL: http://localhost:5173
+      FRONTEND_URL: http://localhost:3001
+      MINIO_ENDPOINT_URL: http://localhost:9000
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -43,12 +44,29 @@ jobs:
           sudo /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y
           sudo apt-get install -y postgresql-client-17
           pg_dump --version
+      - name: Start MinIO binary (pinned, no registry)
+        # Both registries deny minio pulls from these runners (quay.io 500,
+        # Hub access-denied) — run the pinned GitHub Release binary instead
+        # (same tag as MINIO_IMAGE, hash-verified; github.com egress already
+        # proven by the gitleaks step). The fixture uses
+        # MINIO_ENDPOINT_URL and skips the container entirely.
+        run: |
+          TAG=RELEASE.2025-04-22T22-12-26Z
+          BIN="minio.linux-amd64.${TAG}"
+          cd /tmp
+          curl -sSL "https://github.com/minio/minio/releases/download/${TAG}/${BIN}" -o "${BIN}"
+          curl -sSL "https://github.com/minio/minio/releases/download/${TAG}/${BIN}.sha256sum" -o "${BIN}.sha256sum"
+          test "$(sha256sum "${BIN}" | awk '{print $1}')" = "$(awk '{print $1}' "${BIN}.sha256sum")"
+          chmod +x "${BIN}"
+          mkdir -p /tmp/minio-data
+          MINIO_ROOT_USER=minioadmin MINIO_ROOT_PASSWORD=minioadmin123 "/tmp/${BIN}" server /tmp/minio-data --address :9000 >/tmp/minio.log 2>&1 &
+          for i in $(seq 1 30); do curl -sf http://localhost:9000/minio/health/live && break || sleep 2; done
       - run: make test-integration
 
   security:
     runs-on: ubuntu-latest
     env:
-      FRONTEND_URL: http://localhost:5173
+      FRONTEND_URL: http://localhost:3001
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -84,18 +102,20 @@ jobs:
       DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/fastbackend
       REDIS_URL: redis://localhost:6379/0
       # Browser origin must be allowed or every SPA fetch fails closed (status 0).
-      CORS_ORIGINS: '["http://localhost:5173"]'
-      FRONTEND_URL: http://localhost:5173
+      CORS_ORIGINS: '["http://localhost:3001"]'
+      FRONTEND_URL: http://localhost:3001
       # Cookie sessions on (dual-read keeps header tests green); Secure off:
       # plain-http preview would silently drop Secure cookies (see DEPLOYMENT).
       AUTH_COOKIE_ENABLED: 'true'
       AUTH_COOKIE_SECURE: 'false'
+      # Bake the API origin into the SPA build (no client/.env in CI).
+      VITE_API_URL: http://127.0.0.1:8001
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
       - run: uv sync --extra dev --frozen
       - run: uv run alembic upgrade head
-      - run: nohup uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 >/tmp/api.log 2>&1 &
+      - run: nohup uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8001 >/tmp/api.log 2>&1 &
       - uses: actions/setup-node@v4
         with:
           node-version: 24

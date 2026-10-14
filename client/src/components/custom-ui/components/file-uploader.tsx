@@ -1,4 +1,5 @@
 import * as React from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,23 @@ import {
 import { cn } from "@/lib/utils";
 
 /* File uploader: drag&drop + picker with simulated per-file progress.
- * Simulation only — persist via onSubmit in the parent. */
+ * Simulation only — persist via onSubmit in the parent.
+ *
+ * Size transition (change `custom-ui-file-upload`, DESIGN.md §7 rule): the
+ * file list + summary expand/collapse with the Accordion spring (150/22)
+ * instead of snapping — same curve, `motion-reduce` renders dry.
+ *
+ * S5 (dry snap at the end of removal): row exits also zero `borderWidth` +
+ * `marginBottom` (the list gap lives per-item as `mb-2`, since a parent flex
+ * gap sits outside the animated node and snaps on unmount), `overflow` stays
+ * on persistently, and exits run a fixed tween — a spring tails out and
+ * AnimatePresence unmounts mid-settle, which reads as a cut. */
+
+/** Panel spring (enter), same default as the upstream animate-ui base accordion. */
+const PANEL_SPRING = { type: "spring", stiffness: 150, damping: 22 } as const;
+
+/** Exit tween (S5): covers height+margin+border to exactly 0 in ~180ms. */
+const EXIT_TWEEN = { type: "tween", duration: 0.18, ease: "easeInOut" } as const;
 
 export type FileStatus = "queued" | "uploading" | "done" | "error";
 
@@ -106,6 +123,9 @@ export function FileUploader({
   const allDone = files.length > 0 && files.every((f) => f.status === "done");
   const hasUploading = files.some((f) => f.status === "uploading" || f.status === "queued");
   const isAtLimit = files.length >= maxFiles;
+  const reduceMotion = useReducedMotion();
+  const sectionTransition = reduceMotion ? { duration: 0 } : PANEL_SPRING;
+  const exitTransition = reduceMotion ? { duration: 0 } : EXIT_TWEEN;
 
   function simulateUpload(id: string): void {
     let progress = 0;
@@ -208,53 +228,111 @@ export function FileUploader({
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col gap-4">
-        {!isAtLimit && (
-          <button
-            type="button"
-            id="file-upload-drop-zone"
-            aria-label="Drag and drop files or click to browse"
-            onClick={() => inputRef.current?.click()}
-            onDragEnter={handleDragEnter}
-            onDragLeave={handleDragLeave}
-            onDragOver={handleDragOver}
-            onDrop={handleDrop}
-            className={cn(
-              "relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-lg",
-              "border-2 border-dashed py-8 transition-colors duration-200 motion-reduce:transition-none",
-              "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
-              isDragging
-                ? "border-primary bg-primary/5"
-                : "border-border bg-muted/40 hover:border-primary/50 hover:bg-muted/60",
-            )}
-          >
-            <span
-              className={cn(
-                "flex size-11 items-center justify-center rounded-lg border transition-colors duration-200",
-                "motion-reduce:transition-none",
-                isDragging
-                  ? "border-primary/30 bg-primary/10 text-primary"
-                  : "border-border bg-background text-muted-foreground",
-              )}
+      <CardContent className="flex flex-col">
+        <AnimatePresence initial={false}>
+          {!isAtLimit && (
+            <motion.div
+              key="drop-zone-section"
+              data-slot="drop-zone-section"
+              initial={reduceMotion ? false : { height: 0, opacity: 0 }}
+              animate={{
+                height: "auto",
+                opacity: 1,
+                /* The CardContent gap used to live here: a parent flex gap is
+                 * outside the animated node and snaps on unmount, so spacing
+                 * is an animated margin instead (16 = gap-4). */
+                marginBottom: files.length > 0 ? 16 : 0,
+                transition: sectionTransition,
+              }}
+              exit={
+                reduceMotion
+                  ? undefined
+                  : { height: 0, opacity: 0, marginBottom: 0, transition: exitTransition }
+              }
+              style={{ overflow: "hidden" }}
             >
-              <FaCloudUploadAlt className="size-5" aria-hidden="true" />
-            </span>
-            <span className="flex flex-col items-center gap-1 text-center">
-              <span className="text-sm font-medium text-foreground">
-                {isDragging ? "Release to add files" : "Drag & drop or click to browse"}
-              </span>
-              <span className="text-xs text-muted-foreground">{acceptedLabel}</span>
-            </span>
-          </button>
-        )}
-
-        {files.length > 0 && (
-          <div className="flex flex-col gap-2">
-            {files.map((uf) => (
-              <div
-                key={uf.id}
-                className="flex flex-col gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5"
+              <button
+                type="button"
+                id="file-upload-drop-zone"
+                aria-label="Drag and drop files or click to browse"
+                onClick={() => inputRef.current?.click()}
+                onDragEnter={handleDragEnter}
+                onDragLeave={handleDragLeave}
+                onDragOver={handleDragOver}
+                onDrop={handleDrop}
+                className={cn(
+                  "relative flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-lg",
+                  "border-2 border-dashed py-8 transition-colors duration-200 motion-reduce:transition-none",
+                  "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
+                  isDragging
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-muted/40 hover:border-primary/50 hover:bg-muted/60",
+                )}
               >
+                <span
+                  className={cn(
+                    "flex size-11 items-center justify-center rounded-lg border transition-colors duration-200",
+                    "motion-reduce:transition-none",
+                    isDragging
+                      ? "border-primary/30 bg-primary/10 text-primary"
+                      : "border-border bg-background text-muted-foreground",
+                  )}
+                >
+                  <FaCloudUploadAlt className="size-5" aria-hidden="true" />
+                </span>
+                <span className="flex flex-col items-center gap-1 text-center">
+                  <span className="text-sm font-medium text-foreground">
+                    {isDragging ? "Release to add files" : "Drag & drop or click to browse"}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{acceptedLabel}</span>
+                </span>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence initial={false}>
+          {files.length > 0 && (
+            <motion.section
+              key="files-section"
+              data-slot="file-list-section"
+              initial={reduceMotion ? false : { height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1, transition: sectionTransition }}
+              exit={reduceMotion ? undefined : { height: 0, opacity: 0, transition: exitTransition }}
+              style={{ overflow: "hidden" }}
+              className="flex flex-col gap-4"
+            >
+              {/* Trailing -8px eats the rows' uniform mb-2 so the summary
+                stays exactly 16px below the last row. Static class (never a
+                :last-child selector): removing the last row flips no margin,
+                which was the 8px end-snap (S5.5). */}
+              <div className="-mb-2 flex flex-col">
+                <AnimatePresence initial={false} mode="popLayout">
+                  {files.map((uf) => (
+                    <motion.div
+                      key={uf.id}
+                      data-slot="file-row"
+                      style={{ overflow: "hidden" }}
+                      initial={reduceMotion ? false : { opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0, transition: sectionTransition }}
+                      exit={
+                        reduceMotion
+                          ? undefined
+                          : {
+                              opacity: 0,
+                              height: 0,
+                              paddingTop: 0,
+                              paddingBottom: 0,
+                              /* Border (2px) + list spacing sit outside the
+                               * height measure — zero them too or the unmount
+                               * eats the last ~10px in one frame. */
+                              borderWidth: 0,
+                              marginBottom: 0,
+                              transition: exitTransition,
+                            }
+                      }
+                      className="mb-2 flex flex-col gap-2 rounded-lg border border-border bg-muted/40 px-3 py-2.5"
+                    >
                 <div className="flex items-center gap-3">
                   <span
                     className={cn(
@@ -310,30 +388,31 @@ export function FileUploader({
                       className="h-full rounded-full bg-primary transition-all duration-200 motion-reduce:transition-none"
                       style={{ width: `${uf.progress}%` }}
                     />
-                  </div>
+                    </div>
+                  )}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">
+                  {files.length} file{files.length !== 1 ? "s" : ""} · {formatBytes(totalSize)} total
+                </span>
+                {!hasUploading && (
+                  <button
+                    type="button"
+                    id="file-upload-clear-all"
+                    onClick={clearAll}
+                    className="text-xs text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    Clear all
+                  </button>
                 )}
               </div>
-            ))}
-          </div>
-        )}
-
-        {files.length > 0 && (
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
-              {files.length} file{files.length !== 1 ? "s" : ""} · {formatBytes(totalSize)} total
-            </span>
-            {!hasUploading && (
-              <button
-                type="button"
-                id="file-upload-clear-all"
-                onClick={clearAll}
-                className="text-xs text-muted-foreground transition-colors duration-150 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-              >
-                Clear all
-              </button>
-            )}
-          </div>
-        )}
+            </motion.section>
+          )}
+        </AnimatePresence>
       </CardContent>
 
       <CardFooter className="flex items-center justify-between gap-3">
