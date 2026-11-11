@@ -26,7 +26,10 @@ HOST ?= 127.0.0.1
 # baked defaults when the helper cannot run — `make env-check` is the gate
 # that fails on invalid port values (never fail at Make parse time).
 ENV_PORTS := $(shell $(UV) run python scripts/env_ports.py --env-file $(ENV_FILE) --make 2>/dev/null)
-$(eval $(ENV_PORTS))
+# The helper emits `KEY=VALUE;...` on one line (newlines would be folded by
+# `$(shell)` into spaces). `$(eval)` does NOT split on `;`, so expand each
+# assignment separately; values here are port numbers (no spaces).
+$(foreach assignment,$(subst ;, ,$(ENV_PORTS)),$(eval $(assignment)))
 API_PORT ?= 8001
 WORKERS ?= 2
 STACK_SERVICES ?= db redis
@@ -80,6 +83,12 @@ _check-env:
 _check-web-env:
 	@if [ ! -f $(CLIENT_DIR)/.env ]; then \
 		echo "$(CLIENT_DIR)/.env not found - copy $(CLIENT_DIR)/.env.example (VITE_API_URL=http://localhost:8001)"; exit 1; \
+	fi
+
+_check-web-deps:
+	@if [ ! -d $(CLIENT_DIR)/node_modules/vite ]; then \
+		echo "error: $(CLIENT_DIR)/node_modules is missing or incomplete — run 'make web-install' first"; \
+		exit 1; \
 	fi
 
 ##@ 🗄️ Database
@@ -169,7 +178,7 @@ up: _check-env ## Start app + worker + db + redis
 db-up: _check-env ## Start db + redis only (data services for local dev)
 	$(COMPOSE_ENV) $(COMPOSE) up -d $(STACK_SERVICES)
 
-dev: _check-env _check-web-env db-up migrate up ## Full dev loop: backend stack (docker) + frontend (Ctrl+C stops vite; `make dev-down` stops stack)
+dev: _check-env _check-web-env _check-web-deps db-up migrate up ## Full dev loop: backend stack (docker) + frontend (Ctrl+C stops vite; `make dev-down` stops stack)
 	@if ! grep -q "$(WEB_PORT)" $(ENV_FILE); then \
 		echo "hint: $(ENV_FILE) may not allow http://localhost:$(WEB_PORT) — add it to CORS_ORIGINS"; \
 	fi
@@ -210,22 +219,22 @@ worker: ## Taskiq worker (WORKERS=2)
 web-install: ## Install frontend deps (`npm ci` in client/)
 	cd $(CLIENT_DIR) && $(NPM) ci
 
-web: ## Frontend dev server (http://localhost:3001, WEB_PORT=...)
+web: _check-web-deps ## Frontend dev server (http://localhost:3001, WEB_PORT=...)
 	cd $(CLIENT_DIR) && $(NPM) run dev -- --port $(WEB_PORT) --strictPort
 
-web-lint: ## Frontend lint (`oxlint` in client/)
+web-lint: _check-web-deps ## Frontend lint (`oxlint` in client/)
 	cd $(CLIENT_DIR) && $(NPM) run lint
 
-web-test: ## Frontend tests (`vitest run` in client/)
+web-test: _check-web-deps ## Frontend tests (`vitest run` in client/)
 	cd $(CLIENT_DIR) && $(NPM) run test:run
 
-web-build: ## Frontend production build (`tsc` + `vite build` in client/)
+web-build: _check-web-deps ## Frontend production build (`tsc` + `vite build` in client/)
 	cd $(CLIENT_DIR) && $(NPM) run build
 
-web-e2e-install: ## Install Playwright Chromium (version follows client/package.json)
+web-e2e-install: _check-web-deps ## Install Playwright Chromium (version follows client/package.json)
 	cd $(CLIENT_DIR) && $(NPM) exec playwright install chromium
 
-web-e2e: ## Browser E2E vs DEV api (legacy: pollutes the dev DB — prefer `make e2e-full`)
+web-e2e: _check-web-deps ## Browser E2E vs DEV api (legacy: pollutes the dev DB — prefer `make e2e-full`)
 	cd $(CLIENT_DIR) && $(NPM) run e2e
 
 e2e-db-up: ## Start isolated e2e data services (postgres + redis, own ports/volumes)
@@ -248,10 +257,10 @@ e2e-stop: ## Stop the e2e API + data services (keeps volumes)
 	@if [ -f var/e2e-api.pid ]; then pid=$$(cat var/e2e-api.pid); kill "$$pid" 2>/dev/null || true; taskkill //F //T //PID "$$pid" 2>/dev/null || true; rm -f var/e2e-api.pid; fi
 	$(COMPOSE) stop db-e2e redis-e2e
 
-e2e-build: ## Frontend production build pointed at the e2e API
+e2e-build: _check-web-deps ## Frontend production build pointed at the e2e API
 	cd $(CLIENT_DIR) && VITE_API_URL="http://127.0.0.1:$(E2E_API_PORT)" $(NPM) run build
 
-e2e-full: ## Isolated browser E2E end-to-end (own DB/API/preview; teardown after; dev DB untouched)
+e2e-full: _check-web-deps ## Isolated browser E2E end-to-end (own DB/API/preview; teardown after; dev DB untouched)
 	@set -e; trap '$(MAKE) e2e-stop >/dev/null 2>&1' EXIT INT TERM; \
 	$(COMPOSE_ENV) $(COMPOSE) --profile e2e up -d db-e2e redis-e2e; \
 	for i in $$(seq 1 60); do \
@@ -265,7 +274,7 @@ e2e-full: ## Isolated browser E2E end-to-end (own DB/API/preview; teardown after
 	E2E_API_URL="http://127.0.0.1:$(E2E_API_PORT)" WEB_PORT=$(E2E_WEB_PORT) $(NPM) --prefix $(CLIENT_DIR) run e2e; \
 	status=$$?; $(MAKE) e2e-stop >/dev/null 2>&1; exit $$status
 
-web-e2e-update: ## Refresh linux baselines ONLY via web-e2e-baselines.yml (never commit local win32/)
+web-e2e-update: _check-web-deps ## Refresh linux baselines ONLY via web-e2e-baselines.yml (never commit local win32/)
 	cd $(CLIENT_DIR) && $(NPM) run e2e -- --update-snapshots
 
 ##@ 🛫 Ops
@@ -313,6 +322,7 @@ help: ## Show this help
 help-unclassified: ## Targets with ## but no ##@ section above (audit, must be empty)
 	@awk 'FNR == 1 { section = "" } /^##@ / { section = substr($$0, 5); next } /^[a-zA-Z0-9_-]+:.*## / && section == "" { print "  " $$0 }' $(MAKEFILE_LIST)
 
+.PHONY: _check-env _check-web-env _check-web-deps
 .PHONY: setup sync env-template env-check migrate migration downgrade db-current db-history db-shell db-reset
 .PHONY: test test-unit test-integration test-host test-file e2e clean
 .PHONY: lint format-fix types arch security verify check
