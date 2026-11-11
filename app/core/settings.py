@@ -113,8 +113,20 @@ class Settings(BaseSettings):
     password_reset_ttl_minutes: int = 60
     frontend_url: str = ""
 
-    # --- Social login (change C; contract only, no active provider) ---
+    # --- Social login (change login-social-redesign): generic OIDC, flag off.
+    # Flag on wires `/auth/social/*`; flag off leaves the surface at zero
+    # (no route), preserving the social-contract spec. `provider` is a slug
+    # used in the URL; display_name only feeds the SPA button.
     social_login_enabled: bool = False
+    oidc_provider: str = "oidc"
+    oidc_display_name: str = "SSO"
+    oidc_issuer: str = ""
+    oidc_client_id: str = ""
+    oidc_client_secret: str = ""
+    oidc_redirect_uri: str = ""
+    oidc_scopes: str = "openid email profile"
+    oidc_state_ttl_seconds: int = 600
+    oidc_exchange_ttl_seconds: int = 60
 
     # --- HTTP hardening ---
     trusted_hosts: list[str] = ["*"]
@@ -163,6 +175,32 @@ class Settings(BaseSettings):
             raise ValueError("FRONTEND_URL must be set (e.g. http://localhost:3001 for local dev)")
         if self.auth_cookie_samesite.lower() not in ("lax", "strict"):
             raise ValueError("AUTH_COOKIE_SAMESITE must be lax or strict (never none: same-eTLD design)")
+        slug = self.oidc_provider.replace("-", "").replace("_", "")
+        if not slug or not slug.isalnum():
+            raise ValueError("OIDC_PROVIDER must be a non-empty URL-safe slug")
+        if not 60 <= self.oidc_state_ttl_seconds <= 3600:
+            raise ValueError("OIDC_STATE_TTL_SECONDS must be within 60..3600")
+        if not 30 <= self.oidc_exchange_ttl_seconds <= 300:
+            raise ValueError("OIDC_EXCHANGE_TTL_SECONDS must be within 30..300")
+        if self.social_login_enabled:
+            missing = [
+                name
+                for name, value in (
+                    ("OIDC_ISSUER", self.oidc_issuer),
+                    ("OIDC_CLIENT_ID", self.oidc_client_id),
+                    ("OIDC_CLIENT_SECRET", self.oidc_client_secret),
+                    ("OIDC_REDIRECT_URI", self.oidc_redirect_uri),
+                )
+                if not value.strip()
+            ]
+            if missing:
+                raise ValueError(f"SOCIAL_LOGIN_ENABLED requires: {', '.join(missing)}")
+            if "openid" not in self.oidc_scopes.split():
+                raise ValueError("OIDC_SCOPES must include openid")
+            if not self.oidc_issuer.startswith(("http://", "https://")):
+                raise ValueError("OIDC_ISSUER must be an absolute http(s) URL")
+            if not self.oidc_redirect_uri.startswith(("http://", "https://")):
+                raise ValueError("OIDC_REDIRECT_URI must be an absolute http(s) URL")
         if self.environment == "production":
             if self.secret_key == DEV_DEFAULT_SECRET or len(self.secret_key) < 32:
                 raise ValueError("production requires a real SECRET_KEY (>=32 chars)")
@@ -180,6 +218,10 @@ class Settings(BaseSettings):
                 raise ValueError("production cookies require AUTH_COOKIE_SECURE=true (HTTPS only)")
             if self.auth_cookie_enabled and not self.csrf_enabled:
                 raise ValueError("production cookies require CSRF_ENABLED=true (synchronizer token)")
+            if self.social_login_enabled and (
+                not self.oidc_issuer.startswith("https://") or not self.oidc_redirect_uri.startswith("https://")
+            ):
+                raise ValueError("production social login requires HTTPS OIDC_ISSUER and OIDC_REDIRECT_URI")
         return self
 
 

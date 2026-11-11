@@ -19,6 +19,7 @@ from app.core.errors import (
     RefreshTokenReuseError,
     ResourceNotFoundError,
     SlugUnavailableError,
+    SocialLoginError,
     ThrottledError,
     UserNotFoundError,
     WebhookVerificationError,
@@ -42,7 +43,7 @@ def _status_for(exc: DomainError) -> int:
         return 409
     if isinstance(exc, LastRootProtectedError):
         return 409
-    if isinstance(exc, PasswordResetError):
+    if isinstance(exc, (PasswordResetError, SocialLoginError)):
         return 400
     if isinstance(exc, AuditUnavailableError):
         return 500

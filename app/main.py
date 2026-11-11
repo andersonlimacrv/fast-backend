@@ -9,6 +9,8 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 
 from app.core.settings import Settings
 from app.infrastructure.auth.hashing import PwdlibHasher
+from app.infrastructure.auth.oidc import OIDCProvider
+from app.infrastructure.auth.oidc_state import OIDCStateStore
 from app.infrastructure.auth.refresh_tokens import RefreshTokenRepository
 from app.infrastructure.auth.throttling import LoginThrottler
 from app.infrastructure.db.session import create_session_factory
@@ -33,6 +35,8 @@ from app.modules.entitlements.router import router as entitlements_router
 from app.modules.entitlements.service import EntitlementService
 from app.modules.identity.router import router as identity_router
 from app.modules.identity.service import AuthenticationService
+from app.modules.identity.social import SocialLoginService
+from app.modules.identity.social_router import router as social_router
 from app.modules.organization.router import auth_router as org_auth_router
 from app.modules.organization.router import router as organization_router
 from app.modules.organization.service import OrganizationService
@@ -45,6 +49,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     yield
     throttler: LoginThrottler = app.state.throttler
     await throttler.aclose()
+    social = getattr(app.state, "social_service", None)
+    if social is not None:
+        await social.aclose()
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -81,6 +88,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     # Outbox must exist before auth: recovery enqueues `email.template` (change B).
     app.state.auth_service._outbox = app.state.outbox
     app.state.audit_service = AuditService(session_factory=session_factory)
+    app.state.social_service = (
+        SocialLoginService(
+            settings=settings,
+            session_factory=session_factory,
+            refresh_repo=refresh_repo,
+            provider=OIDCProvider(settings),
+            states=OIDCStateStore(settings),
+        )
+        if settings.social_login_enabled
+        else None
+    )
     app.state.admin_service = AdminService(
         identity=app.state.auth_service,
         organizations=app.state.org_service,
@@ -110,6 +128,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health_router)
     app.include_router(meta_router)
     app.include_router(identity_router)
+    if settings.social_login_enabled:
+        # Flag off = zero surface (no `/auth/social*` path at all).
+        app.include_router(social_router)
     app.include_router(organization_router)
     app.include_router(org_auth_router)
     app.include_router(entitlements_router)

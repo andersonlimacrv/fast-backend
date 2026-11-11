@@ -3,11 +3,13 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Link, useNavigate } from "react-router-dom";
 
-import { useAuth } from "@/contexts/AuthContext";
-import { ErrorBox, Field, PageHeader } from "@/components/feedback";
+import { AuthShell } from "@/components/auth/auth-shell";
+import { PasswordInput } from "@/components/auth/password-input";
+import { SocialButtons } from "@/components/auth/social-buttons";
+import { ErrorBox } from "@/components/feedback";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 import { ROUTES } from "@/lib/constants";
 import { registerSchema, type RegisterInput } from "@/services/login";
 
@@ -32,42 +34,65 @@ export function RegisterPage() {
   };
 
   return (
-    <div className="mx-auto max-w-md">
-      <PageHeader title="Register" description="POST /auth/register then auto-login (min 8 chars)." />
-      <Card>
-        <CardContent className="space-y-4 pt-6">
-          <form onSubmit={(e) => void handleSubmit(submit)(e)} className="space-y-4" noValidate>
-            <Field label="Email">
-              <Input type="email" autoComplete="email" aria-invalid={!!errors.email} {...field("email")} />
-            </Field>
+    <AuthShell
+      title="Create your account"
+      description="Start with email and password. You can link single sign-on later."
+      footer={
+        <>
+          Already have an account?{" "}
+          <Link
+            to={ROUTES.login}
+            className="font-medium text-foreground underline decoration-primary/70 underline-offset-4"
+          >
+            Sign in
+          </Link>
+        </>
+      }
+    >
+      <div className="space-y-6">
+        <SocialButtons />
+        <form onSubmit={(e) => void handleSubmit(submit)(e)} className="space-y-4" noValidate>
+          <div>
+            <label htmlFor="register-email" className="mb-1 block text-sm font-medium">
+              Email
+            </label>
+            <Input
+              id="register-email"
+              type="email"
+              autoComplete="email"
+              aria-invalid={!!errors.email}
+              aria-describedby={errors.email ? "register-email-error" : undefined}
+              {...field("email")}
+            />
             {errors.email && (
-              <p className="text-xs text-destructive" role="alert">
+              <p id="register-email-error" className="mt-1 text-xs text-destructive" role="alert">
                 {errors.email.message}
               </p>
             )}
-            <Field label="Password (min 8)">
-              <Input
-                type="password"
-                autoComplete="new-password"
-                aria-invalid={!!errors.password}
-                {...field("password")}
-              />
-            </Field>
+          </div>
+          <div>
+            <label htmlFor="register-password" className="mb-1 block text-sm font-medium">
+              Password (min 8)
+            </label>
+            <PasswordInput
+              id="register-password"
+              autoComplete="new-password"
+              aria-invalid={!!errors.password}
+              aria-describedby={errors.password ? "register-password-error" : undefined}
+              {...field("password")}
+            />
             {errors.password && (
-              <p className="text-xs text-destructive" role="alert">
+              <p id="register-password-error" className="mt-1 text-xs text-destructive" role="alert">
                 {errors.password.message}
               </p>
             )}
-            <ErrorBox error={serverError} />
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Registering…" : "Register"}
-            </Button>
-          </form>
-          <p className="text-sm text-muted-foreground">
-            Have an account? <Link to="/login" className="text-foreground underline decoration-primary/70 underline-offset-4">Login</Link>
-          </p>
-        </CardContent>
-      </Card>
-    </div>
+          </div>
+          <ErrorBox error={serverError} />
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? "Creating account…" : "Create account"}
+          </Button>
+        </form>
+      </div>
+    </AuthShell>
   );
 }

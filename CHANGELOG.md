@@ -9,6 +9,11 @@ Language: entries are written in **English** (see `docs/RULES.md` §9).
 > Version convention: tags and sections use the `v` prefix from here on (`v1.1.0`, …).
 > The `0.1.0` section below is historical (tag `0.1.0` without prefix) and stays as is.
 
+## [Unreleased]
+
+- **`dev-loop-port-eval`**: `make dev` failed on Linux in two ways after the Windows→Linux move. The Makefile evaluated the semicolon-separated `env_ports.py --make` output as one assignment, so `WEB_PORT` became `3001;API_PORT=8001;...` (polluting Vite and the CORS hint); it now splits on `;` and evaluates each assignment. Web targets also gained `_check-web-deps`, which fails with `run 'make web-install' first` instead of a cryptic `vite: command not found` (exit 127). Regression covered by a `make -n dev` unit test.
+- **`login-social-redesign`**: generic OIDC social login (flag-gated) + full auth UI redesign. Backend: `OIDC_*` discovery adapter with PKCE S256/state/nonce, Redis single-use state + one-time exchange grant (tokens never in URLs), account linking only via `(provider, provider_sub)` or a verified email, JWT/refresh reuse the existing rotation core, `/meta.social` allowlist; flag off keeps **zero** `/auth/social*` surface. Client: shared `AuthShell` split layout, redesigned two-step login (step indicator, password visibility, inline password recovery), social button, `/auth/social/callback`, landing modal on `custom-ui/dialog` (flip from bottom). ADR 0014; no migration (`linked_identities` already existed).
+
 ## [v0.3.3] — 2026-10-14
 
 - **`deps-security-bump`**: CI `security` falhava determinístico (`pip-audit`: 18 CVEs em `multidict`/`pyjwt`/`urllib3`) — `PyJWT>=2.8`→`>=2.15` + `uv lock --upgrade-package` (6.9.1 / 2.15.1 / 2.8.0). Gates: `pip-audit` limpo, bandit limpo, unit 140/140, refresh+auth integration 12/12 (Postgres real). Adjacente: `test_bootstrap_tree` falhava por bug latente (`new_project.py` copiava `.git`-arquivo de worktree) — fix documentado, coberto pelo próprio teste.

@@ -37,7 +37,7 @@ Bearer JWT → CurrentPrincipal (signature, iss/aud/exp/type, tokens_valid_after
   → service (domínio, nunca HTTPException) → interfaces traduz erro→status
 ```
 
-Refresh: `SELECT FOR UPDATE` → marca `used_at` → emite sucessor → `replaced_by`; reuse revoga a family inteira (commit antes do raise). Webhook Stripe: HMAC → outbox `stripe:{id}` → aplica → complete.
+Refresh: `SELECT FOR UPDATE` → marca `used_at` → emite sucessor → `replaced_by`; reuse revoga a family inteira (commit antes do raise). Webhook Stripe: HMAC → outbox `stripe:{id}` → aplica → complete. Social (flag-gated): OIDC code flow com PKCE S256/state/nonce; o callback entrega ao SPA um grant de uso único (nenhum token na URL).
 
 ## Índice de decisões (ADRs)
 
@@ -54,6 +54,7 @@ Refresh: `SELECT FOR UPDATE` → marca `used_at` → emite sucessor → `replace
 - `0011-auto-release` — release a cada PR mergeado.
 - `0012-release-guard` — check em tempo de PR + silêncio pós-merge.
 - `0013-client-routing-structure` — pastas espelham `ROUTES` (ver seção client).
+- `0014-generic-oidc-social-login` — OIDC genérico flag-gated (PKCE/state/nonce, grant de troca único, link por email verificado).
 
 ## Client (`client/`, canônico: `docs/CLIENT-STRUCTURE.md`)
 

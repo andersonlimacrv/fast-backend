@@ -78,14 +78,14 @@ Python ≥3.11, `uv`, Docker, Node 20+ (`npm`), Git.
 
 ```bash
 make setup   # .env + deps + checagem de drift + migrations
-make dev     # stack backend (docker) + frontend (:5173)
+make dev     # stack backend (docker) + frontend (:3001)
 ```
 
-- API → http://127.0.0.1:8000/docs · SPA → http://localhost:5173 (`/` landing pública, `/~` home logada, `/admin*` staff).
-- Precisa de `client/.env` (`VITE_API_URL=http://localhost:8000`, ver `client/.env.example`) e `CORS_ORIGINS=["http://localhost:5173"]` no backend.
+- API → http://127.0.0.1:8001/docs · SPA → http://localhost:3001 (`/` landing pública, `/~` home logada, `/admin*` staff).
+- Precisa de `client/.env` (`VITE_API_URL=http://localhost:8001`, ver `client/.env.example`) e `CORS_ORIGINS=["http://localhost:3001"]` no backend.
 
 ```bash
-make api     # API com reload → http://127.0.0.1:8000/docs (precisa do db: make db-up)
+make api     # API com reload → http://127.0.0.1:8001/docs (precisa do db: make db-up)
 ```
 
 ### 2. Primeiro usuário (root one-shot)
@@ -103,7 +103,7 @@ Depois logue como root (`POST /auth/login` ou a SPA). Runbook completo + checkli
 cp .env.example .env                       # make env-template (nunca sobrescreve)
 uv sync --extra dev                        # make sync
 uv run alembic upgrade head                # make migrate
-uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8000 --reload  # make api
+uv run uvicorn app.main:create_app --factory --host 127.0.0.1 --port 8001 --reload  # make api
 ```
 
 </details>
@@ -129,20 +129,34 @@ docker compose --profile tools up -d --build  # make tools
 
 ```bash
 make web-install   # uma vez: npm ci em client/
-make dev           # stack backend + Vite dev → http://localhost:5173 (ou `make web` só p/ o frontend)
+make dev           # stack backend + Vite dev → http://localhost:3001 (ou `make web` só p/ o frontend)
 ```
 
 Landing pública em `/`, home logada em `/~`, login two-step, admin em `/admin*` (staff). Notas de privacidade em `docs/PRIVACY.pt-BR.md`.
+
+### Login social (opcional, OIDC)
+
+O login social vem desligado. Para ligar qualquer provider OIDC (Keycloak, Auth0, Entra ID, Google, ...):
+
+```bash
+SOCIAL_LOGIN_ENABLED=true
+OIDC_ISSUER=https://idp.example.com
+OIDC_CLIENT_ID=...
+OIDC_CLIENT_SECRET=...
+OIDC_REDIRECT_URI=http://localhost:8001/auth/social/oidc/callback
+```
+
+Cadastre a redirect URI no provider. O SPA lê `/meta.social` e mostra "Sign in with <display name>"; `OIDC_PROVIDER` é o slug da URL. Com a flag off nenhuma rota `/auth/social*` existe. Ver ADR 0014.
 
 <details>
 <summary>Por baixo dos panos</summary>
 
 ```bash
 cd client && npm ci
-cd client && npm run dev -- --port 5173 --strictPort
+cd client && npm run dev -- --port 3001 --strictPort
 ```
 
-Precisa de `client/.env` (`VITE_API_URL=http://localhost:8000`, ver `client/.env.example`) e `CORS_ORIGINS=["http://localhost:5173"]` no backend. SPA de visualização read-only — detalhes em `client/README.md`.
+Precisa de `client/.env` (`VITE_API_URL=http://localhost:8001`, ver `client/.env.example`) e `CORS_ORIGINS=["http://localhost:3001"]` no backend. SPA de visualização read-only — detalhes em `client/README.md`.
 
 </details>
 

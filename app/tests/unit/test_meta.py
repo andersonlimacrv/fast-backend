@@ -45,6 +45,7 @@ async def test_meta_shape_anonymous(bare_client: AsyncClient) -> None:
         "billing",
     }
     assert all(set(m) == {"key", "enabled"} for m in body["modules"])
+    assert body["social"] == {"enabled": False, "provider": None, "display_name": None}
 
 
 @pytest.mark.unit

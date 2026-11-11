@@ -10,6 +10,7 @@ import { AdminUsersPage } from "@/pages/admin/Users";
 import { LandingPage } from "@/pages/landing/Landing";
 import { LoginPage } from "@/pages/auth/Login";
 import { RegisterPage } from "@/pages/auth/Register";
+import { SocialCallbackPage } from "@/pages/auth/SocialCallback";
 import { AuditPage } from "@/pages/audit/Audit";
 import { DashboardPage } from "@/pages/overview/Dashboard";
 import { GalleryPage } from "@/pages/admin/gallery/Gallery";
@@ -29,6 +30,7 @@ export default function App() {
       <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/auth/social/callback" element={<SocialCallbackPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route element={<Protected />}>
         <Route path="~" element={<DashboardPage />} />

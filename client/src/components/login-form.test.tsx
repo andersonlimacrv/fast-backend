@@ -11,6 +11,11 @@ vi.mock("@/contexts/AuthContext", () => ({
   useAuth: () => ({ login, sessionNotice: null, dismissNotice: () => {} }),
 }));
 
+vi.mock("@/lib/api", () => ({
+  getMeta: vi.fn(async () => ({ social: { enabled: false, provider: null, display_name: null } })),
+  forgotPassword: vi.fn(async () => {}),
+}));
+
 afterEach(() => {
   cleanup();
   login.mockClear();
@@ -39,7 +44,7 @@ describe("LoginForm two-step", () => {
     renderForm();
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "Ghost@Example.com" } });
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-    expect(await screen.findByLabelText(/password/i)).toBeTruthy();
+    expect(await screen.findByLabelText("Password")).toBeTruthy();
     expect(screen.getByText("ghost@example.com")).toBeTruthy();
     expect(login).not.toHaveBeenCalled();
   });
@@ -48,7 +53,7 @@ describe("LoginForm two-step", () => {
     renderForm();
     fireEvent.change(screen.getByLabelText(/email/i), { target: { value: "  Ada@Example.com " } });
     fireEvent.click(screen.getByRole("button", { name: /continue/i }));
-    fireEvent.change(await screen.findByLabelText(/password/i), { target: { value: "secret123" } });
+    fireEvent.change(await screen.findByLabelText("Password"), { target: { value: "secret123" } });
     fireEvent.click(screen.getByRole("button", { name: /^login$/i }));
     await waitFor(() => expect(login).toHaveBeenCalledWith("ada@example.com", "secret123"));
   });
