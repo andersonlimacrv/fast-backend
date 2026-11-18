@@ -63,4 +63,6 @@
 - [ ] 6.3b Playwright: axe/landing/keyboard passam; `login.png` precisa de
       baseline novo via `web-e2e-baselines.yml` (regra: nunca commitar
       `--update-snapshots` local)
-- [ ] 6.4 `git status --short`; sem commit sem pedido
+- [x] 6.4 commits `cae26d6` (feat) + `7f27421` (fix) após pedido do
+      dono; `git status --short` limpo (só `uv.lock` pré-existente, fora do
+      escopo)

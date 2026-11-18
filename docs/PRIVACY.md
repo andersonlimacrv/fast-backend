@@ -43,7 +43,7 @@ Never stored in logs or audit: passwords, access/refresh/reset tokens, secrets. 
 
 - Browser session, two modes: default header flow keeps short-lived tokens in the SPA memory/`localStorage` (dev convenience); with `AUTH_COOKIE_ENABLED=true` (production SPA transport) the tokens travel as `HttpOnly`/`Secure`/`SameSite=Lax` cookies the JS cannot read, plus a readable `csrf_token` synchronizer echoed in `X-CSRF-Token` on mutations (`Path=/auth` confines the refresh cookie to `/auth/*`). Cookie-authenticated mutations without the token get `403`. See `docs/DEPLOYMENT.md` ("Cookie sessions + CSRF") for the TLS/`Secure` runbook.
 - Landing (`/`): no trackers, no third-party requests, no analytics.
-- Subprocessors depend on deploy: SMTP provider (`EMAIL_BACKEND=smtp`), S3-compatible storage, Stripe (only with `BILLING_ENABLED=true`).
+- Subprocessors depend on deploy: SMTP provider (`EMAIL_BACKEND=smtp`), S3-compatible storage, Stripe (only with `BILLING_ENABLED=true`), and the OIDC identity provider (only with `SOCIAL_LOGIN_ENABLED=true` — receives the email address for account linking).
 
 ## Contact
 
