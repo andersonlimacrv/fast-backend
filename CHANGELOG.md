@@ -112,10 +112,11 @@ Language: entries are written in **English** (see `docs/RULES.md` §9).
 
 ## [v0.4.1] — 2026-11-18
 
-- **`oidc-id-token-signature`**: `id_token` agora com assinatura verificada (JWKS/RS256 + `iss`/`aud`/`exp`/`iat`/`sub`/`nonce`, refetch no `kid` desconhecido); nova dep `cryptography`. ADR 0015.
 - **`deps-npm-audit-fix`**: `npm audit` zerado no `client/` — `vite 8.3.5`, `source-map-js 1.2.2`, `undici` e transitivas via `npm audit fix`, mais bumps manuais `vitest 5.0.1 → 5.0.5` e `zod 4.6.5 → 4.6.7` (fora do range; `--force` rejeitado). Sem mudança de código.
 
 ## [Unreleased]
+
+- **`oidc-id-token-signature`**: `id_token` agora com assinatura verificada (JWKS/RS256 + `iss`/`aud`/`exp`/`iat`/`sub`/`nonce`, refetch no `kid` desconhecido); nova dep `cryptography`. ADR 0015.
 
 ## [v0.3.2] — 2026-09-19
 
