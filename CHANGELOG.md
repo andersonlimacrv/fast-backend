@@ -110,9 +110,11 @@ Language: entries are written in **English** (see `docs/RULES.md` §9).
 - **`dev-loop-port-eval`**: `make dev` failed on Linux in two ways after the Windows→Linux move. The Makefile evaluated the semicolon-separated `env_ports.py --make` output as one assignment, so `WEB_PORT` became `3001;API_PORT=8001;...` (polluting Vite and the CORS hint); it now splits on `;` and evaluates each assignment. Web targets also gained `_check-web-deps`, which fails with `run 'make web-install' first` instead of a cryptic `vite: command not found` (exit 127). Regression covered by a `make -n dev` unit test.
 - **`login-social-redesign`**: generic OIDC social login (flag-gated) + full auth UI redesign. Backend: `OIDC_*` discovery adapter with PKCE S256/state/nonce, Redis single-use state + one-time exchange grant (tokens never in URLs), account linking only via `(provider, provider_sub)` or a verified email, JWT/refresh reuse the existing rotation core, `/meta.social` allowlist; flag off keeps **zero** `/auth/social*` surface. Client: shared `AuthShell` split layout, redesigned two-step login (step indicator, password visibility, inline password recovery), social button, `/auth/social/callback`, landing modal on `custom-ui/dialog` (flip from bottom). ADR 0014; no migration (`linked_identities` already existed).
 
-## [Unreleased]
+## [v0.4.1] — 2026-11-18
 
 - **`deps-npm-audit-fix`**: `npm audit` zerado no `client/` — `vite 8.3.5`, `source-map-js 1.2.2`, `undici` e transitivas via `npm audit fix`, mais bumps manuais `vitest 5.0.1 → 5.0.5` e `zod 4.6.5 → 4.6.7` (fora do range; `--force` rejeitado). Sem mudança de código.
+
+## [Unreleased]
 
 ## [v0.3.2] — 2026-09-19
 
