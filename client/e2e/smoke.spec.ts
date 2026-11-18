@@ -16,7 +16,7 @@ test("landing loads with release info and clean axe", async ({ page }) => {
 
 test("snapshots: login and 404", async ({ page }) => {
   await page.goto("/login");
-  await expect(page.getByRole("heading", { name: /login/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /sign in/i })).toBeVisible();
   await expectNoSeriousA11y(page);
   await expect(page).toHaveScreenshot("login.png");
 

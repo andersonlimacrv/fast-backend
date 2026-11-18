@@ -36,6 +36,8 @@ export {
   Copy,
   Crown,
   Download,
+  Eye,
+  EyeOff,
   File,
   FileCode,
   FileText,

@@ -1,8 +1,14 @@
 """Unit tests: port assignments for Make (tmp files, never the real .env)."""
 
+import shutil
+import subprocess
+from pathlib import Path
+
 import pytest
 
 from scripts.env_ports import main, resolve
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def _write(path, text: str):
@@ -36,6 +42,32 @@ def test_make_output_skips_environ_overrides(tmp_path, monkeypatch, capsys) -> N
     out = capsys.readouterr().out
     assert "WEB_PORT=3002" in out
     assert "API_PORT=" not in out  # CLI/env override wins; Make ?= keeps it
-    # Semicolon-separated: Make $(shell) folds newlines into spaces, so plain
-    # lines would eval as a single garbage assignment.
+    # Semicolon-separated transport: Make $(shell) folds newlines into spaces,
+    # so plain lines would collapse into one value. The Makefile splits on `;`.
     assert ";" in out
+    assert "\n" not in out
+
+
+@pytest.mark.unit
+def test_makefile_eval_keeps_ports_clean(tmp_path) -> None:
+    """Regression: `$(eval $(ENV_PORTS))` used to leave WEB_PORT=3002;API_PORT=..."""
+    make = shutil.which("make")
+    if make is None or shutil.which("bash") is None:
+        pytest.skip("GNU make + bash required for the Makefile regression test")
+    env = _write(
+        tmp_path / ".env",
+        "WEB_PORT=3002\nAPI_PORT=8002\nPOSTGRES_PORT=5402\nREDIS_PORT=6402\n",
+    )
+    result = subprocess.run(
+        [make, "-f", str(REPO_ROOT / "Makefile"), "-n", "dev", f"ENV_FILE={env}"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    # `-n` prints the recipes without executing Docker/Vite.
+    assert "cd client && npm run dev -- --port 3002 --strictPort" in result.stdout
+    assert "http://localhost:3002 |" in result.stdout
+    assert "http://127.0.0.1:8002/docs" in result.stdout
+    assert "3002;API_PORT" not in result.stdout

@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import {
   clearSession,
+  exchangeSocialCode,
   fetchMe,
   getAccessToken,
   listOrgs,
@@ -23,6 +24,7 @@ interface AuthState {
   ready: boolean;
   sessionNotice: string | null;
   login: (email: string, password: string) => Promise<void>;
+  loginWithSocialCode: (code: string) => Promise<void>;
   register: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   logoutEverywhere: () => Promise<void>;
@@ -90,6 +92,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [loadSession],
   );
 
+  const loginWithSocialCode = useCallback(
+    async (code: string) => {
+      await exchangeSocialCode(code);
+      setSessionNotice(null);
+      await loadSession();
+      notify.success("Logged in");
+    },
+    [loadSession],
+  );
+
   const register = useCallback(
     async (email: string, password: string) => {
       await apiRegister(email, password);
@@ -133,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ready,
       sessionNotice,
       login,
+      loginWithSocialCode,
       register,
       logout,
       logoutEverywhere,
@@ -140,7 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       refreshUser: loadSession,
       dismissNotice,
     }),
-    [user, orgs, activeOrgId, ready, sessionNotice, login, register, logout, logoutEverywhere, switchOrg, loadSession, dismissNotice],
+    [user, orgs, activeOrgId, ready, sessionNotice, login, loginWithSocialCode, register, logout, logoutEverywhere, switchOrg, loadSession, dismissNotice],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -134,6 +134,20 @@ make dev           # backend stack + Vite dev → http://localhost:3001 (or `mak
 
 Public landing at `/` (modules, flags, release — works offline), session home at `/~`, two-step login, staff admin at `/admin*`. Privacy notes in `docs/PRIVACY.md`.
 
+### Social login (optional, OIDC)
+
+Social login is off by default. To wire any OIDC provider (Keycloak, Auth0, Entra ID, Google, ...):
+
+```bash
+SOCIAL_LOGIN_ENABLED=true
+OIDC_ISSUER=https://idp.example.com
+OIDC_CLIENT_ID=...
+OIDC_CLIENT_SECRET=...
+OIDC_REDIRECT_URI=http://localhost:8001/auth/social/oidc/callback
+```
+
+Register the redirect URI at the provider. The SPA reads `/meta.social` and shows "Sign in with <display name>"; `OIDC_PROVIDER` is the URL slug. With the flag off no `/auth/social*` route exists. See ADR 0014.
+
 <details>
 <summary>Under the hood</summary>
 

@@ -303,6 +303,25 @@ export async function fetchMe(): Promise<UserRead> {
   return authed<UserRead>("/auth/me");
 }
 
+/** Generic 202 regardless of account existence (anti-enumeration). */
+export async function forgotPassword(email: string): Promise<void> {
+  await raw("/auth/password/forgot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email }),
+  });
+}
+
+/** Exchange the one-time social callback grant for the standard token pair. */
+export async function exchangeSocialCode(code: string): Promise<void> {
+  const pair = await raw<TokenPair>("/auth/social/exchange", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code }),
+  });
+  storeTokenPair(pair.access_token, pair.refresh_token);
+}
+
 export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
   await authed("/auth/change-password", {
     method: "POST",
@@ -454,10 +473,17 @@ export interface MetaModule {
   enabled: boolean;
 }
 
+export interface SocialMeta {
+  enabled: boolean;
+  provider: string | null;
+  display_name: string | null;
+}
+
 export interface MetaRead {
   app: string;
   version: string;
   modules: MetaModule[];
+  social?: SocialMeta;
 }
 
 export async function getMeta(): Promise<MetaRead> {

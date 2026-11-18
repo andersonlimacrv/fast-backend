@@ -45,6 +45,15 @@ class PasswordResetError(DomainError):
     """Reset token unknown, expired, or already used (intentionally generic, change B)."""
 
 
+class SocialLoginError(DomainError):
+    """Social login failed: state/grant invalid, provider failure, or no
+    verified email to link. Deliberately generic (never an account oracle)."""
+
+
+class SocialEmailUnverifiedError(SocialLoginError):
+    """No existing link and the provider did not assert a verified email."""
+
+
 class AuditUnavailableError(DomainError):
     """Privileged action refused: audit recorder missing (fail-closed, change A)."""
 

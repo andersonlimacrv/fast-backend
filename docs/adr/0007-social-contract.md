@@ -1,6 +1,6 @@
 # ADR 0007 — Contrato social adiado (login social futuro)
 
-- Status: aceito (implementado na change `C-social-contract`, 2026-09-15: contrato + tabela + migração, sem rota — verificado via `/openapi.json`)
+- Status: aceito (implementado na change `C-social-contract`, 2026-09-15: contrato + tabela + migração, sem rota — verificado via `/openapi.json`). A decisão "sem provider ativo" foi revogada pela change `login-social-redesign` / ADR 0014 (OIDC genérico opt-in); contrato, tabela e chave `(provider, provider_sub)` permanecem.
 - Data: 2026-09-15
 - Referência congelada: `references/implementation_v2.md` §3.6 (extensões de auth)
 - Contexto upstream: ADR 0001 adiou OAuth; decisão aprovada: "só preparar extensão"

@@ -74,9 +74,11 @@ def main(argv: list[str] | None = None) -> int:
         sys.stderr.write(f"{exc}\n")
         return 2
     if args.make:
-        # Semicolon-separated: Make's $(shell) folds newlines into spaces, so
-        # newline-separated assignments would eval as ONE variable holding
-        # garbage (WEB_PORT="3001 API_PORT=8001 ..."). `;` splits statements.
+        # Semicolon-separated transport: Make's $(shell) folds newlines into
+        # spaces, so one assignment per line would collapse into a single
+        # garbage value. The Makefile splits on `;` and evals each assignment
+        # (`$(foreach ... $(subst ;, ,...))`); `$(eval)` alone does NOT treat
+        # `;` as a statement separator.
         parts = []
         for key, _ in PORTS:
             if key in os.environ:

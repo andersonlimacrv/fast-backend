@@ -43,7 +43,7 @@ Nunca em logs ou auditoria: senhas, tokens (access/refresh/reset), segredos. Tok
 
 - Sessão no navegador, dois modos: o fluxo header padrão mantém tokens curtos na memória/`localStorage` da SPA (conveniência dev); com `AUTH_COOKIE_ENABLED=true` (transporte de produção) os tokens viajam como cookies `HttpOnly`/`Secure`/`SameSite=Lax` que o JS não lê, mais um synchronizer `csrf_token` legível ecoado em `X-CSRF-Token` nas mutações (`Path=/auth` confina o cookie de refresh a `/auth/*`). Mutação por cookie sem o token recebe `403`. Ver `docs/DEPLOYMENT.pt-BR.md` ("Sessões por cookie + CSRF") p/ o runbook TLS/`Secure`.
 - Landing (`/`): sem trackers, sem requisições a terceiros, sem analytics.
-- Suboperadores dependem do deploy: provedor SMTP (`EMAIL_BACKEND=smtp`), storage S3-compatível, Stripe (só com `BILLING_ENABLED=true`).
+- Suboperadores dependem do deploy: provedor SMTP (`EMAIL_BACKEND=smtp`), storage S3-compatível, Stripe (só com `BILLING_ENABLED=true`) e o provedor de identidade OIDC (só com `SOCIAL_LOGIN_ENABLED=true` — recebe o email para vinculação da conta).
 
 ## Contato
 

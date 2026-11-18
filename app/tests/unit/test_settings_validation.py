@@ -100,6 +100,43 @@ def test_unknown_tenancy_rejected() -> None:
 
 
 @pytest.mark.unit
+def test_social_login_defaults_off() -> None:
+    s = Settings(secret_key="x" * 32, frontend_url="https://app.example.com")
+    assert s.social_login_enabled is False
+
+
+@pytest.mark.unit
+def test_social_login_requires_oidc_configuration() -> None:
+    with pytest.raises(ValidationError, match="OIDC_ISSUER"):
+        Settings(secret_key="x" * 32, frontend_url="https://app.example.com", social_login_enabled=True)
+
+
+@pytest.mark.unit
+def test_social_state_and_exchange_ttl_bounds() -> None:
+    with pytest.raises(ValidationError):
+        Settings(secret_key="x" * 32, frontend_url="https://app.example.com", oidc_state_ttl_seconds=10)
+    with pytest.raises(ValidationError):
+        Settings(secret_key="x" * 32, frontend_url="https://app.example.com", oidc_exchange_ttl_seconds=10)
+
+
+@pytest.mark.unit
+def test_production_social_login_requires_https() -> None:
+    with pytest.raises(ValidationError, match="HTTPS OIDC_ISSUER"):
+        Settings(
+            environment="production",
+            secret_key="x" * 32,
+            trusted_hosts=["example.com"],
+            bootstrap_key="y" * 32,
+            frontend_url="https://app.example.com",
+            social_login_enabled=True,
+            oidc_issuer="http://idp.example.com",
+            oidc_client_id="client",
+            oidc_client_secret="secret",
+            oidc_redirect_uri="https://api.example.com/auth/social/oidc/callback",
+        )
+
+
+@pytest.mark.unit
 def test_proxy_hops_default_fail_closed() -> None:
     s = Settings(secret_key="x" * 32, frontend_url="http://localhost:5173")
     assert s.trusted_proxy_hops == 0

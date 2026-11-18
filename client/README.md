@@ -63,6 +63,12 @@ Step 1 validates format and **always advances** for valid emails — existence i
 revealed (backend answers generic 401 with equal Argon2 cost either way). Errors stay
 inline; success lands on `/~`.
 
+The redesigned page uses the shared `AuthShell` (split layout on desktop), a step
+indicator, show/hide password, inline "Forgot password?" (generic 202) and, when the
+backend reports `social.enabled` in `/meta`, a "Sign in with <provider>" button. The
+OIDC callback returns a one-time grant to `/auth/social/callback`, which exchanges it
+for the standard session — tokens never appear in the URL.
+
 ## Notes
 
 - Auth is `Bearer` access JWT (10–15 min) + opaque Postgres refresh with mandatory

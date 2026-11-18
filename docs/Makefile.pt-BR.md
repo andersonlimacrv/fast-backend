@@ -31,6 +31,11 @@
 Segredos e URLs (`DATABASE_URL`, `BACKUP_PASSPHRASE`, …) vêm sempre do
 ambiente, nunca de variáveis do Makefile ou arquivos.
 
+> **Portas do `.env`:** `scripts/env_ports.py --make` emite `KEY=VALUE;...` em
+> uma linha (newlines seriam dobrados pelo `$(shell)`); o Makefile divide em
+> `;` e avalia cada assignment. Overrides de CLI/ambiente vencem, e um helper
+> que falha cai silenciosamente nos defaults `?=` — `make env-check` é o gate.
+
 ## Setup — primeira vez
 
 - **`make setup`** — *O quê:* bootstrap completo de um clone zerado. *Por quê:*
@@ -99,7 +104,7 @@ ambiente, nunca de variáveis do Makefile ou arquivos.
 - **`make up`** — app + worker + db + redis (precisa `.env`; `_check-env`
   falha rápido mandando rodar `make env-template`).
 - **`make db-up`** — só db + redis (serviços de dados p/ dev local: migrate/api/test contra eles).
-- **`make dev`** — loop dev completo: `_check-env` + `_check-web-env` (`client/.env` com `VITE_API_URL`) → `db-up` → `migrate` → `up` (stack detached) → dica de CORS se `$(WEB_PORT)` fora do `.env` → `web` em foreground. API em `:8001/docs`, SPA em `:3001` (portas do `.env`, RULES §13). Ctrl+C para só o Vite; **`make dev-down`** para a stack (mantém volumes).
+- **`make dev`** — loop dev completo: `_check-env` + `_check-web-env` (`client/.env` com `VITE_API_URL`) + `_check-web-deps` (`client/node_modules`; senão manda rodar `make web-install`) → `db-up` → `migrate` → `up` (stack detached) → dica de CORS se `$(WEB_PORT)` fora do `.env` → `web` em foreground. API em `:8001/docs`, SPA em `:3001` (portas do `.env`, RULES §13). Ctrl+C para só o Vite; **`make dev-down`** para a stack (mantém volumes).
 - **`make down`** — para tudo, mantém volumes. **`make restart`** — `down` + `up`.
 - **`make logs` / `logs-app` / `logs-db`** — acompanha logs (todos / app / postgres).
 - **`make tools`** — profiles mailpit + minio (captura de email dev, teste S3).
@@ -112,7 +117,7 @@ ambiente, nunca de variáveis do Makefile ou arquivos.
   (`http://127.0.0.1:8001/docs`).
 - **`make worker [WORKERS=]`** — `taskiq worker app.worker:broker`.
 - **`make web-install`** — `npm ci` dentro de `$(CLIENT_DIR)` (shell-agnostic, funciona até no cmd do Windows).
-- **`make web [WEB_PORT=]`** — servidor dev Vite (`http://localhost:3001`). Precisa de `client/.env` (`VITE_API_URL`) e CORS do backend liberando a origem.
+- **`make web [WEB_PORT=]`** — servidor dev Vite (`http://localhost:3001`). Precisa de `client/.env` (`VITE_API_URL`), `client/node_modules` (erro claro manda rodar `make web-install`) e CORS do backend liberando a origem.
 - **`make web-lint` / `web-test` / `web-build`** — `oxlint`, `vitest run`, `tsc -b && vite build` dentro de `$(CLIENT_DIR)`.
 - **`make web-e2e-install`** — Chromium do Playwright (versão segue o pin de `client/package.json`).
 - **`make web-e2e`** — E2E de browser (axe + snapshots, Chromium) contra `vite preview` — rode `web-build` antes; suítes logadas precisam da API no ar, senão pulam e a cobertura anônima roda. Baselines por plataforma: `linux/` commitado (seed só via `web-e2e-baselines.yml`), `win32/` local gitignored. **Legado: roda contra a API de DEV e polui o banco dev — prefira `make e2e-full`.**

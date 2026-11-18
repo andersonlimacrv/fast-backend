@@ -21,12 +21,23 @@ class ModuleMeta(BaseModel):
     enabled: bool
 
 
+class SocialMeta(BaseModel):
+    """Safe subset for the login UI: never the issuer/client id/secret."""
+
+    model_config = ConfigDict(frozen=True)
+
+    enabled: bool
+    provider: str | None = None
+    display_name: str | None = None
+
+
 class MetaRead(BaseModel):
     model_config = ConfigDict(frozen=True)
 
     app: str
     version: str
     modules: list[ModuleMeta]
+    social: SocialMeta = SocialMeta(enabled=False)
 
 
 @router.get("/meta", response_model=MetaRead)
@@ -35,4 +46,9 @@ async def read_meta(request: Request) -> MetaRead:
     modules = [ModuleMeta(key=key, enabled=True) for key in _ALWAYS_ON]
     modules.append(ModuleMeta(key="admin", enabled=bool(settings.admin_enabled)))
     modules.append(ModuleMeta(key="billing", enabled=bool(settings.billing_enabled)))
-    return MetaRead(app="fast-backend", version=settings.app_version, modules=modules)
+    social = (
+        SocialMeta(enabled=True, provider=settings.oidc_provider, display_name=settings.oidc_display_name)
+        if settings.social_login_enabled
+        else SocialMeta(enabled=False)
+    )
+    return MetaRead(app="fast-backend", version=settings.app_version, modules=modules, social=social)

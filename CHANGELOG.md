@@ -106,6 +106,10 @@ Language: entries are written in **English** (see `docs/RULES.md` §9).
 
 ## [Unreleased]
 
+- **`deps` (CVE float)**: `aiohttp 3.14.3→3.14.5`, `certifi 2026.7.22→2026.10.23`, `dnspython 2.8.0→2.9.2`, `filelock 3.32.6→4.2.12` (só cadeia do `pip-audit`), `msgpack 1.2.2→1.2.4`, `yarl 1.24.5→1.25.1`. `pip-audit` limpo; sem mudança de código.
+- **`dev-loop-port-eval`**: `make dev` failed on Linux in two ways after the Windows→Linux move. The Makefile evaluated the semicolon-separated `env_ports.py --make` output as one assignment, so `WEB_PORT` became `3001;API_PORT=8001;...` (polluting Vite and the CORS hint); it now splits on `;` and evaluates each assignment. Web targets also gained `_check-web-deps`, which fails with `run 'make web-install' first` instead of a cryptic `vite: command not found` (exit 127). Regression covered by a `make -n dev` unit test.
+- **`login-social-redesign`**: generic OIDC social login (flag-gated) + full auth UI redesign. Backend: `OIDC_*` discovery adapter with PKCE S256/state/nonce, Redis single-use state + one-time exchange grant (tokens never in URLs), account linking only via `(provider, provider_sub)` or a verified email, JWT/refresh reuse the existing rotation core, `/meta.social` allowlist; flag off keeps **zero** `/auth/social*` surface. Client: shared `AuthShell` split layout, redesigned two-step login (step indicator, password visibility, inline password recovery), social button, `/auth/social/callback`, landing modal on `custom-ui/dialog` (flip from bottom). ADR 0014; no migration (`linked_identities` already existed).
+
 ## [v0.3.2] — 2026-09-19
 
 - **`ci-cookie-sessions`**: `cookie-auth.spec.ts` skips when the API does not emit cookies (`describeWithCookies`, same pattern as `describeWithApi`); the CI `web` job enables `AUTH_COOKIE_ENABLED=true` + `SECURE=false` (plain http) so the 4 tests run there; `.env.example` no longer trips the gitleaks `generic-api-key` false positive (reworded `AUTH_COOKIE_DOMAIN` comment, 0 findings on tracked files).
