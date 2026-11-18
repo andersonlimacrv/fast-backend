@@ -108,6 +108,8 @@ Language: entries are written in **English** (see `docs/RULES.md` §9).
 
 ## [Unreleased]
 
+- **`sidebar-rail-dropdown`**: `sidebar.spec.ts` (768px) lia o `boundingBox()` do menu uma vez e corria com o frame pré-posicionamento no CI; agora usa `expect.poll` no mesmo assert "ancora à direita". Sem mudança de comportamento.
+
 ## [v0.3.2] — 2026-09-19
 
 - **`ci-cookie-sessions`**: `cookie-auth.spec.ts` skips when the API does not emit cookies (`describeWithCookies`, same pattern as `describeWithApi`); the CI `web` job enables `AUTH_COOKIE_ENABLED=true` + `SECURE=false` (plain http) so the 4 tests run there; `.env.example` no longer trips the gitleaks `generic-api-key` false positive (reworded `AUTH_COOKIE_DOMAIN` comment, 0 findings on tracked files).

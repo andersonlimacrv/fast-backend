@@ -22,6 +22,21 @@ async function expectNoOverflow(page) {
   expect(overflow.scrollW).toBeLessThanOrEqual(overflow.innerW + 1);
 }
 
+/* Radix positions the menu asynchronously after mount (Floating UI measures
+ * first, then places): the menuitem can be visible while the popup is still
+ * at its pre-position frame. Poll the boxes instead of reading once, so CI
+ * slowness cannot turn placement into a race. The spec itself is unchanged:
+ * the menu must settle to the right of the rail trigger. */
+async function expectMenuRightOfTrigger(menu, trigger) {
+  await expect
+    .poll(async () => {
+      const [menuBox, trigBox] = await Promise.all([menu.boundingBox(), trigger.boundingBox()]);
+      if (!menuBox || !trigBox) return false;
+      return menuBox.x >= trigBox.x + trigBox.width - 1;
+    })
+    .toBe(true);
+}
+
 describeWithApi("sidebar responsive", () => {
   let session: MemberSession;
   let orgId: string;
@@ -70,20 +85,16 @@ describeWithApi("sidebar responsive", () => {
     await page.getByRole("link", { name: "Health" }).hover();
     await expect(page.getByText("Health").last()).toBeVisible();
     const railTrigger = page.getByRole("button", { name: /account menu/i });
-    const trigBox = await railTrigger.boundingBox();
     await railTrigger.click();
     const menu = page.getByRole("menu").first();
     await expect(page.getByRole("menuitem", { name: /account/i })).toBeVisible();
-    const menuBox = await menu.boundingBox();
-    expect(menuBox && trigBox ? menuBox.x >= trigBox.x + trigBox.width - 1 : false).toBe(true);
+    await expectMenuRightOfTrigger(menu, railTrigger);
     await page.keyboard.press("Escape");
     // Rail Projects icon opens the actions menu (New/All/list) to the right.
     const projTrigger = page.getByRole("button", { name: /projects, \d+ total/i });
-    const projTrigBox = await projTrigger.boundingBox();
     await projTrigger.click();
     await expect(page.getByRole("menuitem", { name: /new project/i })).toBeVisible();
-    const projMenuBox = await page.getByRole("menu").first().boundingBox();
-    expect(projMenuBox && projTrigBox ? projMenuBox.x >= projTrigBox.x + projTrigBox.width - 1 : false).toBe(true);
+    await expectMenuRightOfTrigger(page.getByRole("menu").first(), projTrigger);
     // Screenshot keeps the Projects menu open (layering proof, like before).
     await expectNoOverflow(page);
     await expectNoSeriousA11y(page);
