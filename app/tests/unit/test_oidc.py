@@ -2,6 +2,7 @@
 
 import base64
 import json
+from typing import Any
 from urllib.parse import parse_qs, urlsplit
 
 import httpx
@@ -16,8 +17,8 @@ ISSUER = "https://idp.example.com"
 REDIRECT_URI = "https://api.example.com/auth/social/oidc/callback"
 
 
-def _settings(**overrides) -> Settings:
-    values = {
+def _settings(**overrides: Any) -> Settings:
+    values: dict[str, Any] = {
         "_env_file": None,
         "secret_key": "x" * 32,
         "frontend_url": "https://app.example.com",

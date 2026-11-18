@@ -4,6 +4,7 @@ Covers the security-critical paths that unit tests cannot: Redis single-use
 state/grant, cookie binding, account linking and flag-off surface.
 """
 
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from urllib.parse import parse_qs, urlsplit
 
@@ -86,7 +87,7 @@ async def social_app(base_settings, clean_db: None):
 
 
 @pytest_asyncio.fixture(loop_scope="function")
-async def social_client(social_app) -> AsyncClient:
+async def social_client(social_app) -> AsyncIterator[AsyncClient]:
     app, _fake = social_app
     async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as client:
         yield client

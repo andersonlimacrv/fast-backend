@@ -12,16 +12,21 @@ from typing import Any, Protocol
 class SocialProfile(Protocol):
     """Normalized profile returned by the provider's UserInfo endpoint."""
 
-    provider: str
-    provider_sub: str
-    email: str | None
-    email_verified: bool
+    @property
+    def provider(self) -> str: ...
+    @property
+    def provider_sub(self) -> str: ...
+    @property
+    def email(self) -> str | None: ...
+    @property
+    def email_verified(self) -> bool: ...
 
 
 class SocialProvider(Protocol):
     """OIDC provider (Google, Keycloak, Auth0, Entra ID, ...)."""
 
-    provider: str
+    @property
+    def provider(self) -> str: ...
 
     def authorize_url(self, *, state: str, code_challenge: str, redirect_uri: str, nonce: str) -> str:
         """Build the provider authorization URL (PKCE S256 + nonce)."""

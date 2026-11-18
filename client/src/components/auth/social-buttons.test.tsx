@@ -3,12 +3,14 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { SocialButtons } from "@/components/auth/social-buttons";
+import { API_BASE } from "@/lib/api";
 
 const getMeta = vi.fn();
 
-vi.mock("@/lib/api", () => ({
-  getMeta: () => getMeta(),
-}));
+vi.mock("@/lib/api", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/lib/api")>();
+  return { ...actual, getMeta: () => getMeta() };
+});
 
 afterEach(() => {
   cleanup();
@@ -22,7 +24,7 @@ describe("SocialButtons", () => {
     render(<SocialButtons onStart={onStart} />);
     const button = await screen.findByRole("button", { name: /sign in with acme sso/i });
     button.click();
-    expect(onStart).toHaveBeenCalledWith("http://localhost:8001/auth/social/oidc/authorize");
+    expect(onStart).toHaveBeenCalledWith(`${API_BASE}/auth/social/oidc/authorize`);
   });
 
   it("renders nothing when the backend flag is off", async () => {
