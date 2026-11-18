@@ -112,6 +112,8 @@ Language: entries are written in **English** (see `docs/RULES.md` §9).
 
 ## [Unreleased]
 
+- **`oidc-id-token-signature`**: `id_token` agora com assinatura verificada (JWKS/RS256 + `iss`/`aud`/`exp`/`iat`/`sub`/`nonce`, refetch no `kid` desconhecido); nova dep `cryptography`. ADR 0015.
+
 ## [v0.3.2] — 2026-09-19
 
 - **`ci-cookie-sessions`**: `cookie-auth.spec.ts` skips when the API does not emit cookies (`describeWithCookies`, same pattern as `describeWithApi`); the CI `web` job enables `AUTH_COOKIE_ENABLED=true` + `SECURE=false` (plain http) so the 4 tests run there; `.env.example` no longer trips the gitleaks `generic-api-key` false positive (reworded `AUTH_COOKIE_DOMAIN` comment, 0 findings on tracked files).

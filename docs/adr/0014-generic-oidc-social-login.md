@@ -4,6 +4,8 @@
 - Data: 2026-10-22
 - Substitui parcialmente: `ADR 0007` (o contrato e a tabela continuam válidos;
   a decisão "sem provider ativo" é revogada)
+- Completado por: `ADR 0015` (validação de assinatura do `id_token` via
+  JWKS/RS256; a decisão "validação fica pendente" está revogada)
 
 ## Contexto
 
@@ -52,8 +54,9 @@ travar o deploy padrão (que segue sem provider).
 - Positivas: SSO opt-in sem novo módulo nem migração; reaproveita refresh
   opaco, rotação, `tokens_valid_after` e auditoria; SPA e API compartilham o
   mesmo contrato de sessão.
-- Negativas: Redis passa a ser necessário para o fluxo social (já era para
-  throttling); validação de assinatura do `id_token` fica pendente.
+- Negativas: `cryptography` no runtime (adicionada na change
+  `oidc-id-token-signature`); validação de assinatura do `id_token`
+  implementada no ADR 0015.
 - Trocar `OIDC_ISSUER` mantendo o mesmo `OIDC_PROVIDER` reinterpretaria os
   `provider_sub` antigos: ao migrar de IdP, troque também o slug do provider.
 - Reversão: `SOCIAL_LOGIN_ENABLED=false` remove todas as rotas; os vínculos
