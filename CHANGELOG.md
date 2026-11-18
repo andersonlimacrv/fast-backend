@@ -100,9 +100,11 @@ Language: entries are written in **English** (see `docs/RULES.md` §9).
   Behavior PRs must add one entry here; docs-only PRs pass without it.
 -->
 
-## [Unreleased]
+## [v0.3.4] — 2026-11-18
 
 - **`sidebar-rail-dropdown`**: `sidebar.spec.ts` (768px) lia o `boundingBox()` do menu uma vez e corria com o frame pré-posicionamento no CI; agora usa `expect.poll` no mesmo assert "ancora à direita". Sem mudança de comportamento.
+
+## [Unreleased]
 
 ## [v0.3.2] — 2026-09-19
 
