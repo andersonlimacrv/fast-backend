@@ -60,9 +60,10 @@
 - [x] 6.2 integração social com Postgres/Redis reais; suíte completa
       (263 passed)
 - [x] 6.3 `npm run lint`, `tsc -b`, `npm test` (175), `npm run build`
-- [ ] 6.3b Playwright: axe/landing/keyboard passam; `login.png` precisa de
-      baseline novo via `web-e2e-baselines.yml` (regra: nunca commitar
-      `--update-snapshots` local)
+- [x] 6.3b Playwright: axe/landing/keyboard passam; `login.png`
+      regenerado via `web-e2e-baselines.yml` (commit `21fd8d8` do bot).
+      Nota: `landing.png` local difere sem API no ar (badge offline) —
+      pré-existente, fora do escopo.
 - [x] 6.4 commits `cae26d6` (feat) + `7f27421` (fix) após pedido do
       dono; `git status --short` limpo (só `uv.lock` pré-existente, fora do
       escopo)
