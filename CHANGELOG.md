@@ -112,6 +112,8 @@ Language: entries are written in **English** (see `docs/RULES.md` §9).
 
 ## [Unreleased]
 
+- **`deps-npm-audit-fix`**: `npm audit` zerado no `client/` — `vite 8.3.5`, `source-map-js 1.2.2`, `undici` e transitivas via `npm audit fix`, mais bumps manuais `vitest 5.0.1 → 5.0.5` e `zod 4.6.5 → 4.6.7` (fora do range; `--force` rejeitado). Sem mudança de código.
+
 ## [v0.3.2] — 2026-09-19
 
 - **`ci-cookie-sessions`**: `cookie-auth.spec.ts` skips when the API does not emit cookies (`describeWithCookies`, same pattern as `describeWithApi`); the CI `web` job enables `AUTH_COOKIE_ENABLED=true` + `SECURE=false` (plain http) so the 4 tests run there; `.env.example` no longer trips the gitleaks `generic-api-key` false positive (reworded `AUTH_COOKIE_DOMAIN` comment, 0 findings on tracked files).
