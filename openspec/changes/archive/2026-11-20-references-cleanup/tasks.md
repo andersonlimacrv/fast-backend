@@ -23,5 +23,5 @@
 
 ## S3 — Pendente do dono
 
-- [ ] 3.1 Replacement inbox rule for future reference docs (one-liner; `lab-harness/design.md:28` growth rule points at the deleted folder)
-- [ ] 3.2 Sem commit sem pedido
+- [x] 3.1 Replacement inbox rule for future reference docs — DECIDIDO pelo dono em 2026-11-20: **inbox fechado** (fase de portes encerrada, sem novos docs; catálogo congelado nos itens atuais; item novo só via change dedicada aprovada). Ponteiro quebrado corrigido em `lab-harness/design.md:28`.
+- [x] 3.2 Sem commit sem pedido (execução autorizada pelo dono em 2026-11-20)

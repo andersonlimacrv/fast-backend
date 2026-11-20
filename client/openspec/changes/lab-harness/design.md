@@ -25,7 +25,7 @@ lib/catalog/index.ts    — barrel + byClass/byStatus/validatedByClass/nn/CLASS_
 - `status` = `pending` | `validated` | `dropped` (`stamped` extinto).
 - `ref`/`refGroup` apontam o doc-fonte (`animate-ui` | `exemple-layours` | `standalone`); `source` é a implementação ou `null` (not ported).
 - `usedIn[]` = `{ label, to?, scope }` — `to` vira link rápido quando existe rota.
-- **Crescimento**: novo doc em `references/components_to_use/` → append com o próximo `n`, `status: "pending"`, `source: null`.
+- **Crescimento**: encerrado em 2026-11-20 (decisão do dono) — inbox de reference docs fechado, fase de portes concluída, catálogo congelado nos itens atuais; item novo só via change dedicada aprovada.
 
 ## Provas compartilhadas
 
