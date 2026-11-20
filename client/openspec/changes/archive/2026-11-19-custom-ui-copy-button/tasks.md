@@ -26,6 +26,6 @@
 
 ## S4 — Verificação
 
-- [ ] 4.1 **Ok visual do dono** em `/admin/lab/trials` (card 06) → `status: "validated"`
-- [ ] 4.2 Gates quando pedidos: `tsc+build`, vitest, e2e full, `oxlint`
-- [ ] 4.3 Sem commit sem pedido
+- [x] 4.1 **Ok visual do dono** em `/admin/lab/trials` (card 06) → `status: "validated"` (validado em 2026-09-19; item `validated` no catálogo)
+- [x] 4.2 Gates quando pedidos: `tsc+build`, vitest, e2e full, `oxlint` (change mergeada com CI verde)
+- [x] 4.3 Sem commit sem pedido (execução autorizada pelo dono em 2026-11-19)

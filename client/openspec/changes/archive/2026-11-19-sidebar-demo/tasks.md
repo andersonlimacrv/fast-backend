@@ -1,6 +1,6 @@
 ## S0 — Spec (esta change)
 
-- [ ] 0.1 `client/openspec/changes/sidebar-demo/{proposal,tasks,design}.md` + aprovação visual antes de commit
+- [x] 0.1 `client/openspec/changes/sidebar-demo/{proposal,tasks,design}.md` + aprovação visual antes de commit
 
 ## S1 — Fundamentos (eu)
 
@@ -29,7 +29,7 @@
 - [x] 6.2 e2e: axe + snapshots sidebar nova + 403 intacto + keyboard Tab (verificado 2026-09-17: 14/14, axe limpo, 403 member intacto)
 - [x] 6.3 Ledger §11 linha 11: DEMO aplicado; `tasks.md` implementation notes
 - [x] 6.4 Gates full: vitest 102/tsc/build/oxlint (só warnings pré-existentes) + e2e 14/14 + backend unit 89/integration 89 + `lint/types` verdes (verificado 2026-09-17)
-- [ ] 6.5 **PARAR p/ ok visual do dono — sem commit/PR até lá**
+- [x] 6.5 **PARAR p/ ok visual do dono — sem commit/PR até lá** (ok dado em 2026-10-01; item 17 `validated` no catálogo)
 
 ## S7 — Backlog de verificação visual (dono, 2026-09-16, screenshot Orgs)
 
@@ -59,7 +59,7 @@
   (drawer/Esc/cookie/tooltip/overflow/axe/snapshots); `forceUpdateBounds` removido
   (rAF ilimitado); `aria-selected` fora do HighlightItem.
 - [x] 7.2 Header `OrgSwitcher` com nomes longos (2026-09-30): `title` com nome/slug completos nos truncados do header, do dropdown e da marca single-org (+ `min-w-0` que faltava nela); teste de regressão `app-sidebar.test.tsx` (nome 50+/slug 40: trunca, expõe titles, árvore intacta). Retrofit RULES §12 (dono): `OrgSwitcher` aceita `orgs`/`activeOrgId`/`onSwitchOrg` injetáveis (produção inalterada) + prova permanente no card 17 (`DEMOS["sidebar"]`, antes `EmptyState`) + teste da prova; regla registrada em `docs/RULES.md` §12. **Prova validada pelo dono em 2026-09-30.**
-- [ ] 7.3 Rail `md–xl`: tooltips dos subgroups + dropdowns ancorados (side right). **Verificado em 2026-09-30 no browser** (tooltip no hover, menu ancora à direita, nomes longos truncando, zero erros) + prova permanente no card 17 (rail row com dados injetados) + teste; exports `OrganizationsRailMenuItem`/`ProjectsRailMenuItem`.
+- [x] 7.3 Rail `md–xl`: tooltips dos subgroups + dropdowns ancorados (side right). **Verificado em 2026-09-30 no browser** (tooltip no hover, menu ancora à direita, nomes longos truncando, zero erros) + prova permanente no card 17 (rail row com dados injetados) + teste; exports `OrganizationsRailMenuItem`/`ProjectsRailMenuItem`. (Entregue; validado com o item 17 em 2026-10-01.)
 - [x] 7.4 Drawer `<md`: Sheet foca/fecha, `⌘B` alterna, cookie persiste após reload — **verificado em 2026-10-01** (`e2e/sidebar.spec.ts` 4/4 vs API dev real: drawer/Esc 390, rail/tooltip/anchor 768, `Control+b` + cookie pós-reload 1280, expandida 1536; snapshots win32 locais, sem commit)
 
 ## S8 — Projects group + Organizations subgroups + Settings placeholder (dono, 2026-09-16)

@@ -17,9 +17,9 @@
 ## S3 — Docs + verificação
 
 - [x] 3.1 `review-design.md` (§6 + ledger 26) + CHANGELOG
-- [ ] 3.2 Ok visual do dono no card 26 (agora no Lab — ver S4)
+- [x] 3.2 Ok visual do dono no card 26 (validado em 2026-10-09; item `validated` no catálogo)
 - [x] 3.3 Gates: `tsc -b`, `oxlint`, vitest, build — **verdes** (`tsc` limpo; oxlint sem achado; suite 169/169; `vite build` ok)
-- [ ] 3.4 Sem commit sem pedido
+- [x] 3.4 Sem commit sem pedido (execução autorizada pelo dono em 2026-11-19)
 
 ## S4 — Trial de cor do efeito (dono, 2026-10-09)
 

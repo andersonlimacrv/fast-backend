@@ -18,6 +18,6 @@
 ## S3 — Docs + verificação
 
 - [x] 3.1 `entries.ts` n=22 e n=24 (notas) + CHANGELOG
-- [ ] 3.2 Ok visual do dono nos cards 22/24 da Gallery
+- [x] 3.2 Ok visual do dono nos cards 22/24 da Gallery (validado em 2026-10-01; itens `validated` no catálogo)
 - [x] 3.3 Gates: `tsc -b`, `oxlint`, vitest, build — **verdes** (`tsc` limpo; oxlint só warnings pré-existentes; catálogo 78/78; suite 168/168; `vite build` ok)
-- [ ] 3.4 Sem commit sem pedido
+- [x] 3.4 Sem commit sem pedido (execução autorizada pelo dono em 2026-11-19)

@@ -32,6 +32,6 @@
 
 ## S7 — Verificação
 
-- [ ] 7.1 Ok visual do dono (root e não-root, dois temas)
+- [x] 7.1 Ok visual do dono (root e não-root, dois temas) — coberto pelo ok da sidebar em 2026-10-01 (Root Mode card listado como validado); veredito aceito pelo dono em 2026-11-19
 - [x] 7.2 Gates: `tsc -b`, `oxlint`, vitest, build — **verdes em 2026-10-13** (`tsc` limpo, oxlint só warnings pré-existentes, vitest 169/169, `vite build` ok)
-- [ ] 7.3 Sem commit sem pedido
+- [x] 7.3 Sem commit sem pedido (execução autorizada pelo dono em 2026-11-19)
