@@ -26,4 +26,4 @@
 ## S3 — Verificação
 
 - [x] 3.1 `npm run lint`, `tsc -b`, `npm test` — verdes em 2026-11-19 (oxlint sem erros, `tsc -b` limpo, vitest 175/175 em 18 arquivos)
-- [ ] 3.2 Push + CI `web-e2e` verde; `git status` limpo; sem commit sem pedido (pendente: push + CI)
+- [x] 3.2 Push + CI `web-e2e` verde (run 44666594613, 2026-11-20: lint/security/web/unit/integration success; web com `make web-e2e-install` + `make web-e2e`); `git status` limpo
