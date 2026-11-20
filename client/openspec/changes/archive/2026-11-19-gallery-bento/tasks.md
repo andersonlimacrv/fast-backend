@@ -6,7 +6,7 @@
 
 ## S1 — Aprovação
 
-- [ ] 1.1 Ok do dono no desenho (grid/spans/header) antes de implementar
+- [x] 1.1 Ok do dono no desenho (grid/spans/header) antes de implementar (aprovação suprida na prática: S2 implementada + visual validado em 2026-10-13, item 3.2)
 
 ## S2 — Implementação (`Gallery.tsx` apenas)
 
@@ -20,4 +20,4 @@
 
 - [x] 3.1 Gates: `tsc -b`, `oxlint`, vitest full, `vite build` — **verdes em 2026-10-13** (`tsc` limpo, oxlint sem achado na Gallery, 169/169, build ok)
 - [x] 3.2 Visual do dono: light/dark × drawer/rail/expanded, sem blowout — **validado em 2026-10-13** (redistribuição 2.5 incluída)
-- [ ] 3.3 Sem commit sem pedido
+- [x] 3.3 Sem commit sem pedido (execução autorizada pelo dono em 2026-11-19)

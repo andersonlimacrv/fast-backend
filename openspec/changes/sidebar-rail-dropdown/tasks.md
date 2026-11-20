@@ -25,5 +25,5 @@
 
 ## S3 — Verificação
 
-- [ ] 3.1 `npm run lint`, `tsc -b`, `npm test`
-- [ ] 3.2 Push + CI `web-e2e` verde; `git status` limpo; sem commit sem pedido
+- [x] 3.1 `npm run lint`, `tsc -b`, `npm test` — verdes em 2026-11-19 (oxlint sem erros, `tsc -b` limpo, vitest 175/175 em 18 arquivos)
+- [ ] 3.2 Push + CI `web-e2e` verde; `git status` limpo; sem commit sem pedido (pendente: push + CI)

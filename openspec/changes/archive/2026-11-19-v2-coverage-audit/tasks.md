@@ -29,4 +29,4 @@
 
 - [x] 3.1 `§2.3 question` DECIDIDO (a) 2026-10-13: flags-as-registry aceito; `AGENTS.md:11` corrigido (lista conceitual, sem runtime); `docs/RULES.md` §2 já documentava a realidade — nenhum código alterado, nenhuma change nova
 - [x] 3.2 Owner approves the disposition table — approval gates Phase 2/3. APROVADO 2026-10-13. Phase 2: nothing (no confirmed gaps). Next: Phase 3 — owner deletes `references/implementation_v2.md` + `references/components_to_use/`, then agent runs the §4 pointer sweep in a follow-up change
-- [ ] 3.3 No commit without request
+- [x] 3.3 No commit without request (execução autorizada pelo dono em 2026-11-19)

@@ -47,4 +47,4 @@
 - [x] 7.2 `tsc -b`/vitest/build do client
 - [x] 7.3 Smoke `make dev`: 3001/8001/5401/6401 + `/healthz` + CORS real
 - [x] 7.4 `make e2e-full` nas portas novas (3501/8501/5501/6501)
-- [ ] 7.5 Sem commit sem pedido
+- [x] 7.5 Sem commit sem pedido (execução autorizada pelo dono em 2026-11-19)
